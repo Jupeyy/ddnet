@@ -814,6 +814,18 @@ typedef struct
 void net_init_mmsgs(MMSGS *m);
 
 /*
+	Function: net_udp_select
+		Waits for a readable UDP socket.
+
+	Parameters:
+		sock - Socket to use.
+
+	Returns:
+		On success it returns 0, else it returns -1 on an error.
+*/
+int net_udp_select(NETSOCKET sock, int timeout_microseconds);
+
+/*
 	Function: net_udp_recv
 		Receives a packet over an UDP socket.
 
