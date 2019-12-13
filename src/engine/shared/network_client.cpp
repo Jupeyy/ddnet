@@ -17,9 +17,6 @@ bool CNetClient::Open(NETADDR BindAddr, int Flags)
 	if(!Socket.type)
 		return false;
 
-	// clean it
-	mem_zero(this, sizeof(*this));
-
 	// init
 	m_Socket = Socket;
 	m_Connection.Init(m_Socket, false);
