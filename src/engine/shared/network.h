@@ -9,6 +9,9 @@
 #include <base/math.h>
 
 #include <engine/message.h>
+#include <mutex>
+#include <condition_variable>
+#include <thread>
 
 /*
 
@@ -436,7 +439,17 @@ class CNetClient
 {
 	CNetConnection m_Connection;
 	CNetRecvUnpacker m_RecvUnpacker;
+
+	std::condition_variable m_Cond;
+	std::mutex m_RecvMutex;
+	std::thread *m_pRecvThread;
+
+	void RecvThread();
+	volatile bool m_ThreadFinished;
+	volatile bool m_CanRecv;
 public:
+	~CNetClient();
+
 	NETSOCKET m_Socket;
 	MMSGS m_MMSGS;
 	// openness

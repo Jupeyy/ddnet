@@ -1590,6 +1590,40 @@ void net_init_mmsgs(MMSGS* m)
 #endif
 }
 
+int net_udp_select(NETSOCKET sock, int timeout_microseconds) 
+{
+	int socket_select_max = -1;
+	fd_set sock_set;
+	struct timeval timeout_val;
+
+	timeout_val.tv_sec = 0;
+	timeout_val.tv_usec = timeout_microseconds;
+
+	if(sock.ipv4sock >= 0)
+	{
+		FD_SET(sock.ipv4sock, &sock_set);
+		if(socket_select_max < sock.ipv4sock) {
+			socket_select_max = sock.ipv4sock;
+		}
+	}
+	if(sock.ipv6sock >= 0)
+	{
+		FD_SET(sock.ipv6sock, &sock_set);
+		if(socket_select_max < sock.ipv6sock) {
+			socket_select_max = sock.ipv6sock;
+		}
+	}
+
+	if(socket_select_max != -1) 
+	{
+		return (select(socket_select_max + 1, &sock_set, NULL, NULL, &timeout_val) > 0) ? 1 : -1;
+	}
+	else
+	{
+		return -1;
+	}	
+}
+
 int net_udp_recv(NETSOCKET sock, NETADDR *addr, void *buffer, int maxsize, MMSGS* m, unsigned char **data)
 {
 #ifndef FUZZING
