@@ -1596,6 +1596,8 @@ int net_udp_select(NETSOCKET sock, int timeout_microseconds)
 	fd_set sock_set;
 	struct timeval timeout_val;
 
+	FD_ZERO(&sock_set);
+
 	timeout_val.tv_sec = 0;
 	timeout_val.tv_usec = timeout_microseconds;
 
