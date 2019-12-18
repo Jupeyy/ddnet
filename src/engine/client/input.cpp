@@ -52,11 +52,17 @@ CInput::CInput()
 	m_pClipboardText = NULL;
 
 	m_CountEditingText = 0;
+    
+	m_pPollThread = NULL;
 }
 
 CInput::~CInput()
 {
-
+	m_Finished = true;
+	if(m_pPollThread)
+	{
+		m_pPollThread->join();
+	}
 }
 
 void CInput::InitThread(IEngineGraphics* pGraphics) {
