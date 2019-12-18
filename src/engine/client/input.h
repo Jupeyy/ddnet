@@ -48,7 +48,15 @@ class CInput : public IEngineInput
 	void Run();
 
 	std::mutex m_EventMtx;
+	std::mutex m_MouseMtx;
+	std::mutex m_KeyboardMtx;
 	std::vector<SDL_Event> m_SDLEvents;
+
+	volatile int m_CurX;
+	volatile int m_CurY;
+	volatile int m_ButtonState;
+	volatile int m_KeyboardStateCount;
+	unsigned char m_KeyboardState[KEY_LAST];
 
 public:
 	volatile bool m_InitGraphics;

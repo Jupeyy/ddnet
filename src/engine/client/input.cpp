@@ -102,7 +102,10 @@ void CInput::Run()
 				SDL_SetRelativeMouseMode(SDL_FALSE);
 		}
 
-		if(SDL_WaitEventTimeout(&Event, 100) == 1)
+		SDL_PumpEvents();
+		//if(SDL_WaitEventTimeout(&Event, 100) == 1)
+		//if(SDL_PollEvent(&Event) == 1)
+		if(SDL_PeepEvents(&Event, 1, SDL_GETEVENT, SDL_FIRSTEVENT, SDL_LASTEVENT) > 0)
 		{
 			if(Event.type != SDL_MOUSEMOTION)
 			{
@@ -110,6 +113,30 @@ void CInput::Run()
 				m_SDLEvents.push_back(Event);
 				m_EventMtx.unlock();
 			}
+
+			if(m_MouseFocus && m_InputGrabbed)
+			{
+				int nx = 0, ny = 0;
+
+				SDL_GetRelativeMouseState(&nx,&ny);
+				m_MouseMtx.lock();
+				m_CurX += nx;
+				m_CurY += ny;
+				m_MouseMtx.unlock();
+			}
+
+			m_KeyboardMtx.lock();
+			int i;
+			const Uint8 *pState = SDL_GetKeyboardState(&i);
+			
+			if(i >= KEY_LAST)
+				i = KEY_LAST-1;
+
+			m_KeyboardStateCount = i;
+			mem_copy(m_KeyboardState, pState, i);
+			m_KeyboardMtx.unlock();
+
+			m_ButtonState = SDL_GetMouseState(NULL, NULL);
 		}
 	}
 }
@@ -119,13 +146,20 @@ void CInput::MouseRelative(float *x, float *y)
 	if(!m_MouseFocus || !m_InputGrabbed)
 		return;
 
-	int nx = 0, ny = 0;
-	float Sens = g_Config.m_InpMousesens / 100.0f;
+	/*int nx = 0, ny = 0;
 
 	SDL_GetRelativeMouseState(&nx,&ny);
 
 	*x = nx*Sens;
-	*y = ny*Sens;
+	*y = ny*Sens;*/
+	float Sens = g_Config.m_InpMousesens / 100.0f;
+
+	m_MouseMtx.lock();
+	*x = m_CurX*Sens;
+	*y = m_CurY*Sens;
+	m_CurX = 0;
+	m_CurY = 0;
+	m_MouseMtx.unlock();
 }
 
 void CInput::MouseModeAbsolute()
@@ -186,11 +220,13 @@ bool CInput::KeyState(int Key) const
 
 void CInput::NextFrame()
 {
-	int i;
-	const Uint8 *pState = SDL_GetKeyboardState(&i);
+	m_KeyboardMtx.lock();
+	int i = m_KeyboardStateCount;
+	const Uint8 *pState = m_KeyboardState;
 	if(i >= KEY_LAST)
 		i = KEY_LAST-1;
 	mem_copy(m_aInputState, pState, i);
+	m_KeyboardMtx.unlock();
 }
 
 bool CInput::GetIMEState()
@@ -236,7 +272,7 @@ int CInput::Update()
 	m_InputCounter = (m_InputCounter%0xFFFF)+1;
 
 	// these states must always be updated manually because they are not in the GetKeyState from SDL
-	int i = SDL_GetMouseState(NULL, NULL);
+	int i = m_ButtonState;
 	if(i&SDL_BUTTON(1)) m_aInputState[KEY_MOUSE_1] = 1; // 1 is left
 	if(i&SDL_BUTTON(3)) m_aInputState[KEY_MOUSE_2] = 1; // 3 is right
 	if(i&SDL_BUTTON(2)) m_aInputState[KEY_MOUSE_3] = 1; // 2 is middle
