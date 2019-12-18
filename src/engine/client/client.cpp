@@ -7,8 +7,6 @@
 
 #include <stdlib.h> // qsort
 #include <stdarg.h>
-#include <string.h>
-#include <climits>
 #include <tuple>
 
 #include <base/hash_ctxt.h>
@@ -3370,7 +3368,7 @@ void CClient::SaveReplay(const int Length)
 		GameClient()->Echo(Localize("Replay feature is disabled!"));
 		return;
 	}
-	
+
 	if(!DemoRecorder(RECORDER_REPLAYS)->IsRecording())
 		m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "replay", "Error: demorecorder isn't recording. Try to rejoin to fix that.");
 	else if(DemoRecorder(RECORDER_REPLAYS)->Length() < 1)
@@ -3401,7 +3399,7 @@ void CClient::SaveReplay(const int Length)
 		// And we restart the recorder
 		DemoRecorder_StartReplayRecorder();
 	}
-	
+
 }
 
 void CClient::DemoSlice(const char *pDstPath, CLIENTFUNC_FILTER pfnFilter, void *pUser)
@@ -3427,15 +3425,19 @@ const char *CClient::DemoPlayer_Play(const char *pFilename, int StorageType)
 		return "error loading demo";
 
 	// load map
-	Crc = (m_DemoPlayer.Info()->m_Header.m_aMapCrc[0]<<24)|
-		(m_DemoPlayer.Info()->m_Header.m_aMapCrc[1]<<16)|
-		(m_DemoPlayer.Info()->m_Header.m_aMapCrc[2]<<8)|
-		(m_DemoPlayer.Info()->m_Header.m_aMapCrc[3]);
-	pError = LoadMapSearch(m_DemoPlayer.Info()->m_Header.m_aMapName, 0, Crc);
+	Crc = m_DemoPlayer.GetMapInfo()->m_Crc;
+	SHA256_DIGEST Sha = m_DemoPlayer.GetMapInfo()->m_Sha256;
+	pError = LoadMapSearch(m_DemoPlayer.Info()->m_Header.m_aMapName, &Sha, Crc);
 	if(pError)
 	{
-		DisconnectWithReason(pError);
-		return pError;
+		m_DemoPlayer.ExtractMap(Storage());
+		Sha = m_DemoPlayer.GetMapInfo()->m_Sha256;
+		pError = LoadMapSearch(m_DemoPlayer.Info()->m_Header.m_aMapName, &Sha, Crc);
+		if(pError)
+		{
+			DisconnectWithReason(pError);
+			return pError;
+		}
 	}
 
 	GameClient()->OnConnected();
