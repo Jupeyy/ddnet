@@ -76,6 +76,7 @@ void CRenderTools::SelectSprite(CDataSprite *pSpr, int Flags, int sx, int sy)
 	int cy = pSpr->m_pSet->m_Gridy;
 
 	float f = sqrtf(h*h + w*w);
+	if(f == 0) f = 1;
 	gs_SpriteWScale = w/f;
 	gs_SpriteHScale = h/f;
 

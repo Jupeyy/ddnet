@@ -4,6 +4,7 @@
 #define _WIN32_WINNT 0x0501
 
 #include <new>
+#include <fenv.h>
 
 #include <stdlib.h> // qsort
 #include <stdarg.h>
@@ -3856,6 +3857,8 @@ int main(int argc, const char **argv) // ignore_convention
 			break;
 		}
 	}
+
+//	feenableexcept(FE_INVALID);
 
 	if(secure_random_init() != 0)
 	{

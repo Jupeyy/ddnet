@@ -82,7 +82,10 @@ int CSkins::SkinScan(const char *pName, int IsDir, int DirType, void *pUser)
 				}
 			}
 
-		Skin.m_BloodColor = ColorRGBA(normalize(vec3(aColors[0], aColors[1], aColors[2])));
+		if(aColors[0] != 0 || aColors[1] != 0 || aColors[2] != 0)
+			Skin.m_BloodColor = ColorRGBA(normalize(vec3(aColors[0], aColors[1], aColors[2])));
+		else
+			Skin.m_BloodColor = ColorRGBA(vec3(0, 0, 0));
 	}
 
 	// create colorless version
@@ -123,9 +126,11 @@ int CSkins::SkinScan(const char *pName, int IsDir, int DirType, void *pUser)
 		for(int x = 0; x < BodySize; x++)
 		{
 			int v = d[y*Pitch+x*4];
-			if(v <= OrgWeight)
-				v = (int)(((v/(float)OrgWeight) * NewWeight));
-			else
+			if(v <= OrgWeight) {
+				if(v != 0)
+					v = (int)(((v/(float)OrgWeight) * NewWeight));
+			}
+			else if(InvOrgWeight != 0)
 				v = (int)(((v-OrgWeight)/(float)InvOrgWeight)*InvNewWeight + NewWeight);
 			d[y*Pitch+x*4] = v;
 			d[y*Pitch+x*4+1] = v;
