@@ -76,6 +76,8 @@
 #undef main
 #endif
 
+#include "engine/client/input.h"
+
 void CGraph::Init(float Min, float Max)
 {
 	m_Min = Min;
@@ -2820,8 +2822,13 @@ void CClient::Run()
 		RegisterFail = RegisterFail || !Kernel()->RegisterInterface(m_pGraphics); // IEngineGraphics
 		RegisterFail = RegisterFail || !Kernel()->RegisterInterface(static_cast<IGraphics*>(m_pGraphics), false);
 
-		if(RegisterFail || m_pGraphics->Init() != 0)
+		((CInput*)Input())->InitThread(m_pGraphics);
+		while(!((CInput*)Input())->m_InitGraphics)
 		{
+			//just for testing
+		}
+		if(RegisterFail || ((CInput*)Input())->m_InitGraphicsRet != 0)
+		{	
 			dbg_msg("client", "couldn't init graphics");
 			return;
 		}

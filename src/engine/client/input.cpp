@@ -17,6 +17,8 @@
 #include "keynames.h"
 #undef KEYS_INCLUDE
 
+#include <functional>
+
 void CInput::AddEvent(char *pText, int Key, int Flags)
 {
 	if(m_NumEvents != INPUT_BUFFER_SIZE)
@@ -52,11 +54,58 @@ CInput::CInput()
 	m_CountEditingText = 0;
 }
 
+CInput::~CInput()
+{
+
+}
+
+void CInput::InitThread(IEngineGraphics* pGraphics) {
+	m_pGraphics = pGraphics;
+
+	m_InitGraphics = false;
+
+	m_pPollThread = new std::thread(std::bind(&CInput::Run, this));
+}
+
 void CInput::Init()
 {
 	m_pGraphics = Kernel()->RequestInterface<IEngineGraphics>();
 
 	MouseModeRelative();
+}
+
+void CInput::Run()
+{
+	//init graphics
+	m_InitGraphicsRet = m_pGraphics->Init();
+	m_InitGraphics = true;
+
+	m_SetNewMouseMode = false;
+	m_RelativeMouseMode = false;
+
+	SDL_Event Event;
+
+	while(!m_Finished)
+	{
+		if(m_SetNewMouseMode)
+		{
+			m_SetNewMouseMode = false;
+			if(m_RelativeMouseMode)
+				SDL_SetRelativeMouseMode(SDL_TRUE);
+			else
+				SDL_SetRelativeMouseMode(SDL_FALSE);
+		}
+
+		if(SDL_WaitEventTimeout(&Event, 100) == 1)
+		{
+			if(Event.type != SDL_MOUSEMOTION)
+			{
+				m_EventMtx.lock();
+				m_SDLEvents.push_back(Event);
+				m_EventMtx.unlock();
+			}
+		}
+	}
 }
 
 void CInput::MouseRelative(float *x, float *y)
@@ -76,14 +125,16 @@ void CInput::MouseRelative(float *x, float *y)
 void CInput::MouseModeAbsolute()
 {
 	m_InputGrabbed = 0;
-	SDL_SetRelativeMouseMode(SDL_FALSE);
+	m_SetNewMouseMode = true;
+	m_RelativeMouseMode = false;
 	Graphics()->SetWindowGrab(false);
 }
 
 void CInput::MouseModeRelative()
 {
 	m_InputGrabbed = 1;
-	SDL_SetRelativeMouseMode(SDL_TRUE);
+	m_SetNewMouseMode = true;
+	m_RelativeMouseMode = true;
 	Graphics()->SetWindowGrab(true);
 }
 
@@ -193,8 +244,14 @@ int CInput::Update()
 	{
 		SDL_Event Event;
 		bool IgnoreKeys = false;
-		while(SDL_PollEvent(&Event))
+		//SDL_PumpEvents();
+		//while(SDL_PeepEvents(&Event, 1, SDL_GETEVENT, SDL_FIRSTEVENT, SDL_LASTEVENT) >= 1)
+		//while(SDL_PollEvent(&Event))
+
+		m_EventMtx.lock();
+		for(size_t i = 0; i < m_SDLEvents.size(); ++i)
 		{
+			Event = m_SDLEvents[i];
 			int Key = -1;
 			int Scancode = 0;
 			int Action = IInput::FLAG_PRESS;
@@ -312,7 +369,10 @@ int CInput::Update()
 
 				// other messages
 				case SDL_QUIT:
+				{
+					m_EventMtx.unlock();
 					return 1;
+				}
 			}
 
 			if(Scancode > KEY_FIRST && Scancode < g_MaxKeys && !IgnoreKeys && m_CountEditingText == 0)
@@ -326,6 +386,9 @@ int CInput::Update()
 			}
 
 		}
+		m_SDLEvents.clear();
+
+		m_EventMtx.unlock();
 	}
 
 	return 0;

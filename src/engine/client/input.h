@@ -3,6 +3,11 @@
 #ifndef ENGINE_CLIENT_INPUT_H
 #define ENGINE_CLIENT_INPUT_H
 
+#include <thread>
+#include <vector>
+#include <mutex>
+#include <condition_variable>
+
 class CInput : public IEngineInput
 {
 	IEngineGraphics *m_pGraphics;
@@ -34,9 +39,25 @@ class CInput : public IEngineInput
 
 	IEngineGraphics *Graphics() { return m_pGraphics; }
 
-public:
-	CInput();
+	std::thread* m_pPollThread;
 
+	volatile bool m_SetNewMouseMode;
+	volatile bool m_RelativeMouseMode;
+
+	volatile bool m_Finished;
+	void Run();
+
+	std::mutex m_EventMtx;
+	std::vector<SDL_Event> m_SDLEvents;
+
+public:
+	volatile bool m_InitGraphics;
+	volatile int m_InitGraphicsRet;
+
+	CInput();
+	~CInput();
+
+	virtual void InitThread(IEngineGraphics* pGraphics);
 	virtual void Init();
 
 	bool KeyIsPressed(int Key) const { return KeyState(Key); }
