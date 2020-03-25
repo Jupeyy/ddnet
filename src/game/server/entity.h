@@ -106,6 +106,8 @@ public:
 	*/
 	virtual void Tick() {}
 
+	virtual void Tick2() {}
+
 	/*
 		Function: tick_defered
 			Called after all entities tick() function has been called.

@@ -222,6 +222,7 @@ public:
 	void Init(CWorldCore *pWorld, CCollision *pCollision, CTeamsCore *pTeams, std::map<int, std::vector<vec2> > *pTeleOuts);
 	void Reset();
 	void Tick(bool UseInput);
+	void TickDefered();
 	void Move();
 
 	void Read(const CNetObj_CharacterCore *pObjCore);

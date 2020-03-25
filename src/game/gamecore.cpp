@@ -379,6 +379,14 @@ void CCharacterCore::Tick(bool UseInput)
 		}
 	}
 
+	// clamp the velocity to something sane
+	if(length(m_Vel) > 6000)
+		m_Vel = normalize(m_Vel) * 6000;
+}
+
+void CCharacterCore::TickDefered() {
+	float PhysSize = 28.f;
+
 	if(m_pWorld)
 	{
 		for(int i = 0; i < MAX_CLIENTS; i++)
@@ -446,10 +454,6 @@ void CCharacterCore::Tick(bool UseInput)
 			m_NewHook = false;
 		}
 	}
-
-	// clamp the velocity to something sane
-	if(length(m_Vel) > 6000)
-		m_Vel = normalize(m_Vel) * 6000;
 }
 
 void CCharacterCore::Move()
