@@ -314,7 +314,6 @@ class CCommandProcessorFragment_OpenGL3_3 : public CCommandProcessorFragment_Ope
 	
 	GLuint m_QuadDrawIndexBufferID;
 	unsigned int m_CurrentIndicesInBuffer;
-
 	void DestroyBufferContainer(int Index, bool DeleteBOs = true);
 	
 	void AppendIndices(unsigned int NewIndicesCount);
