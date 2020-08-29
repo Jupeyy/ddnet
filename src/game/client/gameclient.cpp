@@ -631,7 +631,11 @@ void CGameClient::OnRender()
 		{
 			if(m_pMenus->CanDisplayWarning())
 			{
+<<<<<<< HEAD
 				m_pMenus->PopupWarning("Warning!", pWarning->m_aWarningMsg, "Ok", 10000000);
+=======
+				m_pMenus->PopupWarning("Warning!", pWarning->m_WarningMsg.c_str(), "Ok", 10000000);
+>>>>>>> 7655b4c1f... Show warnings with non divisible by 16 textures(3D/2D array textures)
 
 				pWarning->m_WasShown = true;
 			}

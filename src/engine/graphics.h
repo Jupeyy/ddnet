@@ -7,6 +7,10 @@
 
 #include <base/color.h>
 #include <stddef.h>
+<<<<<<< HEAD
+=======
+#include <string>
+>>>>>>> 7655b4c1f... Show warnings with non divisible by 16 textures(3D/2D array textures)
 
 #include <vector>
 #define GRAPHICS_TYPE_UNSIGNED_BYTE 0x1401
@@ -120,7 +124,11 @@ struct GL_SVertexTex3D
 struct SGraphicsWarning
 {
 	SGraphicsWarning() : m_WasShown(false) {}
+<<<<<<< HEAD
 	char m_aWarningMsg[128];
+=======
+	std::string m_WarningMsg;
+>>>>>>> 7655b4c1f... Show warnings with non divisible by 16 textures(3D/2D array textures)
 	bool m_WasShown;
 };
 
@@ -194,7 +202,11 @@ public:
 	virtual int LoadPNG(CImageInfo *pImg, const char *pFilename, int StorageType) = 0;
 
 	virtual int UnloadTexture(CTextureHandle Index) = 0;
+<<<<<<< HEAD
 	virtual CTextureHandle LoadTextureRaw(int Width, int Height, int Format, const void *pData, int StoreFormat, int Flags, const char *pTexName = NULL) = 0;
+=======
+	virtual CTextureHandle LoadTextureRaw(int Width, int Height, int Format, const void *pData, int StoreFormat, int Flags, const char* pTexName = NULL) = 0;
+>>>>>>> 7655b4c1f... Show warnings with non divisible by 16 textures(3D/2D array textures)
 	virtual int LoadTextureRawSub(CTextureHandle TextureID, int x, int y, int Width, int Height, int Format, const void *pData) = 0;
 	virtual CTextureHandle LoadTexture(const char *pFilename, int StorageType, int StoreFormat, int Flags) = 0;
 	virtual void TextureSet(CTextureHandle Texture) = 0;

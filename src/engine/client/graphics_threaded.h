@@ -4,6 +4,7 @@
 #include <engine/graphics.h>
 
 #include <vector>
+#include <string>
 
 #define CMD_BUFFER_DATA_BUFFER_SIZE 1024*1024*2
 #define CMD_BUFFER_CMD_BUFFER_SIZE 1024*256
@@ -744,7 +745,11 @@ public:
 	virtual void LinesDraw(const CLineItem *pArray, int Num);
 
 	virtual int UnloadTexture(IGraphics::CTextureHandle Index);
+<<<<<<< HEAD
 	virtual IGraphics::CTextureHandle LoadTextureRaw(int Width, int Height, int Format, const void *pData, int StoreFormat, int Flags, const char *pTexName = NULL);
+=======
+	virtual IGraphics::CTextureHandle LoadTextureRaw(int Width, int Height, int Format, const void *pData, int StoreFormat, int Flags, const char* pTexName = NULL);
+>>>>>>> 7655b4c1f... Show warnings with non divisible by 16 textures(3D/2D array textures)
 	virtual int LoadTextureRawSub(IGraphics::CTextureHandle TextureID, int x, int y, int Width, int Height, int Format, const void *pData);
 
 	// simple uncompressed RGBA loaders

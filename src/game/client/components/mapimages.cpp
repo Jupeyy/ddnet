@@ -10,6 +10,8 @@
 
 #include "mapimages.h"
 
+#include <string>
+
 CMapImages::CMapImages() : CMapImages(100)
 {
 }
@@ -91,9 +93,13 @@ void CMapImages::OnMapLoadImpl(class CLayers *pLayers, IMap *pMap)
 		{
 			void *pData = pMap->GetData(pImg->m_ImageData);
 			char *pName = (char *)pMap->GetData(pImg->m_ImageName);
+<<<<<<< HEAD
 			char aTexName[128];
 			str_format(aTexName, sizeof(aTexName), "%s %s", "embedded:", pName);
 			m_aTextures[i] = Graphics()->LoadTextureRaw(pImg->m_Width, pImg->m_Height, CImageInfo::FORMAT_RGBA, pData, CImageInfo::FORMAT_RGBA, LoadFlag, aTexName);
+=======
+			m_aTextures[i] = Graphics()->LoadTextureRaw(pImg->m_Width, pImg->m_Height, CImageInfo::FORMAT_RGBA, pData, CImageInfo::FORMAT_RGBA, LoadFlag, (std::string("embedded: ") + pName).c_str());
+>>>>>>> 7655b4c1f... Show warnings with non divisible by 16 textures(3D/2D array textures)
 			pMap->UnloadData(pImg->m_ImageData);
 		}
 	}
