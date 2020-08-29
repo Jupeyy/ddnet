@@ -408,11 +408,7 @@ int CGraphics_Threaded::LoadTextureRawSub(CTextureHandle TextureID, int x, int y
 	return 0;
 }
 
-<<<<<<< HEAD
 IGraphics::CTextureHandle CGraphics_Threaded::LoadTextureRaw(int Width, int Height, int Format, const void *pData, int StoreFormat, int Flags, const char *pTexName)
-=======
-IGraphics::CTextureHandle CGraphics_Threaded::LoadTextureRaw(int Width, int Height, int Format, const void *pData, int StoreFormat, int Flags, const char* pTexName)
->>>>>>> 7655b4c1f... Show warnings with non divisible by 16 textures(3D/2D array textures)
 {
 	// don't waste memory on texture if we are stress testing
 #ifdef CONF_DEBUG
@@ -457,7 +453,6 @@ IGraphics::CTextureHandle CGraphics_Threaded::LoadTextureRaw(int Width, int Heig
 		if(Width == 0 || (Width % 16) != 0 || Height == 0 || (Height % 16) != 0)
 		{
 			SGraphicsWarning NewWarning;
-<<<<<<< HEAD
 			char aText[128];
 			if(pTexName && *pTexName)
 			{
@@ -470,16 +465,6 @@ IGraphics::CTextureHandle CGraphics_Threaded::LoadTextureRaw(int Width, int Heig
 			}
 			str_format(NewWarning.m_aWarningMsg, sizeof(NewWarning.m_aWarningMsg), "The width and height of texture%sare not divisible by 16, which might cause visual bugs.", aText);
 
-=======
-			NewWarning.m_WarningMsg = std::string("The width and height of texture");
-			if(pTexName && *pTexName)
-			{
-				NewWarning.m_WarningMsg.append(":\n\"");
-				NewWarning.m_WarningMsg.append(pTexName);
-				NewWarning.m_WarningMsg.append("\"\n");
-			}
-			NewWarning.m_WarningMsg.append("are not divisible by 16, which might cause visual bugs.");
->>>>>>> 7655b4c1f... Show warnings with non divisible by 16 textures(3D/2D array textures)
 			m_Warnings.emplace_back(NewWarning);
 		}
 	}
