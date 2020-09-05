@@ -3745,7 +3745,7 @@ void CCommandProcessorFragment_SDL::Cmd_VSync(const CCommandBuffer::SCommand_VSy
 
 void CCommandProcessorFragment_SDL::Cmd_Resize(const CCommandBuffer::SCommand_Resize *pCommand)
 {
-	SDL_SetWindowSize(m_pWindow, pCommand->m_Width, pCommand->m_Height);
+	//SDL_SetWindowSize(m_pWindow, pCommand->m_Width, pCommand->m_Height);
 	glViewport(0, 0, pCommand->m_Width, pCommand->m_Height);
 }
 
@@ -4066,6 +4066,9 @@ static int IsVersionSupportedGlew(int VersionMajor, int VersionMinor, int Versio
 
 int CGraphicsBackend_SDL_OpenGL::Init(const char *pName, int *Screen, int *pWidth, int *pHeight, int FsaaSamples, int Flags, int *pDesktopWidth, int *pDesktopHeight, int *pCurrentWidth, int *pCurrentHeight, IStorage *pStorage)
 {
+	m_Notified = 0;
+	m_NotifyDelay = time_get_microseconds();
+
 	// print sdl version
 	{
 		SDL_version Compiled;
@@ -4425,6 +4428,7 @@ int CGraphicsBackend_SDL_OpenGL::Init(const char *pName, int *Screen, int *pWidt
 		return EGraphicsBackendErrorCodes::GRAPHICS_BACKEND_ERROR_CODE_OPENGL_VERSION_FAILED;
 	}
 
+	SDL_ShowWindow(m_pWindow);
 	if(SetWindowScreen(g_Config.m_GfxScreen))
 	{
 		// query the current displaymode, when running in fullscreen
@@ -4546,7 +4550,30 @@ int CGraphicsBackend_SDL_OpenGL::WindowActive()
 
 int CGraphicsBackend_SDL_OpenGL::WindowOpen()
 {
-	return SDL_GetWindowFlags(m_pWindow)&SDL_WINDOW_SHOWN;
+	int r = SDL_GetWindowFlags(m_pWindow)&SDL_WINDOW_SHOWN;
+#if defined(SDL_VIDEO_DRIVER_X11)
+	if(m_Notified > 0 && r != 0 && (time_get_microseconds() - m_NotifyDelay > 1000000)) {
+		// get window handle
+		SDL_SysWMinfo info;
+		SDL_VERSION(&info.version);
+		if(SDL_GetWindowWMInfo(m_pWindow, &info))
+		{
+			
+			Display *dpy = info.info.x11.display;
+			Window win = info.info.x11.window;
+
+			// More modern way of notifying
+			static Atom remAttention = XInternAtom(dpy, "_NET_WM_STATE_REMOVE", true);
+			static Atom wmState = XInternAtom(dpy, "_NET_WM_STATE", true);
+			XChangeProperty(dpy, win, wmState, XA_ATOM, 32, PropModeReplace,
+				(unsigned char *) &remAttention, 1);
+			
+			--m_Notified;
+			m_NotifyDelay = time_get_microseconds();
+		}
+	}
+#endif
+	return r;
 }
 
 void CGraphicsBackend_SDL_OpenGL::SetWindowGrab(bool Grab)
@@ -4578,12 +4605,8 @@ void CGraphicsBackend_SDL_OpenGL::NotifyWindow()
 		Display *dpy = info.info.x11.display;
 		Window win = info.info.x11.window;
 
-		// Old hints
-		XWMHints *wmhints;
-		wmhints = XAllocWMHints();
-		wmhints->flags = XUrgencyHint;
-		XSetWMHints(dpy, win, wmhints);
-		XFree(wmhints);
+		m_Notified += 2;
+		m_NotifyDelay = time_get_microseconds();
 
 		// More modern way of notifying
 		static Atom demandsAttention = XInternAtom(dpy, "_NET_WM_STATE_DEMANDS_ATTENTION", true);
