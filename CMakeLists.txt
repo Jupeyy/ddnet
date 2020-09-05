@@ -204,6 +204,34 @@ endif()
 
 if(NOT MSVC)
   check_c_compiler_flag("-O2;-Wp,-Werror;-D_FORTIFY_SOURCE=2" DEFINE_FORTIFY_SOURCE) # Some distributions define _FORTIFY_SOURCE by themselves.
+  
+  #set(PROFILING_OPTION "-fprofile-generate=./pgo_files")
+	set(PROFILING_OPTION "-fprofile-use=./pgo_files -fprofile-correction")
+  
+  set(MYOWN_FLAGS "${MYOWN_FLAGS} -no-pie")
+  set(MYOWN_FLAGS "${MYOWN_FLAGS} -O3")
+  set(MYOWN_FLAGS "${MYOWN_FLAGS} -fvisibility=hidden")
+  set(MYOWN_FLAGS "${MYOWN_FLAGS} -s")
+  set(MYOWN_FLAGS "${MYOWN_FLAGS} -g0")
+  set(MYOWN_FLAGS "${MYOWN_FLAGS} -Ofast")
+  set(MYOWN_FLAGS "${MYOWN_FLAGS} -frename-registers")
+  set(MYOWN_FLAGS "${MYOWN_FLAGS} -funroll-loops")
+  set(MYOWN_FLAGS "${MYOWN_FLAGS} -fno-exceptions")
+  set(MYOWN_FLAGS "${MYOWN_FLAGS} -march=znver1")
+  set(MYOWN_FLAGS "${MYOWN_FLAGS} -pipe")
+  #set(MYOWN_FLAGS "${MYOWN_FLAGS} ${PROFILING_OPTION}")
+  set(MYOWN_FLAGS "${MYOWN_FLAGS} -flto")
+  
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${MYOWN_FLAGS}")
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${MYOWN_FLAGS}")
+  
+  #set(LINKER_FLAGS "${LINKER_FLAGS} ${PROFILING_OPTION}")
+  set(LINKER_FLAGS "${LINKER_FLAGS} -flto")
+  
+  
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${LINKER_FLAGS}")
+set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${LINKER_FLAGS}")
+set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} ${LINKER_FLAGS}")
 endif()
 
 ########################################################################
