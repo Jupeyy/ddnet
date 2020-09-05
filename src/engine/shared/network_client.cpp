@@ -97,20 +97,7 @@ int CNetClient::Recv(CNetChunk *pChunk)
 	while(1)
 	{
 		// TODO: empty the recvinfo
-<<<<<<< HEAD
-		NETADDR Addr;
-		unsigned char *pData;
-		int Bytes = net_udp_recv(m_Socket, &Addr, m_RecvUnpacker.m_aBuffer, NET_MAX_PACKETSIZE, &m_MMSGS, &pData);
-
-		// no more packets for now
-		if(Bytes <= 0)
-			break;
-
-		bool Sixup = false;
-		if(CNetBase::UnpackPacket(pData, Bytes, &m_RecvUnpacker.m_Data, Sixup) == 0)
-=======
 		if(m_CanRecv)
->>>>>>> eda0000a9... async recv hack
 		{
 			// check for a chunk
 			if(m_RecvUnpacker.FetchChunk(pChunk))
@@ -132,7 +119,8 @@ int CNetClient::Recv(CNetChunk *pChunk)
 				break;
 			}
 
-			if(CNetBase::UnpackPacket(pData, Bytes, &m_RecvUnpacker.m_Data) == 0)
+			bool Sixup = false;
+			if(CNetBase::UnpackPacket(pData, Bytes, &m_RecvUnpacker.m_Data, Sixup) == 0)
 			{
 				if(m_RecvUnpacker.m_Data.m_Flags&NET_PACKETFLAG_CONNLESS)
 				{
