@@ -484,6 +484,9 @@ class CGraphicsBackend_SDL_OpenGL : public CGraphicsBackend_Threaded
 
 	SBackendCapabilites m_Capabilites;
 
+	int m_Notified;
+	time_t m_NotifyDelay;
+
 	bool m_UseNewOpenGL;
 
 public:
