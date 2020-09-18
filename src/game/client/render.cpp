@@ -153,7 +153,8 @@ void CRenderTools::DrawRoundRectExt(float x, float y, float w, float h, float r,
 {
 	IGraphics::CFreeformItem ArrayF[32];
 	int NumItems = 0;
-	int Num = 8;
+	int Num = 0;
+	r = 0;
 	for(int i = 0; i < Num; i+=2)
 	{
 		float a1 = i/(float)Num * pi/2;
@@ -214,7 +215,8 @@ void CRenderTools::DrawRoundRectExt(float x, float y, float w, float h, float r,
 
 void CRenderTools::DrawRoundRectExt4(float x, float y, float w, float h, vec4 ColorTopLeft, vec4 ColorTopRight, vec4 ColorBottomLeft, vec4 ColorBottomRight, float r, int Corners)
 {
-	int Num = 8;
+	r = 0;
+	int Num = 0;
 	for(int i = 0; i < Num; i += 2)
 	{
 		float a1 = i / (float)Num * pi / 2;
@@ -364,7 +366,8 @@ int CRenderTools::CreateRoundRectQuadContainer(float x, float y, float w, float 
 
 	IGraphics::CFreeformItem ArrayF[32];
 	int NumItems = 0;
-	int Num = 8;
+	int Num = 0;
+	r = 0;
 	for(int i = 0; i < Num; i += 2)
 	{
 		float a1 = i / (float)Num * pi / 2;
