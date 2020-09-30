@@ -11,6 +11,7 @@
 #include "uuid_manager.h"
 
 #include <zlib.h>
+#include <zopfli.h>
 
 static const int DEBUG = 0;
 
@@ -700,6 +701,28 @@ int CDataFileWriter::AddData(int Size, void *pData)
 		dbg_msg("datafile", "compression error %d", Result);
 		dbg_assert(0, "zlib error");
 	}
+
+	pInfo->m_UncompressedSize = Size;
+	pInfo->m_CompressedSize = (int)s;
+	pInfo->m_pCompressedData = malloc(pInfo->m_CompressedSize);
+	mem_copy(pInfo->m_pCompressedData, pCompData, pInfo->m_CompressedSize);
+	free(pCompData);
+
+	m_NumDatas++;
+	return m_NumDatas - 1;
+}
+
+int CDataFileWriter::AddDataZopfli(int Size, void *pData)
+{
+	dbg_assert(m_NumDatas < 1024, "too much data");
+
+	CDataInfo *pInfo = &m_pDatas[m_NumDatas];
+	size_t s = 0;
+	unsigned char *pCompData;
+
+	ZopfliOptions Opt;
+	ZopfliInitOptions(&Opt);
+	ZopfliCompress(&Opt, ZOPFLI_FORMAT_ZLIB, (unsigned char *)pData, Size, (unsigned char **)&pCompData, &s); // ignore_convention
 
 	pInfo->m_UncompressedSize = Size;
 	pInfo->m_CompressedSize = (int)s;

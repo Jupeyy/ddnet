@@ -340,6 +340,7 @@ if(NOT CMAKE_CROSSCOMPILING)
   find_package(PkgConfig)
 endif()
 find_package(ZLIB)
+find_package(Zopfli)
 find_package(Crypto)
 find_package(Curl)
 if(VIDEORECORDER)
@@ -449,6 +450,7 @@ show_dependency_status("SDL2" SDL2)
 show_dependency_status("SQLite3" SQLite3)
 show_dependency_status("Wavpack" WAVPACK)
 show_dependency_status("Zlib" ZLIB)
+show_dependency_status("Zopfli" ZOPFLI)
 if(WEBSOCKETS)
   show_dependency_status("Websockets" WEBSOCKETS)
 endif()
@@ -1590,13 +1592,14 @@ set(GAME_GENERATED_SHARED
   src/game/generated/protocolglue.h
 )
 
-set(DEPS ${DEP_JSON} ${DEP_MD5} ${ZLIB_DEP})
+set(DEPS ${DEP_JSON} ${DEP_MD5} ${ZLIB_DEP} ${ZOPFLI_DEP})
 
 # Libraries
 set(LIBS
   ${CRYPTO_LIBRARIES}
   ${WEBSOCKETS_LIBRARIES}
   ${ZLIB_LIBRARIES}
+  ${ZOPFLI_LIBRARIES}
   ${PLATFORM_LIBS}
   # Add pthreads (on non-Windows) at the end, so that other libraries can depend
   # on it.
@@ -2049,6 +2052,7 @@ set_src(TOOLS GLOB src/tools
   map_convert_07.cpp
   map_diff.cpp
   map_extract.cpp
+  map_optimize_zopfli.cpp
   map_replace_image.cpp
   map_resave.cpp
   packetgen.cpp
@@ -2061,7 +2065,7 @@ foreach(ABS_T ${TOOLS})
     string(REGEX REPLACE "\\.cpp$" "" TOOL "${T}")
     set(TOOL_DEPS ${DEPS})
     set(TOOL_LIBS ${LIBS})
-    if(TOOL MATCHES "^(tileset_.*|dilate|map_convert_07|map_extract|map_replace_image)$")
+    if(TOOL MATCHES "^(tileset_.*|dilate|map_optimize_zopfli|map_convert_07|map_extract|map_replace_image)$")
       list(APPEND TOOL_DEPS ${PNGLITE_DEP})
       list(APPEND TOOL_LIBS ${PNGLITE_LIBRARIES})
       list(APPEND TOOL_INCLUDE_DIRS ${PNGLITE_INCLUDE_DIRS})
@@ -2300,6 +2304,7 @@ set(CPACK_TARGETS
   map_convert_07
   map_diff
   map_extract
+  map_optimize_zopfli
 )
 if(STEAMAPI_KIND STREQUAL SHARED)
   list(APPEND CPACK_TARGETS ${TARGET_STEAMAPI})
@@ -2590,7 +2595,7 @@ foreach(target ${TARGETS_OWN})
   target_include_directories(${target} PRIVATE ${PROJECT_BINARY_DIR}/src)
   target_include_directories(${target} PRIVATE src)
   target_compile_definitions(${target} PRIVATE $<$<CONFIG:Debug>:CONF_DEBUG>)
-  target_include_directories(${target} PRIVATE ${SQLite3_INCLUDE_DIRS} ${ZLIB_INCLUDE_DIRS})
+  target_include_directories(${target} PRIVATE ${SQLite3_INCLUDE_DIRS} ${ZLIB_INCLUDE_DIRS} ${ZOPFLI_INCLUDE_DIRS})
   target_compile_definitions(${target} PRIVATE GLEW_STATIC)
   if(CRYPTO_FOUND)
     target_compile_definitions(${target} PRIVATE CONF_OPENSSL)
