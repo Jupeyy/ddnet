@@ -8,6 +8,11 @@
 #ifndef BASE_SYSTEM_H
 #define BASE_SYSTEM_H
 
+// use mingws printf, etc.
+#ifndef __USE_MINGW_ANSI_STDIO
+#define __USE_MINGW_ANSI_STDIO 1
+#endif
+
 #include "detect.h"
 
 #ifndef __USE_GNU
@@ -25,10 +30,6 @@
 #ifdef CONF_PLATFORM_LINUX
 #include <netinet/in.h>
 #include <sys/socket.h>
-#endif
-
-#ifdef __cplusplus
-extern "C" {
 #endif
 
 /* Group: Debug */
@@ -59,7 +60,7 @@ void dbg_assert_imp(const char *filename, int line, int test, const char *msg);
 #define dbg_assert(test, msg) assert(test)
 #endif
 
-#ifdef __GNUC__
+#if defined(__GNUC__) && !defined(CONF_FAMILY_WINDOWS)
 #define GNUC_ATTRIBUTE(x) __attribute__(x)
 #else
 #define GNUC_ATTRIBUTE(x)
@@ -2102,9 +2103,5 @@ void secure_random_fill(void *bytes, unsigned length);
 		Returns random int (replacement for rand()).
 */
 int secure_rand(void);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif
