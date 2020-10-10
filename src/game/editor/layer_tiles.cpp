@@ -747,6 +747,7 @@ int CLayerTiles::RenderProperties(CUIRect *pToolBox)
 			break;
 		case 10:
 			Result = TILE_TELECHECKINEVIL;
+			break;
 		default:
 			break;
 		}

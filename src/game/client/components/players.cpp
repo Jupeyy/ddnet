@@ -732,7 +732,7 @@ void CPlayers::OnInit()
 		Graphics()->QuadsSetSubset(0, 1, 1, 0);
 		RenderTools()->QuadContainerAddSprite(m_WeaponEmoteQuadContainerIndex, g_pData->m_Weapons.m_aId[i].m_VisualSize * ScaleX, g_pData->m_Weapons.m_aId[i].m_VisualSize * ScaleY);
 	}
-	float ScaleX, ScaleY;
+	float ScaleX = 1, ScaleY = 1;
 
 	// at the end the hand
 	Graphics()->QuadsSetSubset(0, 0, 1, 1);

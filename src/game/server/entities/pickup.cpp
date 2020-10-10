@@ -68,12 +68,12 @@ void CPickup::Tick()
 			case POWERUP_ARMOR:
 				if(pChr->Team() == TEAM_SUPER)
 					continue;
-				for(int i = WEAPON_SHOTGUN; i < NUM_WEAPONS; i++)
+				for(int n = WEAPON_SHOTGUN; n < NUM_WEAPONS; n++)
 				{
-					if(pChr->GetWeaponGot(i))
+					if(pChr->GetWeaponGot(n))
 					{
-						pChr->SetWeaponGot(i, false);
-						pChr->SetWeaponAmmo(i, 0);
+						pChr->SetWeaponGot(n, false);
+						pChr->SetWeaponAmmo(n, 0);
 						Sound = true;
 					}
 				}
@@ -174,7 +174,8 @@ void CPickup::Snap(int SnappingClient)
 	if(Server()->IsSixup(SnappingClient))
 	{
 		if(m_Type == POWERUP_WEAPON)
-			pP->m_Type = m_Subtype == WEAPON_SHOTGUN ? 3 : m_Subtype == WEAPON_GRENADE ? 2 : 4;
+			pP->m_Type = m_Subtype == WEAPON_SHOTGUN ? 3 : m_Subtype == WEAPON_GRENADE ? 2 :
+                                                                                                     4;
 		else if(m_Type == POWERUP_NINJA)
 			pP->m_Type = 5;
 	}

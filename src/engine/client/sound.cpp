@@ -85,7 +85,7 @@ static int s_WVBufferPosition = 0;
 static int s_WVBufferSize = 0;
 
 const int DefaultDistance = 1500;
-int m_LastBreak = 0;
+static int m_LastBreak = 0;
 
 // TODO: there should be a faster way todo this
 static short Int2Short(int i)

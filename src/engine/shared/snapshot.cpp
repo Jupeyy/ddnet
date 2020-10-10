@@ -282,14 +282,6 @@ int CSnapshotDelta::CreateDelta(CSnapshot *pFrom, CSnapshot *pTo, void *pDstData
 		}
 	}
 
-	if(0)
-	{
-		dbg_msg("snapshot", "%d %d %d",
-			pDelta->m_NumDeletedItems,
-			pDelta->m_NumUpdateItems,
-			pDelta->m_NumTempItems);
-	}
-
 	/*
 	// TODO: pack temp stuff
 

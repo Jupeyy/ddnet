@@ -570,7 +570,7 @@ void aio_write_unlocked(ASYNCIO *aio, const void *buffer, unsigned size)
 		{
 			mem_copy(aio->buffer + aio->write_pos, buffer, remaining_contiguous);
 			size -= remaining_contiguous;
-			buffer = ((unsigned char *)buffer) + remaining_contiguous;
+			buffer = ((const unsigned char *)buffer) + remaining_contiguous;
 			aio->write_pos = 0;
 		}
 		mem_copy(aio->buffer + aio->write_pos, buffer, size);
@@ -1033,22 +1033,22 @@ static void sockaddr_to_netaddr(const struct sockaddr *src, NETADDR *dst)
 	{
 		mem_zero(dst, sizeof(NETADDR));
 		dst->type = NETTYPE_IPV4;
-		dst->port = htons(((struct sockaddr_in *)src)->sin_port);
-		mem_copy(dst->ip, &((struct sockaddr_in *)src)->sin_addr.s_addr, 4);
+		dst->port = htons(((const struct sockaddr_in *)src)->sin_port);
+		mem_copy(dst->ip, &((const struct sockaddr_in *)src)->sin_addr.s_addr, 4);
 	}
 	else if(src->sa_family == AF_WEBSOCKET_INET)
 	{
 		mem_zero(dst, sizeof(NETADDR));
 		dst->type = NETTYPE_WEBSOCKET_IPV4;
-		dst->port = htons(((struct sockaddr_in *)src)->sin_port);
-		mem_copy(dst->ip, &((struct sockaddr_in *)src)->sin_addr.s_addr, 4);
+		dst->port = htons(((const struct sockaddr_in *)src)->sin_port);
+		mem_copy(dst->ip, &((const struct sockaddr_in *)src)->sin_addr.s_addr, 4);
 	}
 	else if(src->sa_family == AF_INET6)
 	{
 		mem_zero(dst, sizeof(NETADDR));
 		dst->type = NETTYPE_IPV6;
-		dst->port = htons(((struct sockaddr_in6 *)src)->sin6_port);
-		mem_copy(dst->ip, &((struct sockaddr_in6 *)src)->sin6_addr.s6_addr, 16);
+		dst->port = htons(((const struct sockaddr_in6 *)src)->sin6_port);
+		mem_copy(dst->ip, &((const struct sockaddr_in6 *)src)->sin6_addr.s6_addr, 16);
 	}
 	else
 	{
@@ -1193,8 +1193,6 @@ static int parse_int(int *out, const char **str)
 		i = (i * 10) + (**str - '0');
 		(*str)++;
 	}
-
-	return 0;
 }
 
 static int parse_char(char c, const char **str)
@@ -2995,7 +2993,7 @@ const char *str_utf8_skip_whitespaces(const char *str)
 
 void str_utf8_trim_right(char *param)
 {
-	const char *str = param;
+	char *str = param;
 	char *end = 0;
 	while(*str)
 	{

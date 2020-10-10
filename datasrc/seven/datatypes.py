@@ -88,7 +88,7 @@ class Struct(BaseType):
 			lines += member.var.EmitPreDefinition(target_name+"."+member.name)
 		return lines
 	def EmitDefinition(self, name):
-		lines = ["/* %s */ {" % self.TargetName()]
+		lines = ["/* const %s */ {" % self.TargetName()]
 		for member in self.Members():
 			lines += ["\t" + " ".join(member.var.EmitDefinition("")) + ","]
 		lines += ["}"]
@@ -232,7 +232,7 @@ class NetObject:
 	def emit_validate(self):
 		lines = ["case %s:" % self.enum_name]
 		lines += ["{"]
-		lines += ["\t%s *pObj = (%s *)pData;"%(self.struct_name, self.struct_name)]
+		lines += ["\tconst %s *pObj = (const %s *)pData;"%(self.struct_name, self.struct_name)]
 		lines += ["\tif(sizeof(*pObj) != Size) return -1;"]
 		for v in self.variables:
 			lines += ["\t"+line for line in v.emit_validate()]

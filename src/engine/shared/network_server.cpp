@@ -13,7 +13,7 @@
 #include <game/generated/protocol.h>
 
 const int DummyMapCrc = 0x6c760ac4;
-unsigned char g_aDummyMapData[] = {
+static unsigned char g_aDummyMapData[] = {
 	0x44, 0x41, 0x54, 0x41, 0x04, 0x00, 0x00, 0x00, 0x22, 0x01, 0x00, 0x00,
 	0x14, 0x01, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00,
 	0x01, 0x00, 0x00, 0x00, 0xd4, 0x00, 0x00, 0x00, 0x0e, 0x00, 0x00, 0x00,
@@ -146,8 +146,8 @@ SECURITY_TOKEN CNetServer::GetToken(const NETADDR &Addr)
 {
 	SHA256_CTX Sha256;
 	sha256_init(&Sha256);
-	sha256_update(&Sha256, (unsigned char *)m_SecurityTokenSeed, sizeof(m_SecurityTokenSeed));
-	sha256_update(&Sha256, (unsigned char *)&Addr, 20); // omit port, bad idea!
+	sha256_update(&Sha256, (const unsigned char *)m_SecurityTokenSeed, sizeof(m_SecurityTokenSeed));
+	sha256_update(&Sha256, (const unsigned char *)&Addr, 20); // omit port, bad idea!
 
 	SECURITY_TOKEN SecurityToken = ToSecurityToken(sha256_finish(&Sha256).data);
 

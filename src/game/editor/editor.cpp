@@ -4553,7 +4553,8 @@ void CEditor::RenderFileDialog()
 			{
 				//scroll
 				float IndexY = View.y - m_FileDialogScrollValue * ScrollNum * 17.0f + NewIndex * 17.0f;
-				int Scroll = View.y > IndexY ? -1 : View.y + View.h < IndexY + 17.0f ? 1 : 0;
+				int Scroll = View.y > IndexY ? -1 : View.y + View.h < IndexY + 17.0f ? 1 :
+                                                                                                       0;
 				if(Scroll)
 				{
 					if(Scroll < 0)
@@ -4597,7 +4598,7 @@ void CEditor::RenderFileDialog()
 			}
 			if(h > Preview.h)
 			{
-				w = w * Preview.h / h,
+				w = w * Preview.h / h;
 				h = Preview.h;
 			}
 
@@ -4672,7 +4673,7 @@ void CEditor::RenderFileDialog()
 				}
 			}
 			FilelistPopulate(!str_comp(m_pFileDialogPath, "maps") || !str_comp(m_pFileDialogPath, "mapres") ? m_FileDialogStorageType :
-															  m_FileList[m_FilesSelectedIndex].m_StorageType);
+                                                                                                                          m_FileList[m_FilesSelectedIndex].m_StorageType);
 			if(m_FilesSelectedIndex >= 0 && !m_FileList[m_FilesSelectedIndex].m_IsDir)
 				str_copy(m_aFileDialogFileName, m_FileList[m_FilesSelectedIndex].m_aFilename, sizeof(m_aFileDialogFileName));
 			else
@@ -5071,8 +5072,8 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 		if(m_Map.m_lEnvelopes.size())
 		{
 			EnvColor = IsEnvelopeUsed(m_SelectedEnvelope) ?
-					   ColorRGBA(1, 0.7f, 0.7f, 0.5f) :
-					   ColorRGBA(0.7f, 1, 0.7f, 0.5f);
+                                           ColorRGBA(1, 0.7f, 0.7f, 0.5f) :
+                                           ColorRGBA(0.7f, 1, 0.7f, 0.5f);
 		}
 
 		RenderTools()->DrawUIRect(&Shifter, EnvColor, 0, 0.0f);
@@ -5916,27 +5917,27 @@ void CEditor::Render()
 				if(m_apSavedBrushes[Slot])
 				{
 					CLayerGroup *pPrev = m_apSavedBrushes[Slot];
-					for(int i = 0; i < pPrev->m_lLayers.size(); i++)
+					for(int n = 0; n < pPrev->m_lLayers.size(); n++)
 					{
-						if(pPrev->m_lLayers[i]->m_BrushRefCount == 1)
-							delete pPrev->m_lLayers[i];
+						if(pPrev->m_lLayers[n]->m_BrushRefCount == 1)
+							delete pPrev->m_lLayers[n];
 						else
-							pPrev->m_lLayers[i]->m_BrushRefCount--;
+							pPrev->m_lLayers[n]->m_BrushRefCount--;
 					}
 				}
 				delete m_apSavedBrushes[Slot];
 				m_apSavedBrushes[Slot] = new CLayerGroup(m_Brush);
 
-				for(int i = 0; i < m_apSavedBrushes[Slot]->m_lLayers.size(); i++)
-					m_apSavedBrushes[Slot]->m_lLayers[i]->m_BrushRefCount++;
+				for(int n = 0; n < m_apSavedBrushes[Slot]->m_lLayers.size(); n++)
+					m_apSavedBrushes[Slot]->m_lLayers[n]->m_BrushRefCount++;
 			}
 			else if(m_apSavedBrushes[Slot])
 			{
 				dbg_msg("editor", "loading brush from slot %d", Slot);
 
 				CLayerGroup *pNew = m_apSavedBrushes[Slot];
-				for(int i = 0; i < pNew->m_lLayers.size(); i++)
-					pNew->m_lLayers[i]->m_BrushRefCount++;
+				for(int n = 0; n < pNew->m_lLayers.size(); n++)
+					pNew->m_lLayers[n]->m_BrushRefCount++;
 
 				m_Brush = *pNew;
 			}
