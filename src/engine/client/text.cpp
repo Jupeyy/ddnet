@@ -994,7 +994,7 @@ public:
 				SFontSizeChar *pChr = GetChar(pFont, pSizeData, Character);
 				if(pChr)
 				{
-					bool ApplyBearingX = !(((m_RenderFlags & TEXT_RENDER_FLAG_NO_X_BEARING) != 0) || (CharacterCounter == 0 && (m_RenderFlags & TEXT_RENDER_FLAG_NO_FIRST_CHARACTER_X_BEARING) != 0));
+					bool ApplyBearingX = !(((m_RenderFlags & TEXT_RENDER_FLAG_NO_X_BEARING) != 0) || (CharacterCounter == 0 && (m_RenderFlags & TEXT_RENDER_FLAG_NO_FIRST_CHARACTER_X_BEARING) != 0 && Character != ' '));
 					float Advance = ((((m_RenderFlags & TEXT_RENDER_FLAG_ONLY_ADVANCE_WIDTH) != 0) ? (pChr->m_Width) : (pChr->m_AdvanceX + ((!ApplyBearingX) ? (-pChr->m_OffsetX) : 0.f)))) * Scale;
 
 					float CharKerning = 0.f;
@@ -1041,7 +1041,7 @@ public:
 
 					pCursor->m_MaxCharacterHeight = maximum(pCursor->m_MaxCharacterHeight, CharHeight + BearingY);
 
-					if(NextCharacter == 0 && (m_RenderFlags & TEXT_RENDER_FLAG_NO_LAST_CHARACTER_ADVANCE) != 0)
+					if(NextCharacter == 0 && (m_RenderFlags & TEXT_RENDER_FLAG_NO_LAST_CHARACTER_ADVANCE) != 0 && Character != ' ')
 						DrawX += BearingX + CharKerning + CharWidth;
 					else
 						DrawX += Advance * Size + CharKerning;
@@ -1316,7 +1316,7 @@ public:
 				SFontSizeChar *pChr = GetChar(TextContainer.m_pFont, pSizeData, Character);
 				if(pChr)
 				{
-					bool ApplyBearingX = !(((RenderFlags & TEXT_RENDER_FLAG_NO_X_BEARING) != 0) || (CharacterCounter == 0 && (RenderFlags & TEXT_RENDER_FLAG_NO_FIRST_CHARACTER_X_BEARING) != 0));
+					bool ApplyBearingX = !(((RenderFlags & TEXT_RENDER_FLAG_NO_X_BEARING) != 0) || (CharacterCounter == 0 && (RenderFlags & TEXT_RENDER_FLAG_NO_FIRST_CHARACTER_X_BEARING) != 0 && Character != ' '));
 					float Advance = ((((RenderFlags & TEXT_RENDER_FLAG_ONLY_ADVANCE_WIDTH) != 0) ? (pChr->m_Width) : (pChr->m_AdvanceX + ((!ApplyBearingX) ? (-pChr->m_OffsetX) : 0.f)))) * Scale;
 
 					float CharKerning = 0.f;
@@ -1395,7 +1395,7 @@ public:
 
 					pCursor->m_MaxCharacterHeight = maximum(pCursor->m_MaxCharacterHeight, CharHeight + BearingY);
 
-					if(NextCharacter == 0 && (RenderFlags & TEXT_RENDER_FLAG_NO_LAST_CHARACTER_ADVANCE) != 0)
+					if(NextCharacter == 0 && (RenderFlags & TEXT_RENDER_FLAG_NO_LAST_CHARACTER_ADVANCE) != 0 && Character != ' ')
 						DrawX += BearingX + CharKerning + CharWidth;
 					else
 						DrawX += Advance * Size + CharKerning;
