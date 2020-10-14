@@ -751,9 +751,9 @@ void CChat::AddLine(int ClientID, int Team, const char *pLine)
 				Highlighted = true;
 			}
 			else
-				str_copy(pCurrentLine->m_aName, m_pClient->m_aClients[ClientID].m_aName, sizeof(pCurrentLine->m_aName));
+				str_format(pCurrentLine->m_aName, sizeof(pCurrentLine->m_aName), "%s", m_pClient->m_aClients[ClientID].m_aName);
 
-			str_format(pCurrentLine->m_aText, sizeof(pCurrentLine->m_aText), ": %s", pLine);
+			str_format(pCurrentLine->m_aText, sizeof(pCurrentLine->m_aText), "%s", pLine);
 			pCurrentLine->m_Friend = m_pClient->m_aClients[ClientID].m_Friend;
 		}
 
@@ -944,6 +944,15 @@ void CChat::OnPrepareLines()
 				TextRender()->AppendTextContainer(&Cursor, m_aLines[r].m_TextContainerIndex, aCount);
 		}
 
+		if(m_aLines[r].m_ClientID >= 0 && m_aLines[r].m_aName[0] != '\0')
+		{
+			TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
+			if(m_aLines[r].m_TextContainerIndex == -1)
+				m_aLines[r].m_TextContainerIndex = TextRender()->CreateTextContainer(&Cursor, ": ");
+			else
+				TextRender()->AppendTextContainer(&Cursor, m_aLines[r].m_TextContainerIndex, ": ");
+		}
+
 		// render line
 		ColorRGBA Color;
 		if(m_aLines[r].m_ClientID == -1) // system
@@ -959,10 +968,13 @@ void CChat::OnPrepareLines()
 
 		TextRender()->TextColor(Color);
 
+		CTextCursor AppendCursor = Cursor;
+		AppendCursor.m_StartX = AppendCursor.m_X;
+
 		if(m_aLines[r].m_TextContainerIndex == -1)
 			m_aLines[r].m_TextContainerIndex = TextRender()->CreateTextContainer(&Cursor, m_aLines[r].m_aText);
 		else
-			TextRender()->AppendTextContainer(&Cursor, m_aLines[r].m_TextContainerIndex, m_aLines[r].m_aText);
+			TextRender()->AppendTextContainer(&AppendCursor, m_aLines[r].m_TextContainerIndex, m_aLines[r].m_aText);
 	}
 
 	TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);

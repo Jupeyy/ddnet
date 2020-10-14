@@ -22,7 +22,7 @@ class CChat : public CComponent
 		int m_ClientID;
 		int m_Team;
 		int m_NameColor;
-		char m_aName[64];
+		char m_aName[64 + 12]; // add some extra space for chat specialization
 		char m_aText[512];
 		bool m_Friend;
 		bool m_Highlighted;
