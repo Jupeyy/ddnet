@@ -29,8 +29,14 @@ CEntity::CEntity(CGameWorld *pGameWorld, int ObjType)
 
 CEntity::~CEntity()
 {
+}
+
+bool CEntity::Destroy()
+{
 	if(GameWorld())
 		GameWorld()->RemoveEntity(this);
+
+	return true;
 }
 
 int CEntity::NetworkClipped(vec2 ViewPos)

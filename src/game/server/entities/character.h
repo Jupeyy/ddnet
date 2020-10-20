@@ -46,7 +46,7 @@ public:
 	CCharacter(CGameWorld *pWorld);
 
 	virtual void Reset();
-	virtual void Destroy();
+	virtual bool Destroy();
 	virtual void Tick();
 	virtual void TickDefered();
 	virtual void TickPaused();

@@ -27,7 +27,12 @@ CGameWorld::~CGameWorld()
 	// delete all entities
 	for(int i = 0; i < NUM_ENTTYPES; i++)
 		while(m_apFirstEntityTypes[i])
-			delete m_apFirstEntityTypes[i];
+		{
+			CEntity *pEnt = m_apFirstEntityTypes[i];
+			RemoveEntity(pEnt);
+			pEnt->Destroy();
+			delete pEnt;
+		}
 }
 
 void CGameWorld::SetGameServer(CGameContext *pGameServer)
@@ -144,7 +149,8 @@ void CGameWorld::RemoveEntities()
 			if(pEnt->m_MarkedForDestroy)
 			{
 				RemoveEntity(pEnt);
-				pEnt->Destroy();
+				if(pEnt->Destroy())
+					delete pEnt;
 			}
 			pEnt = m_pNextTraverseEntity;
 		}

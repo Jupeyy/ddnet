@@ -92,7 +92,7 @@ public:
 		Function: destroy
 			Destroys the entity.
 	*/
-	virtual void Destroy() { delete this; }
+	virtual bool Destroy();
 
 	/*
 		Function: reset

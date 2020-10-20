@@ -31,7 +31,12 @@ CGameWorld::~CGameWorld()
 	// delete all entities
 	for(int i = 0; i < NUM_ENTTYPES; i++)
 		while(m_apFirstEntityTypes[i])
-			delete m_apFirstEntityTypes[i];
+		{
+			CEntity *pEnt = m_apFirstEntityTypes[i];
+			RemoveEntity(pEnt);
+			pEnt->Destroy();
+			delete pEnt;
+		}
 	if(m_pChild && m_pChild->m_pParent == this)
 	{
 		OnModified();
@@ -172,7 +177,8 @@ void CGameWorld::RemoveEntities()
 			if(pEnt->m_MarkedForDestroy)
 			{
 				RemoveEntity(pEnt);
-				pEnt->Destroy();
+				if(pEnt->Destroy())
+					delete pEnt;
 			}
 			pEnt = m_pNextTraverseEntity;
 		}
@@ -529,7 +535,12 @@ void CGameWorld::CopyWorld(CGameWorld *pFrom)
 	// delete the previous entities
 	for(int i = 0; i < NUM_ENTTYPES; i++)
 		while(m_apFirstEntityTypes[i])
-			delete m_apFirstEntityTypes[i];
+		{
+			CEntity *pEnt = m_apFirstEntityTypes[i];
+			RemoveEntity(pEnt);
+			pEnt->Destroy();
+			delete pEnt;
+		}
 	for(int i = 0; i < MAX_CLIENTS; i++)
 	{
 		m_apCharacters[i] = 0;
@@ -589,5 +600,10 @@ void CGameWorld::Clear()
 	// delete all entities
 	for(int i = 0; i < NUM_ENTTYPES; i++)
 		while(m_apFirstEntityTypes[i])
-			delete m_apFirstEntityTypes[i];
+		{
+			CEntity *pEnt = m_apFirstEntityTypes[i];
+			RemoveEntity(pEnt);
+			pEnt->Destroy();
+			delete pEnt;
+		}
 }

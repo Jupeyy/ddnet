@@ -24,8 +24,12 @@ CEntity::CEntity(CGameWorld *pGameWorld, int ObjType)
 
 CEntity::~CEntity()
 {
-	GameWorld()->RemoveEntity(this);
 	Server()->SnapFreeID(m_ID);
+}
+
+bool CEntity::Destroy()
+{
+	return true;
 }
 
 int CEntity::NetworkClipped(int SnappingClient)
