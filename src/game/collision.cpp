@@ -317,7 +317,7 @@ int CCollision::IntersectLine(vec2 Pos0, vec2 Pos1, vec2 *pOutCollision, vec2 *p
 	for(int i = 0; i <= End; i++)
 	{
 		float a = i / (float)End;
-		vec2 Pos = mix(Pos0, Pos1, a);
+		vec2 Pos = lerp(Pos0, Pos1, a);
 		ix = round_to_int(Pos.x);
 		iy = round_to_int(Pos.y);
 
@@ -350,7 +350,7 @@ int CCollision::IntersectLineTeleHook(vec2 Pos0, vec2 Pos1, vec2 *pOutCollision,
 	for(int i = 0; i <= End; i++)
 	{
 		float a = i / (float)End;
-		vec2 Pos = mix(Pos0, Pos1, a);
+		vec2 Pos = lerp(Pos0, Pos1, a);
 		ix = round_to_int(Pos.x);
 		iy = round_to_int(Pos.y);
 
@@ -405,7 +405,7 @@ int CCollision::IntersectLineTeleWeapon(vec2 Pos0, vec2 Pos1, vec2 *pOutCollisio
 	for(int i = 0; i <= End; i++)
 	{
 		float a = i / (float)End;
-		vec2 Pos = mix(Pos0, Pos1, a);
+		vec2 Pos = lerp(Pos0, Pos1, a);
 		ix = round_to_int(Pos.x);
 		iy = round_to_int(Pos.y);
 
@@ -946,7 +946,7 @@ std::list<int> CCollision::GetMapIndices(vec2 PrevPos, vec2 Pos, unsigned MaxInd
 		for(int i = 0; i < End; i++)
 		{
 			a = i / d;
-			Tmp = mix(PrevPos, Pos, a);
+			Tmp = lerp(PrevPos, Pos, a);
 			Nx = clamp((int)Tmp.x / 32, 0, m_Width - 1);
 			Ny = clamp((int)Tmp.y / 32, 0, m_Height - 1);
 			Index = Ny * m_Width + Nx;
@@ -1030,7 +1030,7 @@ int CCollision::GetIndex(vec2 PrevPos, vec2 Pos)
 	for(int i = 0, id = (int)ceilf(Distance); i < id; i++)
 	{
 		a = (float)i / Distance;
-		Tmp = mix(PrevPos, Pos, a);
+		Tmp = lerp(PrevPos, Pos, a);
 		Nx = clamp((int)Tmp.x / 32, 0, m_Width - 1);
 		Ny = clamp((int)Tmp.y / 32, 0, m_Height - 1);
 		if((m_pTele) ||
@@ -1196,7 +1196,7 @@ int CCollision::IntersectNoLaser(vec2 Pos0, vec2 Pos1, vec2 *pOutCollision, vec2
 	for(int i = 0, id = (int)ceilf(d); i < id; i++)
 	{
 		float a = (int)i / d;
-		vec2 Pos = mix(Pos0, Pos1, a);
+		vec2 Pos = lerp(Pos0, Pos1, a);
 		int Nx = clamp(round_to_int(Pos.x) / 32, 0, m_Width - 1);
 		int Ny = clamp(round_to_int(Pos.y) / 32, 0, m_Height - 1);
 		if(GetIndex(Nx, Ny) == TILE_SOLID || GetIndex(Nx, Ny) == TILE_NOHOOK || GetIndex(Nx, Ny) == TILE_NOLASER || GetFIndex(Nx, Ny) == TILE_NOLASER)
@@ -1227,7 +1227,7 @@ int CCollision::IntersectNoLaserNW(vec2 Pos0, vec2 Pos1, vec2 *pOutCollision, ve
 	for(int i = 0, id = (int)ceilf(d); i < id; i++)
 	{
 		float a = (float)i / d;
-		vec2 Pos = mix(Pos0, Pos1, a);
+		vec2 Pos = lerp(Pos0, Pos1, a);
 		if(IsNoLaser(round_to_int(Pos.x), round_to_int(Pos.y)) || IsFNoLaser(round_to_int(Pos.x), round_to_int(Pos.y)))
 		{
 			if(pOutCollision)
@@ -1256,7 +1256,7 @@ int CCollision::IntersectAir(vec2 Pos0, vec2 Pos1, vec2 *pOutCollision, vec2 *pO
 	for(int i = 0, id = (int)ceilf(d); i < id; i++)
 	{
 		float a = (float)i / d;
-		vec2 Pos = mix(Pos0, Pos1, a);
+		vec2 Pos = lerp(Pos0, Pos1, a);
 		if(IsSolid(round_to_int(Pos.x), round_to_int(Pos.y)) || (!GetTile(round_to_int(Pos.x), round_to_int(Pos.y)) && !GetFTile(round_to_int(Pos.x), round_to_int(Pos.y))))
 		{
 			if(pOutCollision)

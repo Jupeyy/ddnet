@@ -3,8 +3,8 @@
 #ifndef GAME_GAMECORE_H
 #define GAME_GAMECORE_H
 
-#include <base/math.h>
 #include <base/system.h>
+#include <base/vmath.h>
 
 #include <map>
 #include <vector>

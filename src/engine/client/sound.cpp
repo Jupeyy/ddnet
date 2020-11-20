@@ -104,7 +104,7 @@ static int IntAbs(int i)
 	return i;
 }
 
-static void Mix(short *pFinalOut, unsigned Frames)
+static void lerp(short *pFinalOut, unsigned Frames)
 {
 	int MasterVol;
 	mem_zero(m_pMixBuffer, m_MaxFrames * 2 * sizeof(int));
@@ -282,11 +282,11 @@ static void SdlCallback(void *pUnused, Uint8 *pStream, int Len)
 	(void)pUnused;
 #if defined(CONF_VIDEORECORDER)
 	if(!(IVideo::Current() && g_Config.m_ClVideoSndEnable))
-		Mix((short *)pStream, Len / 2 / 2);
+		lerp((short *)pStream, Len / 2 / 2);
 	else
 		IVideo::Current()->NextAudioFrame(Mix);
 #else
-	Mix((short *)pStream, Len / 2 / 2);
+	lerp((short *)pStream, Len / 2 / 2);
 #endif
 }
 

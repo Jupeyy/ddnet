@@ -215,13 +215,13 @@ void CCharacter::HandleNinja()
 	if(m_Ninja.m_CurrentMoveTime == 0)
 	{
 		// reset velocity
-		m_Core.m_Vel = m_Ninja.m_ActivationDir * m_Ninja.m_OldVelAmount;
+		m_Core.m_Vel = m_Ninja.m_ActivationDir * (float)m_Ninja.m_OldVelAmount;
 	}
 
 	if(m_Ninja.m_CurrentMoveTime > 0)
 	{
 		// Set velocity
-		m_Core.m_Vel = m_Ninja.m_ActivationDir * g_pData->m_Weapons.m_Ninja.m_Velocity;
+		m_Core.m_Vel = m_Ninja.m_ActivationDir * (float)g_pData->m_Weapons.m_Ninja.m_Velocity;
 		vec2 OldPos = m_Pos;
 		GameServer()->Collision()->MoveBox(&m_Core.m_Pos, &m_Core.m_Vel, vec2(m_ProximityRadius, m_ProximityRadius), 0.f);
 
@@ -519,7 +519,7 @@ void CCharacter::FireWeapon()
 				float a = GetAngle(Direction);
 				a += Spreading[i+2];
 				float v = 1-(absolute(i)/(float)ShotSpread);
-				float Speed = mix((float)GameServer()->Tuning()->m_ShotgunSpeeddiff, 1.0f, v);
+				float Speed = lerp((float)GameServer()->Tuning()->m_ShotgunSpeeddiff, 1.0f, v);
 				CProjectile *pProj = new CProjectile(GameWorld(), WEAPON_SHOTGUN,
 					m_pPlayer->GetCID(),
 					ProjStartPos,
@@ -1286,7 +1286,8 @@ void CCharacter::Snap(int SnappingClient)
 	if(m_Core.m_ActiveWeapon == WEAPON_NINJA)
 		pDDNetCharacter->m_Flags |= CHARACTERFLAG_WEAPON_NINJA;
 
-	pDDNetCharacter->m_FreezeEnd = m_DeepFreeze ? -1 : m_FreezeTime == 0 ? 0 : Server()->Tick() + m_FreezeTime;
+	pDDNetCharacter->m_FreezeEnd = m_DeepFreeze ? -1 : m_FreezeTime == 0 ? 0 :
+                                                                               Server()->Tick() + m_FreezeTime;
 	pDDNetCharacter->m_Jumps = m_Core.m_Jumps;
 	pDDNetCharacter->m_TeleCheckpoint = m_TeleCheckpoint;
 	pDDNetCharacter->m_StrongWeakID = m_StrongWeakID;
@@ -1410,7 +1411,7 @@ void CCharacter::HandleSkippableTiles(int Index)
 		GameServer()->Collision()->GetSpeedup(Index, &Direction, &Force, &MaxSpeed);
 		if(Force == 255 && MaxSpeed)
 		{
-			m_Core.m_Vel = Direction * (MaxSpeed / 5);
+			m_Core.m_Vel = Direction * (float)(MaxSpeed / 5);
 		}
 		else
 		{
@@ -1447,14 +1448,14 @@ void CCharacter::HandleSkippableTiles(int Index)
 				DiffAngle = SpeederAngle - TeeAngle;
 				SpeedLeft = MaxSpeed / 5.0f - cos(DiffAngle) * TeeSpeed;
 				if(abs((int)SpeedLeft) > Force && SpeedLeft > 0.0000001f)
-					TempVel += Direction * Force;
+					TempVel += Direction * (float)Force;
 				else if(abs((int)SpeedLeft) > Force)
-					TempVel += Direction * -Force;
+					TempVel += Direction * (float)-Force;
 				else
 					TempVel += Direction * SpeedLeft;
 			}
 			else
-				TempVel += Direction * Force;
+				TempVel += Direction * (float)Force;
 
 			m_Core.m_Vel = ClampVel(m_MoveRestrictions, TempVel);
 		}

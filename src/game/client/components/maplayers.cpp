@@ -103,7 +103,7 @@ void CMapLayers::EnvelopeEval(int TimeOffsetMillis, int Env, float *pChannels, v
 			{
 				// get the lerp of the current tick and prev
 				int MinTick = pThis->Client()->PrevGameTick(g_Config.m_ClDummy);
-				s_Time = (int64)(mix<double>(
+				s_Time = (int64)(lerp<double>(
 							 0,
 							 (pThis->Client()->GameTick(g_Config.m_ClDummy) - MinTick),
 							 pThis->Client()->IntraGameTick(g_Config.m_ClDummy)) *
@@ -113,7 +113,7 @@ void CMapLayers::EnvelopeEval(int TimeOffsetMillis, int Env, float *pChannels, v
 			else
 			{
 				int MinTick = pThis->m_LastLocalTick;
-				s_Time = (int64)(mix<double>(0,
+				s_Time = (int64)(lerp<double>(0,
 							 pThis->m_CurrentLocalTick - MinTick,
 							 pThis->Client()->IntraGameTick(g_Config.m_ClDummy)) *
 						 TickToMicroSeconds) +
@@ -130,7 +130,7 @@ void CMapLayers::EnvelopeEval(int TimeOffsetMillis, int Env, float *pChannels, v
 			{
 				// get the lerp of the current tick and prev
 				int MinTick = pThis->Client()->PrevGameTick(g_Config.m_ClDummy);
-				s_Time = (int64)(mix<double>(
+				s_Time = (int64)(lerp<double>(
 							 0,
 							 (pThis->Client()->GameTick(g_Config.m_ClDummy) - MinTick),
 							 pThis->Client()->IntraGameTick(g_Config.m_ClDummy)) *

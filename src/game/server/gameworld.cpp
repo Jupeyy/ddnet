@@ -316,7 +316,7 @@ CCharacter *CGameWorld::IntersectCharacter(vec2 Pos0, vec2 Pos1, float Radius, v
 			continue;
 
 		vec2 IntersectPos;
-		if(closest_point_on_line(Pos0, Pos1, p->m_Pos, IntersectPos))
+		if(closest_point_on_line<float>(Pos0, Pos1, p->m_Pos, IntersectPos))
 		{
 			float Len = distance(p->m_Pos, IntersectPos);
 			if(Len < p->m_ProximityRadius + Radius)
@@ -372,7 +372,7 @@ std::list<class CCharacter *> CGameWorld::IntersectedCharacters(vec2 Pos0, vec2 
 			continue;
 
 		vec2 IntersectPos;
-		if(closest_point_on_line(Pos0, Pos1, pChr->m_Pos, IntersectPos))
+		if(closest_point_on_line<float>(Pos0, Pos1, pChr->m_Pos, IntersectPos))
 		{
 			float Len = distance(pChr->m_Pos, IntersectPos);
 			if(Len < pChr->m_ProximityRadius + Radius)

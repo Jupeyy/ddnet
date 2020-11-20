@@ -85,7 +85,7 @@ void CItems::RenderProjectile(const CNetObj_Projectile *pCurrent, int ItemID)
 	// don't check for validity of the projectile for the current weapon here, so particle effects are rendered for mod compability
 	if(CurWeapon == WEAPON_GRENADE)
 	{
-		m_pClient->m_pEffects->SmokeTrail(Pos, Vel * -1, Alpha);
+		m_pClient->m_pEffects->SmokeTrail(Pos, Vel * (float)-1, Alpha);
 		static float s_Time = 0.0f;
 		static float s_LastLocalTime = LocalTime();
 
@@ -151,7 +151,7 @@ void CItems::RenderPickup(const CNetObj_Pickup *pPrev, const CNetObj_Pickup *pCu
 	int QuadOffset = 2;
 
 	float IntraTick = IsPredicted ? Client()->PredIntraGameTick(g_Config.m_ClDummy) : Client()->IntraGameTick(g_Config.m_ClDummy);
-	vec2 Pos = mix(vec2(pPrev->m_X, pPrev->m_Y), vec2(pCurrent->m_X, pCurrent->m_Y), IntraTick);
+	vec2 Pos = lerp(vec2(pPrev->m_X, pPrev->m_Y), vec2(pCurrent->m_X, pCurrent->m_Y), IntraTick);
 	float Angle = 0.0f;
 	if(pCurrent->m_Type == POWERUP_WEAPON)
 	{
@@ -211,7 +211,7 @@ void CItems::RenderFlag(const CNetObj_Flag *pPrev, const CNetObj_Flag *pCurrent,
 
 	Graphics()->QuadsSetRotation(Angle);
 
-	vec2 Pos = mix(vec2(pPrev->m_X, pPrev->m_Y), vec2(pCurrent->m_X, pCurrent->m_Y), Client()->IntraGameTick(g_Config.m_ClDummy));
+	vec2 Pos = lerp(vec2(pPrev->m_X, pPrev->m_Y), vec2(pCurrent->m_X, pCurrent->m_Y), Client()->IntraGameTick(g_Config.m_ClDummy));
 
 	if(pCurGameData)
 	{
@@ -551,7 +551,7 @@ void CItems::ReconstructSmokeTrail(const CNetObj_Projectile *pCurrent, int ItemI
 			TimePassed = minimum(TimePassed, (TimePassed - MinTrailSpan) / (Pt - MinTrailSpan) * (MinTrailSpan * 0.5f) + MinTrailSpan);
 		// add particle for this projectile
 		if(pCurrent->m_Type == WEAPON_GRENADE)
-			m_pClient->m_pEffects->SmokeTrail(Pos, Vel * -1, Alpha, TimePassed);
+			m_pClient->m_pEffects->SmokeTrail(Pos, Vel * (float)-1, Alpha, TimePassed);
 		else
 			m_pClient->m_pEffects->BulletTrail(Pos, Alpha, TimePassed);
 	}

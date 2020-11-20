@@ -181,7 +181,7 @@ void CGameContext::CreateDamageInd(vec2 Pos, float Angle, int Amount, int64 Mask
 	float e = a + pi / 3;
 	for(int i = 0; i < Amount; i++)
 	{
-		float f = mix(s, e, float(i + 1) / float(Amount + 2));
+		float f = lerp(s, e, float(i + 1) / float(Amount + 2));
 		CNetEvent_DamageInd *pEvent = (CNetEvent_DamageInd *)m_Events.Create(NETEVENTTYPE_DAMAGEIND, sizeof(CNetEvent_DamageInd), Mask);
 		if(pEvent)
 		{
@@ -253,7 +253,7 @@ void CGameContext::CreateExplosion(vec2 Pos, int Owner, int Weapon, bool NoDamag
 				TeamMask = CmaskUnset(TeamMask, PlayerTeam);
 			}
 
-			apEnts[i]->TakeDamage(ForceDir * Dmg * 2, (int)Dmg, Owner, Weapon);
+			apEnts[i]->TakeDamage(ForceDir * Dmg * (float)2, (int)Dmg, Owner, Weapon);
 		}
 	}
 }
@@ -1580,7 +1580,8 @@ void *CGameContext::PreProcessMsg(int *MsgID, CUnpacker *pUnpacker, int ClientID
 			if(pMsg7->m_Force)
 			{
 				str_format(s_aRawMsg, sizeof(s_aRawMsg), "force_vote \"%s\" \"%s\" \"%s\"", pMsg7->m_Type, pMsg7->m_Value, pMsg7->m_Reason);
-				Console()->SetAccessLevel(Authed == AUTHED_ADMIN ? IConsole::ACCESS_LEVEL_ADMIN : Authed == AUTHED_MOD ? IConsole::ACCESS_LEVEL_MOD : IConsole::ACCESS_LEVEL_HELPER);
+				Console()->SetAccessLevel(Authed == AUTHED_ADMIN ? IConsole::ACCESS_LEVEL_ADMIN : Authed == AUTHED_MOD ? IConsole::ACCESS_LEVEL_MOD :
+                                                                                                                                         IConsole::ACCESS_LEVEL_HELPER);
 				Console()->ExecuteLine(s_aRawMsg, ClientID, false);
 				Console()->SetAccessLevel(IConsole::ACCESS_LEVEL_ADMIN);
 				return 0;
@@ -1751,7 +1752,8 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 
 					int Authed = Server()->GetAuthedState(ClientID);
 					if(Authed)
-						Console()->SetAccessLevel(Authed == AUTHED_ADMIN ? IConsole::ACCESS_LEVEL_ADMIN : Authed == AUTHED_MOD ? IConsole::ACCESS_LEVEL_MOD : IConsole::ACCESS_LEVEL_HELPER);
+						Console()->SetAccessLevel(Authed == AUTHED_ADMIN ? IConsole::ACCESS_LEVEL_ADMIN : Authed == AUTHED_MOD ? IConsole::ACCESS_LEVEL_MOD :
+                                                                                                                                                         IConsole::ACCESS_LEVEL_HELPER);
 					else
 						Console()->SetAccessLevel(IConsole::ACCESS_LEVEL_USER);
 					Console()->SetPrintOutputLevel(m_ChatPrintCBIndex, 0);

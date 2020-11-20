@@ -204,7 +204,7 @@ void CEffects::Explosion(vec2 Pos)
 				continue;
 
 			float a = 1 - (length(vec2(x, y)) / length(vec2(8, 8)));
-			m_pClient->m_pFlow->Add(Pos + vec2(x, y) * 16, normalize(vec2(x, y)) * 5000.0f * a, 10.0f);
+			m_pClient->m_pFlow->Add(Pos + vec2(x, y) * (float)16, normalize(vec2(x, y)) * 5000.0f * a, 10.0f);
 		}
 
 	// add the explosion
@@ -231,7 +231,7 @@ void CEffects::Explosion(vec2 Pos)
 		p.m_EndSize = 0;
 		p.m_Gravity = frandom() * -800.0f;
 		p.m_Friction = 0.4f;
-		p.m_Color = mix(vec4(0.75f, 0.75f, 0.75f, 1.0f), vec4(0.5f, 0.5f, 0.5f, 1.0f), frandom());
+		p.m_Color = lerp(vec4(0.75f, 0.75f, 0.75f, 1.0f), vec4(0.5f, 0.5f, 0.5f, 1.0f), frandom());
 		m_pClient->m_pParticles->Add(CParticles::GROUP_GENERAL, &p);
 	}
 }

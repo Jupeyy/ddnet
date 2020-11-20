@@ -107,7 +107,7 @@ void CMapSounds::OnRender()
 		static float s_Time = 0.0f;
 		if(m_pClient->m_Snap.m_pGameInfoObj) // && !(m_pClient->m_Snap.m_pGameInfoObj->m_GameStateFlags&GAMESTATEFLAG_PAUSED))
 		{
-			s_Time = mix((Client()->PrevGameTick(g_Config.m_ClDummy) - m_pClient->m_Snap.m_pGameInfoObj->m_RoundStartTick) / (float)Client()->GameTickSpeed(),
+			s_Time = lerp((Client()->PrevGameTick(g_Config.m_ClDummy) - m_pClient->m_Snap.m_pGameInfoObj->m_RoundStartTick) / (float)Client()->GameTickSpeed(),
 				(Client()->GameTick(g_Config.m_ClDummy) - m_pClient->m_Snap.m_pGameInfoObj->m_RoundStartTick) / (float)Client()->GameTickSpeed(),
 				Client()->IntraGameTick(g_Config.m_ClDummy));
 		}

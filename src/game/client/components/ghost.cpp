@@ -231,7 +231,7 @@ void CGhost::CheckStartLocal(bool Predicted)
 			int TickDiff = CurTick - PrevTick;
 			for(int i = 0; i < TickDiff; i++)
 			{
-				if(CRaceHelper::IsStart(m_pClient, mix(PrevPos, Pos, (float)i / TickDiff), mix(PrevPos, Pos, (float)(i + 1) / TickDiff)))
+				if(CRaceHelper::IsStart(m_pClient, lerp(PrevPos, Pos, (float)i / TickDiff), lerp(PrevPos, Pos, (float)(i + 1) / TickDiff)))
 				{
 					RecordTick = PrevTick + i + 1;
 					if(!m_AllowRestart)

@@ -109,7 +109,7 @@ void CProjectile::Tick()
 		if(Collide && m_Bouncing != 0)
 		{
 			m_StartTick = GameWorld()->GameTick();
-			m_Pos = NewPos + (-(m_Direction * 4));
+			m_Pos = NewPos + (-(m_Direction * (float)4));
 			if(m_Bouncing == 1)
 				m_Direction.x = -m_Direction.x;
 			else if(m_Bouncing == 2)

@@ -36,6 +36,8 @@ CBackgroundEngineMap *CMenuBackground::CreateBGMap()
 	return new CMenuMap;
 }
 
+#include <fenv.h>
+
 void CMenuBackground::OnInit()
 {
 	m_pBackgroundMap = CreateBGMap();
@@ -51,6 +53,8 @@ void CMenuBackground::OnInit()
 	m_Camera.m_pClient = GameClient();
 	m_Camera.m_ZoomSet = false;
 	m_Camera.m_ZoomSmoothingTarget = 0;
+
+	feenableexcept(FE_INVALID);
 }
 
 void CMenuBackground::ResetPositions()

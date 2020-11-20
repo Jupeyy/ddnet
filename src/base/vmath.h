@@ -3,10 +3,13 @@
 #ifndef BASE_VMATH_H
 #define BASE_VMATH_H
 
-#include <math.h>
-
 #include "math.h"
 
+#include <glm/common.hpp>
+#include <glm/geometric.hpp>
+#include <glm/vec2.hpp>
+
+typedef glm::vec2 vec2;
 // ------------------------------------
 
 template<typename T>
@@ -82,52 +85,48 @@ public:
 	T &operator[](const int index) { return index ? y : x; }
 };
 
-template<typename T>
-inline T length(const vector2_base<T> &a)
+typedef vector2_base<bool> bvec2;
+typedef vector2_base<int> ivec2;
+
+inline float length(const vec2 &a)
 {
-	return sqrtf(a.x * a.x + a.y * a.y);
+	return glm::sqrt(a.x * a.x + a.y * a.y);
+}
+
+inline float distance(const vec2 &a, const vec2 &b)
+{
+	return glm::length(a - b);
+}
+
+inline vec2 normalize(const vec2 &v)
+{
+	vec2 vtmp = glm::normalize(v);
+	return vtmp;
 }
 
 template<typename T>
-inline T distance(const vector2_base<T> a, const vector2_base<T> &b)
-{
-	return length(a - b);
-}
-
-template<typename T>
-inline T dot(const vector2_base<T> a, const vector2_base<T> &b)
+inline T dot(const vec2 a, const vec2 &b)
 {
 	return a.x * b.x + a.y * b.y;
 }
 
 template<typename T>
-inline vector2_base<T> normalize(const vector2_base<T> &v)
+inline vec2 normalize_pre_length(const vec2 &v, T len)
 {
-	T l = (T)(1.0f / sqrtf(v.x * v.x + v.y * v.y));
-	return vector2_base<T>(v.x * l, v.y * l);
+	return vec2(v.x / len, v.y / len);
 }
 
 template<typename T>
-inline vector2_base<T> normalize_pre_length(const vector2_base<T> &v, T len)
+inline bool closest_point_on_line(vec2 line_point0, vec2 line_point1, vec2 target_point, vec2 &out_pos)
 {
-	return vector2_base<T>(v.x / len, v.y / len);
-}
-
-typedef vector2_base<float> vec2;
-typedef vector2_base<bool> bvec2;
-typedef vector2_base<int> ivec2;
-
-template<typename T>
-inline bool closest_point_on_line(vector2_base<T> line_point0, vector2_base<T> line_point1, vector2_base<T> target_point, vector2_base<T> &out_pos)
-{
-	vector2_base<T> c = target_point - line_point0;
-	vector2_base<T> v = (line_point1 - line_point0);
+	vec2 c = target_point - line_point0;
+	vec2 v = (line_point1 - line_point0);
 	T d = length(line_point0 - line_point1);
 	if(d > 0)
 	{
 		v = normalize_pre_length<T>(v, d);
 		T t = dot(v, c) / d;
-		out_pos = mix(line_point0, line_point1, clamp(t, (T)0, (T)1));
+		out_pos = lerp(line_point0, line_point1, clamp(t, (T)0, (T)1));
 		return true;
 	}
 	else
@@ -223,12 +222,12 @@ inline T length(const vector3_base<T> &a)
 }
 
 template<typename T>
-inline vector2_base<T> rotate(const vector2_base<T> &a, float angle)
+inline vec2 rotate(const vec2 &a, T angle)
 {
 	angle = angle * pi / 180.0f;
-	float s = sinf(angle);
-	float c = cosf(angle);
-	return vector2_base<T>((T)(c * a.x - s * a.y), (T)(s * a.x + c * a.y));
+	T s = sinf(angle);
+	T c = cosf(angle);
+	return vec2((T)(c * a.x - s * a.y), (T)(s * a.x + c * a.y));
 }
 
 template<typename T>

@@ -3,8 +3,11 @@
 #ifndef BASE_MATH_H
 #define BASE_MATH_H
 
-#include <math.h>
+#include <stddef.h>
+#include <stdint.h>
 #include <stdlib.h>
+
+#include <math.h>
 
 template<typename T>
 constexpr inline T clamp(T val, T min, T max)
@@ -33,7 +36,7 @@ inline int round_ceil(float f)
 }
 
 template<typename T, typename TB>
-constexpr inline T mix(const T a, const T b, TB amount)
+constexpr inline T lerp(const T a, const T b, TB amount)
 {
 	return a + (b - a) * amount;
 }

@@ -40,7 +40,7 @@ void CDamageInd::Create(vec2 Pos, vec2 Dir)
 	{
 		i->m_Pos = Pos;
 		i->m_StartTime = LocalTime();
-		i->m_Dir = Dir * -1;
+		i->m_Dir = Dir * (float)-1;
 		i->m_StartAngle = (((float)rand() / (float)RAND_MAX) - 1.0f) * 2.0f * pi;
 	}
 }
@@ -70,7 +70,7 @@ void CDamageInd::OnRender()
 			DestroyI(&m_aItems[i]);
 		else
 		{
-			vec2 Pos = mix(m_aItems[i].m_Pos + m_aItems[i].m_Dir * 75.0f, m_aItems[i].m_Pos, clamp((Life - 0.60f) / 0.15f, 0.0f, 1.0f));
+			vec2 Pos = lerp(m_aItems[i].m_Pos + m_aItems[i].m_Dir * 75.0f, m_aItems[i].m_Pos, clamp((Life - 0.60f) / 0.15f, 0.0f, 1.0f));
 			Graphics()->SetColor(1.0f, 1.0f, 1.0f, Life / 0.1f);
 			Graphics()->QuadsSetRotation(m_aItems[i].m_StartAngle + Life * 2.0f);
 			Graphics()->RenderQuadContainerAsSprite(m_DmgIndQuadContainerIndex, 0, Pos.x, Pos.y);

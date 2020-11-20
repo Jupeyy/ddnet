@@ -208,7 +208,7 @@ void CParticles::RenderGroup(int Group)
 			int QuadOffset = m_aParticles[i].m_Spr;
 			float a = m_aParticles[i].m_Life / m_aParticles[i].m_LifeSpan;
 			vec2 p = m_aParticles[i].m_Pos;
-			float Size = mix(m_aParticles[i].m_StartSize, m_aParticles[i].m_EndSize, a);
+			float Size = lerp(m_aParticles[i].m_StartSize, m_aParticles[i].m_EndSize, a);
 
 			if(LastColor[0] != m_aParticles[i].m_Color.r || LastColor[1] != m_aParticles[i].m_Color.g || LastColor[2] != m_aParticles[i].m_Color.b || LastColor[3] != m_aParticles[i].m_Color.a || LastQuadOffset != QuadOffset)
 			{
@@ -256,7 +256,7 @@ void CParticles::RenderGroup(int Group)
 			Graphics()->QuadsBegin();
 			float a = m_aParticles[i].m_Life / m_aParticles[i].m_LifeSpan;
 			vec2 p = m_aParticles[i].m_Pos;
-			float Size = mix(m_aParticles[i].m_StartSize, m_aParticles[i].m_EndSize, a);
+			float Size = lerp(m_aParticles[i].m_StartSize, m_aParticles[i].m_EndSize, a);
 
 			Graphics()->QuadsSetRotation(m_aParticles[i].m_Rot);
 

@@ -209,12 +209,26 @@ if(NOT MSVC)
   add_c_compiler_flag_if_supported(OUR_FLAGS_OWN -Wduplicated-branches)
   add_c_compiler_flag_if_supported(OUR_FLAGS_OWN -Wlogical-op)
   add_c_compiler_flag_if_supported(OUR_FLAGS_OWN -Wrestrict)
+  #add_c_compiler_flag_if_supported(OUR_FLAGS_OWN -fopenmp)
+  #add_c_compiler_flag_if_supported(OUR_FLAGS_OWN -Wl,-fopenmp)
+  #add_c_compiler_flag_if_supported(OUR_FLAGS_OWN -static)
+  #add_c_compiler_flag_if_supported(OUR_FLAGS_OWN -D_GLIBCXX_PARALLEL)
+  add_c_compiler_flag_if_supported(OUR_FLAGS_OWN -Wl,-lgomp)
   # TODO: Enable for C++ code except gtest
   #add_cxx_compiler_flag_if_supported(OUR_FLAGS_OWN "-Wuseless-cast")
 endif()
 
 if(NOT MSVC)
   check_c_compiler_flag("-O2;-Wp,-Werror;-D_FORTIFY_SOURCE=2" DEFINE_FORTIFY_SOURCE) # Some distributions define _FORTIFY_SOURCE by themselves.
+
+  #set(MYOWN_FLAGS "${MYOWN_FLAGS} -fopenmp")
+  #set(MYOWN_FLAGS "${MYOWN_FLAGS} -D_GLIBCXX_PARALLEL")
+  set(MYOWN_FLAGS "${MYOWN_FLAGS} -pipe")
+
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${MYOWN_FLAGS}")
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${MYOWN_FLAGS}")
+  
+  #set(LINKER_FLAGS "${LINKER_FLAGS} -lgomp -fopenmp")
 endif()
 
 ########################################################################
@@ -354,6 +368,7 @@ if(VIDEORECORDER)
   find_package(FFMPEG)
 endif()
 find_package(Freetype)
+find_package(glm)
 if(DOWNLOAD_GTEST)
   find_package(Git)
 endif()
@@ -433,6 +448,7 @@ if(VIDEORECORDER)
   show_dependency_status("FFmpeg" FFMPEG)
 endif()
 show_dependency_status("Freetype" FREETYPE)
+show_dependency_status("GLM" GLM)
 if(DOWNLOAD_GTEST)
   show_dependency_status("Git" GIT)
 endif()
@@ -1807,6 +1823,7 @@ if(CLIENT)
     ${LIBS}
     ${CURL_LIBRARIES}
     ${FREETYPE_LIBRARIES}
+    ${GLM_LIBRARIES}
     ${GLEW_LIBRARIES}
     ${PNGLITE_LIBRARIES}
     ${SDL2_LIBRARIES}
@@ -1855,6 +1872,7 @@ if(CLIENT)
   target_include_directories(${TARGET_CLIENT} PRIVATE
     ${CURL_INCLUDE_DIRS}
     ${FREETYPE_INCLUDE_DIRS}
+    ${GLM_INCLUDE_DIRS}
     ${GLEW_INCLUDE_DIRS}
     ${OGG_INCLUDE_DIRS}
     ${OPUSFILE_INCLUDE_DIRS}

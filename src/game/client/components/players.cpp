@@ -106,7 +106,7 @@ void CPlayers::RenderHook(
 	if(in_range(ClientID, MAX_CLIENTS - 1))
 		Position = m_pClient->m_aClients[ClientID].m_RenderPos;
 	else
-		Position = mix(vec2(Prev.m_X, Prev.m_Y), vec2(Player.m_X, Player.m_Y), IntraTick);
+		Position = lerp(vec2(Prev.m_X, Prev.m_Y), vec2(Player.m_X, Player.m_Y), IntraTick);
 
 	// draw hook
 	if(Prev.m_HookState > 0 && Player.m_HookState > 0)
@@ -121,7 +121,7 @@ void CPlayers::RenderHook(
 		if(in_range(pPlayerChar->m_HookedPlayer, MAX_CLIENTS - 1))
 			HookPos = m_pClient->m_aClients[pPlayerChar->m_HookedPlayer].m_RenderPos;
 		else
-			HookPos = mix(vec2(Prev.m_HookX, Prev.m_HookY), vec2(Player.m_HookX, Player.m_HookY), IntraTick);
+			HookPos = lerp(vec2(Prev.m_HookX, Prev.m_HookY), vec2(Player.m_HookX, Player.m_HookY), IntraTick);
 
 		float d = distance(Pos, HookPos);
 		vec2 Dir = normalize(Pos - HookPos);
@@ -221,7 +221,7 @@ void CPlayers::RenderPlayer(
 		else if(Player.m_Angle < 0 && Prev.m_Angle > (256.0f * pi))
 			Player.m_Angle += 256.0f * 2 * pi;
 
-		Angle = mix((float)Prev.m_Angle, (float)Player.m_Angle, AngleIntraTick) / 256.0f;
+		Angle = lerp((float)Prev.m_Angle, (float)Player.m_Angle, AngleIntraTick) / 256.0f;
 	}
 
 	vec2 Direction = GetDirection((int)(Angle * 256.0f));
@@ -229,9 +229,9 @@ void CPlayers::RenderPlayer(
 	if(in_range(ClientID, MAX_CLIENTS - 1))
 		Position = m_pClient->m_aClients[ClientID].m_RenderPos;
 	else
-		Position = mix(vec2(Prev.m_X, Prev.m_Y), vec2(Player.m_X, Player.m_Y), IntraTick);
+		Position = lerp(vec2(Prev.m_X, Prev.m_Y), vec2(Player.m_X, Player.m_Y), IntraTick);
 
-	vec2 Vel = mix(vec2(Prev.m_VelX / 256.0f, Prev.m_VelY / 256.0f), vec2(Player.m_VelX / 256.0f, Player.m_VelY / 256.0f), IntraTick);
+	vec2 Vel = lerp(vec2(Prev.m_VelX / 256.0f, Prev.m_VelY / 256.0f), vec2(Player.m_VelX / 256.0f, Player.m_VelY / 256.0f), IntraTick);
 
 	m_pClient->m_pFlow->Add(Position, Vel * 100.0f, 10.0f);
 
@@ -259,7 +259,7 @@ void CPlayers::RenderPlayer(
 		State.Add(&g_pData->m_aAnimations[ANIM_NINJA_SWING], clamp(LastAttackTime * 2.0f, 0.0f, 1.0f), 1.0f);
 
 	// do skidding
-	if(!InAir && WantOtherDir && length(Vel * 50) > 500.0f)
+	if(!InAir && WantOtherDir && length(Vel * (float)50) > 500.0f)
 	{
 		static int64 SkidSoundTime = 0;
 		if(time() - SkidSoundTime > time_freq() / 10)
@@ -307,11 +307,11 @@ void CPlayers::RenderPlayer(
 			do
 			{
 				OldPos = NewPos;
-				NewPos = OldPos + ExDirection * m_pClient->m_Tuning[g_Config.m_ClDummy].m_HookFireSpeed;
+				NewPos = OldPos + ExDirection * (float)m_pClient->m_Tuning[g_Config.m_ClDummy].m_HookFireSpeed;
 
 				if(distance(InitPos, NewPos) > m_pClient->m_Tuning[g_Config.m_ClDummy].m_HookLength)
 				{
-					NewPos = InitPos + normalize(NewPos - InitPos) * m_pClient->m_Tuning[g_Config.m_ClDummy].m_HookLength;
+					NewPos = InitPos + normalize(NewPos - InitPos) * (float)m_pClient->m_Tuning[g_Config.m_ClDummy].m_HookLength;
 					DoBreak = true;
 				}
 
@@ -479,7 +479,7 @@ void CPlayers::RenderPlayer(
 				if(AttackTicksPassed < g_pData->m_Weapons.m_aId[iw].m_Muzzleduration + 3)
 				{
 					float t = AttackTicksPassed / g_pData->m_Weapons.m_aId[iw].m_Muzzleduration;
-					Alpha = mix(2.0f, 0.0f, minimum(1.0f, maximum(0.0f, t)));
+					Alpha = lerp(2.0f, 0.0f, minimum(1.0f, maximum(0.0f, t)));
 				}
 
 				int IteX = rand() % g_pData->m_Weapons.m_aId[iw].m_NumSpriteMuzzles;
@@ -529,7 +529,7 @@ void CPlayers::RenderPlayer(
 	{
 		vec2 GhostPosition = Position;
 		if(ClientID >= 0)
-			GhostPosition = mix(
+			GhostPosition = lerp(
 				vec2(m_pClient->m_Snap.m_aCharacters[ClientID].m_Prev.m_X, m_pClient->m_Snap.m_aCharacters[ClientID].m_Prev.m_Y),
 				vec2(m_pClient->m_Snap.m_aCharacters[ClientID].m_Cur.m_X, m_pClient->m_Snap.m_aCharacters[ClientID].m_Cur.m_Y),
 				Client()->IntraGameTick(g_Config.m_ClDummy));

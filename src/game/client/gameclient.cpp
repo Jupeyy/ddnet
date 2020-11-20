@@ -574,22 +574,22 @@ void CGameClient::UpdatePositions()
 				// don't use predicted
 			}
 			else
-				m_LocalCharacterPos = mix(m_PredictedPrevChar.m_Pos, m_PredictedChar.m_Pos, Client()->PredIntraGameTick(g_Config.m_ClDummy));
+				m_LocalCharacterPos = lerp(m_PredictedPrevChar.m_Pos, m_PredictedChar.m_Pos, Client()->PredIntraGameTick(g_Config.m_ClDummy));
 		}
 		else
 		{
 			if(!(m_Snap.m_pGameInfoObj && m_Snap.m_pGameInfoObj->m_GameStateFlags & GAMESTATEFLAG_GAMEOVER))
 			{
 				if(m_Snap.m_pLocalCharacter)
-					m_LocalCharacterPos = mix(m_PredictedPrevChar.m_Pos, m_PredictedChar.m_Pos, Client()->PredIntraGameTick(g_Config.m_ClDummy));
+					m_LocalCharacterPos = lerp(m_PredictedPrevChar.m_Pos, m_PredictedChar.m_Pos, Client()->PredIntraGameTick(g_Config.m_ClDummy));
 			}
 			//		else
-			//			m_LocalCharacterPos = mix(m_PredictedPrevChar.m_Pos, m_PredictedChar.m_Pos, Client()->PredIntraGameTick(g_Config.m_ClDummy));
+			//			m_LocalCharacterPos = lerp(m_PredictedPrevChar.m_Pos, m_PredictedChar.m_Pos, Client()->PredIntraGameTick(g_Config.m_ClDummy));
 		}
 	}
 	else if(m_Snap.m_pLocalCharacter && m_Snap.m_pLocalPrevCharacter)
 	{
-		m_LocalCharacterPos = mix(
+		m_LocalCharacterPos = lerp(
 			vec2(m_Snap.m_pLocalPrevCharacter->m_X, m_Snap.m_pLocalPrevCharacter->m_Y),
 			vec2(m_Snap.m_pLocalCharacter->m_X, m_Snap.m_pLocalCharacter->m_Y), Client()->IntraGameTick(g_Config.m_ClDummy));
 	}
@@ -599,7 +599,7 @@ void CGameClient::UpdatePositions()
 	{
 		if(Client()->State() == IClient::STATE_DEMOPLAYBACK && m_DemoSpecID != SPEC_FOLLOW && m_Snap.m_SpecInfo.m_SpectatorID != SPEC_FREEVIEW)
 		{
-			m_Snap.m_SpecInfo.m_Position = mix(
+			m_Snap.m_SpecInfo.m_Position = lerp(
 				vec2(m_Snap.m_aCharacters[m_Snap.m_SpecInfo.m_SpectatorID].m_Prev.m_X, m_Snap.m_aCharacters[m_Snap.m_SpecInfo.m_SpectatorID].m_Prev.m_Y),
 				vec2(m_Snap.m_aCharacters[m_Snap.m_SpecInfo.m_SpectatorID].m_Cur.m_X, m_Snap.m_aCharacters[m_Snap.m_SpecInfo.m_SpectatorID].m_Cur.m_Y),
 				Client()->IntraGameTick(g_Config.m_ClDummy));
@@ -608,7 +608,7 @@ void CGameClient::UpdatePositions()
 		else if(m_Snap.m_pSpectatorInfo && ((Client()->State() == IClient::STATE_DEMOPLAYBACK && m_DemoSpecID == SPEC_FOLLOW) || (Client()->State() != IClient::STATE_DEMOPLAYBACK && m_Snap.m_SpecInfo.m_SpectatorID != SPEC_FREEVIEW)))
 		{
 			if(m_Snap.m_pPrevSpectatorInfo && m_Snap.m_pPrevSpectatorInfo->m_SpectatorID == m_Snap.m_pSpectatorInfo->m_SpectatorID)
-				m_Snap.m_SpecInfo.m_Position = mix(vec2(m_Snap.m_pPrevSpectatorInfo->m_X, m_Snap.m_pPrevSpectatorInfo->m_Y),
+				m_Snap.m_SpecInfo.m_Position = lerp(vec2(m_Snap.m_pPrevSpectatorInfo->m_X, m_Snap.m_pPrevSpectatorInfo->m_Y),
 					vec2(m_Snap.m_pSpectatorInfo->m_X, m_Snap.m_pSpectatorInfo->m_Y), Client()->IntraGameTick(g_Config.m_ClDummy));
 			else
 				m_Snap.m_SpecInfo.m_Position = vec2(m_Snap.m_pSpectatorInfo->m_X, m_Snap.m_pSpectatorInfo->m_Y);
@@ -1633,12 +1633,12 @@ void CGameClient::OnNewSnapshot()
 	static float LastScreenAspect = .0;
 	static bool LastDummyConnected = false;
 	float ZoomToSend = m_pCamera->m_ZoomSmoothingTarget == .0 ? m_pCamera->m_Zoom // Initial
-								    :
-								    m_pCamera->m_ZoomSmoothingTarget > m_pCamera->m_Zoom ? m_pCamera->m_ZoomSmoothingTarget // Zooming out
-															   :
-															   m_pCamera->m_ZoomSmoothingTarget < m_pCamera->m_Zoom ? LastZoom // Zooming in
-																						  :
-																						  m_pCamera->m_Zoom; // Not zooming
+			   :
+			   m_pCamera->m_ZoomSmoothingTarget > m_pCamera->m_Zoom ? m_pCamera->m_ZoomSmoothingTarget // Zooming out
+			   :
+			   m_pCamera->m_ZoomSmoothingTarget < m_pCamera->m_Zoom ? LastZoom // Zooming in
+										  :
+                                                                                  m_pCamera->m_Zoom; // Not zooming
 	if(ZoomToSend != LastZoom || Graphics()->ScreenAspect() != LastScreenAspect || (Client()->DummyConnected() && !LastDummyConnected))
 	{
 		CNetMsg_Cl_ShowDistance Msg;
@@ -1665,7 +1665,7 @@ void CGameClient::OnNewSnapshot()
 		if(m_Snap.m_aCharacters[i].m_Active && (m_Snap.m_aCharacters[i].m_Cur.m_Jumped & 2) && !(m_Snap.m_aCharacters[i].m_Prev.m_Jumped & 2))
 			if(!Predict() || (!AntiPingPlayers() && i != m_Snap.m_LocalClientID))
 			{
-				vec2 Pos = mix(vec2(m_Snap.m_aCharacters[i].m_Prev.m_X, m_Snap.m_aCharacters[i].m_Prev.m_Y),
+				vec2 Pos = lerp(vec2(m_Snap.m_aCharacters[i].m_Prev.m_X, m_Snap.m_aCharacters[i].m_Prev.m_Y),
 					vec2(m_Snap.m_aCharacters[i].m_Cur.m_X, m_Snap.m_aCharacters[i].m_Cur.m_Y),
 					Client()->IntraGameTick(g_Config.m_ClDummy));
 				m_pEffects->AirJump(Pos);
@@ -1820,8 +1820,8 @@ void CGameClient::OnPredict()
 			vec2 PredErr = (s_aLastPos[i] - NewPos) / (float)minimum(Client()->GetPredictionTime(), 200);
 			if(in_range(length(PredErr), 0.05f, 5.f))
 			{
-				vec2 PredPos = mix(m_aClients[i].m_PrevPredicted.m_Pos, m_aClients[i].m_Predicted.m_Pos, Client()->PredIntraGameTick(g_Config.m_ClDummy));
-				vec2 CurPos = mix(
+				vec2 PredPos = lerp(m_aClients[i].m_PrevPredicted.m_Pos, m_aClients[i].m_Predicted.m_Pos, Client()->PredIntraGameTick(g_Config.m_ClDummy));
+				vec2 CurPos = lerp(
 					vec2(m_Snap.m_aCharacters[i].m_Prev.m_X, m_Snap.m_aCharacters[i].m_Prev.m_Y),
 					vec2(m_Snap.m_aCharacters[i].m_Cur.m_X, m_Snap.m_aCharacters[i].m_Cur.m_Y),
 					Client()->IntraGameTick(g_Config.m_ClDummy));
@@ -2161,7 +2161,7 @@ int CGameClient::IntersectCharacter(vec2 HookPos, vec2 NewPos, vec2 &NewPos2, in
 		CNetObj_Character Prev = m_Snap.m_aCharacters[i].m_Prev;
 		CNetObj_Character Player = m_Snap.m_aCharacters[i].m_Cur;
 
-		vec2 Position = mix(vec2(Prev.m_X, Prev.m_Y), vec2(Player.m_X, Player.m_Y), Client()->IntraGameTick(g_Config.m_ClDummy));
+		vec2 Position = lerp(vec2(Prev.m_X, Prev.m_Y), vec2(Player.m_X, Player.m_Y), Client()->IntraGameTick(g_Config.m_ClDummy));
 
 		bool IsOneSuper = cData.m_Super || OwnClientData.m_Super;
 		bool IsOneSolo = cData.m_Solo || OwnClientData.m_Solo;
@@ -2170,7 +2170,7 @@ int CGameClient::IntersectCharacter(vec2 HookPos, vec2 NewPos, vec2 &NewPos2, in
 			continue;
 
 		vec2 ClosestPoint;
-		if(closest_point_on_line(HookPos, NewPos, Position, ClosestPoint))
+		if(closest_point_on_line<float>(HookPos, NewPos, Position, ClosestPoint))
 		{
 			if(distance(Position, ClosestPoint) < PhysSize + 2.0f)
 			{
@@ -2364,7 +2364,7 @@ void CGameClient::UpdateRenderedCharacters()
 		m_aClients[i].m_RenderPrev = m_Snap.m_aCharacters[i].m_Prev;
 		m_aClients[i].m_IsPredicted = false;
 		m_aClients[i].m_IsPredictedLocal = false;
-		vec2 UnpredPos = mix(
+		vec2 UnpredPos = lerp(
 			vec2(m_Snap.m_aCharacters[i].m_Prev.m_X, m_Snap.m_aCharacters[i].m_Prev.m_Y),
 			vec2(m_Snap.m_aCharacters[i].m_Cur.m_X, m_Snap.m_aCharacters[i].m_Cur.m_Y),
 			Client()->IntraGameTick(g_Config.m_ClDummy));
@@ -2377,7 +2377,7 @@ void CGameClient::UpdateRenderedCharacters()
 
 			m_aClients[i].m_IsPredicted = true;
 
-			Pos = mix(
+			Pos = lerp(
 				vec2(m_aClients[i].m_RenderPrev.m_X, m_aClients[i].m_RenderPrev.m_Y),
 				vec2(m_aClients[i].m_RenderCur.m_X, m_aClients[i].m_RenderCur.m_Y),
 				m_aClients[i].m_IsPredicted ? Client()->PredIntraGameTick(g_Config.m_ClDummy) : Client()->IntraGameTick(g_Config.m_ClDummy));
@@ -2498,7 +2498,7 @@ void CGameClient::DetectStrongHook()
 
 vec2 CGameClient::GetSmoothPos(int ClientID)
 {
-	vec2 Pos = mix(m_aClients[ClientID].m_PrevPredicted.m_Pos, m_aClients[ClientID].m_Predicted.m_Pos, Client()->PredIntraGameTick(g_Config.m_ClDummy));
+	vec2 Pos = lerp(m_aClients[ClientID].m_PrevPredicted.m_Pos, m_aClients[ClientID].m_Predicted.m_Pos, Client()->PredIntraGameTick(g_Config.m_ClDummy));
 	int64 Now = time_get();
 	for(int i = 0; i < 2; i++)
 	{
@@ -2511,7 +2511,7 @@ vec2 CGameClient::GetSmoothPos(int ClientID)
 			float SmoothIntra;
 			Client()->GetSmoothTick(&SmoothTick, &SmoothIntra, MixAmount);
 			if(SmoothTick > 0 && m_aClients[ClientID].m_PredTick[(SmoothTick - 1) % 200] >= Client()->PrevGameTick(g_Config.m_ClDummy) && m_aClients[ClientID].m_PredTick[SmoothTick % 200] <= Client()->PredGameTick(g_Config.m_ClDummy))
-				Pos[i] = mix(m_aClients[ClientID].m_PredPos[(SmoothTick - 1) % 200][i], m_aClients[ClientID].m_PredPos[SmoothTick % 200][i], SmoothIntra);
+				Pos[i] = lerp(m_aClients[ClientID].m_PredPos[(SmoothTick - 1) % 200][i], m_aClients[ClientID].m_PredPos[SmoothTick % 200][i], SmoothIntra);
 		}
 	}
 	return Pos;

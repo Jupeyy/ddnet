@@ -281,7 +281,7 @@ void CVideo::NextAudioFrame(void (*Mix)(short *pFinalOut, unsigned Frames))
 		//dbg_msg("video_recorder", "video_frame: %lf", (double)(m_Vframe/m_FPS));
 		//if((double)(m_Vframe/m_FPS) < m_AudioStream.pEnc->frame_number*m_AudioStream.pEnc->frame_size/m_AudioStream.pEnc->sample_rate)
 		//return;
-		Mix(m_aBuffer, ALEN);
+		lerp(m_aBuffer, ALEN);
 		//m_AudioStream.pFrame->pts = m_AudioStream.pEnc->frame_number;
 		//dbg_msg("video_recorder", "aframe: %d", m_AudioStream.pEnc->frame_number);
 

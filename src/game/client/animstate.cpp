@@ -42,9 +42,9 @@ static void AnimSeqEval(CAnimSequence *pSeq, float Time, CAnimKeyframe *pFrame)
 		if(pFrame1 && pFrame2)
 		{
 			pFrame->m_Time = Time;
-			pFrame->m_X = mix(pFrame1->m_X, pFrame2->m_X, Blend);
-			pFrame->m_Y = mix(pFrame1->m_Y, pFrame2->m_Y, Blend);
-			pFrame->m_Angle = mix(pFrame1->m_Angle, pFrame2->m_Angle, Blend);
+			pFrame->m_X = lerp(pFrame1->m_X, pFrame2->m_X, Blend);
+			pFrame->m_Y = lerp(pFrame1->m_Y, pFrame2->m_Y, Blend);
+			pFrame->m_Angle = lerp(pFrame1->m_Angle, pFrame2->m_Angle, Blend);
 		}
 	}
 }

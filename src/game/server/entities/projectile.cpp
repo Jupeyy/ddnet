@@ -170,7 +170,7 @@ void CProjectile::Tick()
 					apEnts[i]->Freeze();
 		}
 
-		if(pOwnerChar && ColPos && !GameLayerClipped(ColPos) &&
+		if(pOwnerChar && !GameLayerClipped(ColPos) &&
 			((m_Type == WEAPON_GRENADE && pOwnerChar->HasTelegunGrenade()) || (m_Type == WEAPON_GUN && pOwnerChar->HasTelegunGun())))
 		{
 			int MapIndex = GameServer()->Collision()->GetPureMapIndex(pTargetChr ? pTargetChr->m_Pos : ColPos);
@@ -202,7 +202,7 @@ void CProjectile::Tick()
 				else
 					Found = GetNearestAirPos(NewPos, CurPos, &PossiblePos);
 
-				if(Found && PossiblePos)
+				if(Found)
 				{
 					pOwnerChar->m_TeleGunPos = PossiblePos;
 					pOwnerChar->m_TeleGunTeleport = true;
@@ -214,7 +214,7 @@ void CProjectile::Tick()
 		if(Collide && m_Bouncing != 0)
 		{
 			m_StartTick = Server()->Tick();
-			m_Pos = NewPos + (-(m_Direction * 4));
+			m_Pos = NewPos + (-(m_Direction * 4.0f));
 			if(m_Bouncing == 1)
 				m_Direction.x = -m_Direction.x;
 			else if(m_Bouncing == 2)

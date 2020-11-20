@@ -228,7 +228,7 @@ CCharacter *CGameWorld::IntersectCharacter(vec2 Pos0, vec2 Pos1, float Radius, v
 			continue;
 
 		vec2 IntersectPos;
-		if(closest_point_on_line(Pos0, Pos1, p->m_Pos, IntersectPos))
+		if(closest_point_on_line<float>(Pos0, Pos1, p->m_Pos, IntersectPos))
 		{
 			float Len = distance(p->m_Pos, IntersectPos);
 			if(Len < p->m_ProximityRadius + Radius)
@@ -258,7 +258,7 @@ std::list<class CCharacter *> CGameWorld::IntersectedCharacters(vec2 Pos0, vec2 
 			continue;
 
 		vec2 IntersectPos;
-		if(closest_point_on_line(Pos0, Pos1, pChr->m_Pos, IntersectPos))
+		if(closest_point_on_line<float>(Pos0, Pos1, pChr->m_Pos, IntersectPos))
 		{
 			float Len = distance(pChr->m_Pos, IntersectPos);
 			if(Len < pChr->m_ProximityRadius + Radius)
@@ -332,7 +332,7 @@ void CGameWorld::CreateExplosion(vec2 Pos, int Owner, int Weapon, bool NoDamage,
 					continue;
 				if(Owner == -1 && ActivatedTeam != -1 && pChar->IsAlive() && pChar->Team() != ActivatedTeam)
 					continue;
-				pChar->TakeDamage(ForceDir * Dmg * 2, (int)Dmg, Owner, Weapon);
+				pChar->TakeDamage(ForceDir * Dmg * (float)2, (int)Dmg, Owner, Weapon);
 				if(GetCharacterByID(Owner) ? GetCharacterByID(Owner)->m_Hit & CCharacter::DISABLE_HIT_GRENADE : !g_Config.m_SvHit || NoDamage)
 					break;
 			}
@@ -400,7 +400,7 @@ void CGameWorld::NetObjAdd(int ObjID, int ObjType, const void *pObjData)
 			// otherwise try to determine its owner by checking if there is only one player nearby
 			if(NetProj.m_StartTick >= GameTick() - 4)
 			{
-				const vec2 NetPos = NetProj.m_Pos - normalize(NetProj.m_Direction) * 28.0 * 0.75;
+				const vec2 NetPos = NetProj.m_Pos - normalize(NetProj.m_Direction) * 28.0f * 0.75f;
 				const bool Prev = (GameTick() - NetProj.m_StartTick) > 1;
 				float First = 200.0f, Second = 200.0f;
 				CCharacter *pClosest = 0;

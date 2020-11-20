@@ -237,11 +237,11 @@ void CCharacterCore::Tick(bool UseInput)
 	}
 	else if(m_HookState == HOOK_FLYING)
 	{
-		vec2 NewPos = m_HookPos + m_HookDir * m_pWorld->m_Tuning[g_Config.m_ClDummy].m_HookFireSpeed;
+		vec2 NewPos = m_HookPos + m_HookDir * (float)m_pWorld->m_Tuning[g_Config.m_ClDummy].m_HookFireSpeed;
 		if((!m_NewHook && distance(m_Pos, NewPos) > m_pWorld->m_Tuning[g_Config.m_ClDummy].m_HookLength) || (m_NewHook && distance(m_HookTeleBase, NewPos) > m_pWorld->m_Tuning[g_Config.m_ClDummy].m_HookLength))
 		{
 			m_HookState = HOOK_RETRACT_START;
-			NewPos = m_Pos + normalize(NewPos - m_Pos) * m_pWorld->m_Tuning[g_Config.m_ClDummy].m_HookLength;
+			NewPos = m_Pos + normalize(NewPos - m_Pos) * (float)m_pWorld->m_Tuning[g_Config.m_ClDummy].m_HookLength;
 			m_pReset = true;
 		}
 
@@ -276,7 +276,7 @@ void CCharacterCore::Tick(bool UseInput)
 					continue;
 
 				vec2 ClosestPoint;
-				if(closest_point_on_line(m_HookPos, NewPos, pCharCore->m_Pos, ClosestPoint))
+				if(closest_point_on_line<float>(m_HookPos, NewPos, pCharCore->m_Pos, ClosestPoint))
 				{
 					if(distance(pCharCore->m_Pos, ClosestPoint) < PhysSize + 2.0f)
 					{
@@ -347,7 +347,7 @@ void CCharacterCore::Tick(bool UseInput)
 		// don't do this hook rutine when we are hook to a player
 		if(m_HookedPlayer == -1 && distance(m_HookPos, m_Pos) > 46.0f)
 		{
-			vec2 HookVel = normalize(m_HookPos - m_Pos) * m_pWorld->m_Tuning[g_Config.m_ClDummy].m_HookDragAccel;
+			vec2 HookVel = normalize(m_HookPos - m_Pos) * (float)m_pWorld->m_Tuning[g_Config.m_ClDummy].m_HookDragAccel;
 			// the hook as more power to drag you up then down.
 			// this makes it easier to get on top of an platform
 			if(HookVel.y > 0)
@@ -446,7 +446,7 @@ void CCharacterCore::Tick(bool UseInput)
 
 	// clamp the velocity to something sane
 	if(length(m_Vel) > 6000)
-		m_Vel = normalize(m_Vel) * 6000;
+		m_Vel = normalize(m_Vel) * (float)6000;
 }
 
 void CCharacterCore::Move()
@@ -484,7 +484,7 @@ void CCharacterCore::Move()
 			for(int i = 0; i < End; i++)
 			{
 				float a = i / Distance;
-				vec2 Pos = mix(m_Pos, NewPos, a);
+				vec2 Pos = lerp(m_Pos, NewPos, a);
 				for(int p = 0; p < MAX_CLIENTS; p++)
 				{
 					CCharacterCore *pCharCore = m_pWorld->m_apCharacters[p];
