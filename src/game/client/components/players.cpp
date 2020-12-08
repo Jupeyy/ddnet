@@ -697,8 +697,8 @@ void CPlayers::OnRender()
 			}
 			else
 			{
-				const void *pPrevInfo = Client()->SnapFindItem(IClient::SNAP_PREV, NETOBJTYPE_PLAYERINFO, i);
-				const void *pInfo = Client()->SnapFindItem(IClient::SNAP_CURRENT, NETOBJTYPE_PLAYERINFO, i);
+				const void *pPrevInfo = m_pClient->m_Snap.m_paPrevPlayerInfos[i];
+				const void *pInfo = m_pClient->m_Snap.m_paPlayerInfos[i];
 				if(!pPrevInfo || !pInfo)
 				{
 					continue;

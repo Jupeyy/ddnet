@@ -1273,6 +1273,7 @@ void CGameClient::OnNewSnapshot()
 				{
 					m_aClients[pInfo->m_ClientID].m_Team = pInfo->m_Team;
 					m_aClients[pInfo->m_ClientID].m_Active = true;
+					m_Snap.m_paPrevPlayerInfos[pInfo->m_ClientID] = m_Snap.m_paPlayerInfos[pInfo->m_ClientID];
 					m_Snap.m_paPlayerInfos[pInfo->m_ClientID] = pInfo;
 					m_Snap.m_NumPlayers++;
 

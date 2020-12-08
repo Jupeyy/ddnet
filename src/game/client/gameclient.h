@@ -196,6 +196,7 @@ public:
 		const CNetObj_GameData *m_pGameDataObj;
 		int m_GameDataSnapID;
 
+		const CNetObj_PlayerInfo *m_paPrevPlayerInfos[MAX_CLIENTS];
 		const CNetObj_PlayerInfo *m_paPlayerInfos[MAX_CLIENTS];
 		const CNetObj_PlayerInfo *m_paInfoByScore[MAX_CLIENTS];
 		const CNetObj_PlayerInfo *m_paInfoByName[MAX_CLIENTS];
