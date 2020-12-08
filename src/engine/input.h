@@ -86,7 +86,7 @@ class IEngineInput : public IInput
 	MACRO_INTERFACE("engineinput", 0)
 public:
 	virtual void Init() = 0;
-	virtual int Update() = 0;
+	virtual int Update(bool WaitForEvent = false) = 0;
 	virtual void NextFrame() = 0;
 	virtual int VideoRestartNeeded() = 0;
 };

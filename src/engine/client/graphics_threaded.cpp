@@ -2433,7 +2433,7 @@ bool CGraphics_Threaded::SetWindowScreen(int Index)
 	return m_pBackend->SetWindowScreen(Index);
 }
 
-void CGraphics_Threaded::Resize(int w, int h)
+void CGraphics_Threaded::Resize(int w, int h, bool SetWindowSize)
 {
 #if defined(CONF_VIDEORECORDER)
 	if(IVideo::Current() && IVideo::Current()->IsRecording())
@@ -2450,6 +2450,9 @@ void CGraphics_Threaded::Resize(int w, int h)
 
 	m_ScreenWidth = w;
 	m_ScreenHeight = h;
+
+	if(SetWindowSize)
+		m_pBackend->ResizeWindow(w, h);
 
 	CCommandBuffer::SCommand_Resize Cmd;
 	Cmd.m_Width = w;
@@ -2487,6 +2490,11 @@ int CGraphics_Threaded::WindowOpen()
 void CGraphics_Threaded::SetWindowGrab(bool Grab)
 {
 	return m_pBackend->SetWindowGrab(Grab);
+}
+
+void CGraphics_Threaded::SetWindowFocused()
+{
+	m_pBackend->SetWindowFocused();
 }
 
 void CGraphics_Threaded::NotifyWindow()

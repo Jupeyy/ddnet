@@ -201,7 +201,7 @@ public:
 	virtual bool SetWindowScreen(int Index) = 0;
 	virtual bool SetVSync(bool State) = 0;
 	virtual int GetWindowScreen() = 0;
-	virtual void Resize(int w, int h) = 0;
+	virtual void Resize(int w, int h, bool SetWindowSize = false) = 0;
 	virtual void AddWindowResizeListener(WINDOW_RESIZE_FUNC pFunc, void *pUser) = 0;
 
 	virtual void Clear(float r, float g, float b) = 0;
@@ -379,6 +379,7 @@ public:
 	virtual void WaitForIdle() = 0;
 
 	virtual void SetWindowGrab(bool Grab) = 0;
+	virtual void SetWindowFocused() = 0;
 	virtual void NotifyWindow() = 0;
 
 	virtual SWarning *GetCurWarning() = 0;

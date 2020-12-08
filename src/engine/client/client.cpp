@@ -1,6 +1,7 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 
+#include "engine/client/input.h"
 #define _WIN32_WINNT 0x0501
 
 #include <new>
@@ -3033,6 +3034,10 @@ void CClient::Run()
 		}
 	}
 
+	// init the input
+	Input()->Init();
+	while(Input()->Update(true) != TW_INPUT_RESULT_WINDOW_SHOWN) {}
+
 	// make sure the first frame just clears everything to prevent undesired colors when waiting for io
 	Graphics()->Clear(0, 0, 0);
 	Graphics()->Swap();
@@ -3069,9 +3074,6 @@ void CClient::Run()
 
 	// init font rendering
 	Kernel()->RequestInterface<IEngineTextRender>()->Init();
-
-	// init the input
-	Input()->Init();
 
 	// start refreshing addresses while we load
 	MasterServer()->RefreshAddresses(m_NetClient[CLIENT_MAIN].NetType());
@@ -3133,6 +3135,8 @@ void CClient::Run()
 
 	int64 LastTime = time_get_microseconds();
 	int64 LastRenderTime = time_get();
+
+	Graphics()->SetWindowFocused();
 
 	while(1)
 	{
@@ -3199,7 +3203,7 @@ void CClient::Run()
 		}
 
 		// update input
-		if(Input()->Update())
+		if(Input()->Update() == TW_INPUT_RESULT_QUIT)
 		{
 			if(State() == IClient::STATE_QUITTING)
 				break;
@@ -4231,13 +4235,18 @@ void CClient::HandleMapPath(const char *pPath)
 #if defined(CONF_PLATFORM_MACOSX)
 extern "C" int TWMain(int argc, const char **argv) // ignore_convention
 #else
-int main(int argc, const char **argv) // ignore_convention
+/*int WINAPI WinMain(
+	HINSTANCE hInstance,
+	HINSTANCE hPrevInstance,
+	LPSTR lpCmdLine,
+	int nShowCmd)*/
+int main(int argc, const char *argv[])
 #endif
 {
 	bool Silent = false;
 	bool RandInitFailed = false;
 
-	for(int i = 1; i < argc; i++) // ignore_convention
+	/*	for(int i = 1; i < argc; i++) // ignore_convention
 	{
 		if(str_comp("-s", argv[i]) == 0 || str_comp("--silent", argv[i]) == 0) // ignore_convention
 		{
@@ -4247,7 +4256,7 @@ int main(int argc, const char **argv) // ignore_convention
 #endif
 			break;
 		}
-	}
+	}*/
 
 	if(secure_random_init() != 0)
 	{
@@ -4360,14 +4369,14 @@ int main(int argc, const char **argv) // ignore_convention
 	g_Config.m_ClConfigVersion = 1;
 
 	// parse the command line arguments
-	if(argc == 2 && str_startswith(argv[1], CONNECTLINK))
+	/*if(argc == 2 && str_startswith(argv[1], CONNECTLINK))
 		pClient->HandleConnectLink(argv[1]);
 	else if(argc == 2 && str_endswith(argv[1], ".demo"))
 		pClient->HandleDemoPath(argv[1]);
 	else if(argc == 2 && str_endswith(argv[1], ".map"))
 		pClient->HandleMapPath(argv[1]);
 	else if(argc > 1) // ignore_convention
-		pConsole->ParseArguments(argc - 1, &argv[1]); // ignore_convention
+		pConsole->ParseArguments(argc - 1, &argv[1]); // ignore_convention*/
 
 	if(pSteam->GetConnectAddress())
 	{
@@ -4379,7 +4388,12 @@ int main(int argc, const char **argv) // ignore_convention
 
 #if defined(CONF_FAMILY_WINDOWS)
 	if(!g_Config.m_ClShowConsole)
+	{
+		fclose(stdout);
+		fclose(stdin);
+		fclose(stderr);
 		FreeConsole();
+	}
 #endif
 
 	// run the client

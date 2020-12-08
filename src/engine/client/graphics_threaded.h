@@ -659,6 +659,8 @@ public:
 	virtual int WindowActive() = 0;
 	virtual int WindowOpen() = 0;
 	virtual void SetWindowGrab(bool Grab) = 0;
+	virtual void ResizeWindow(int w, int h) = 0;
+	virtual void SetWindowFocused() = 0;
 	virtual void NotifyWindow() = 0;
 
 	virtual void RunBuffer(CCommandBuffer *pBuffer) = 0;
@@ -1112,7 +1114,7 @@ public:
 	bool Fullscreen(bool State) override;
 	void SetWindowBordered(bool State) override;
 	bool SetWindowScreen(int Index) override;
-	void Resize(int w, int h) override;
+	void Resize(int w, int h, bool SetWindowSize = false) override;
 	void AddWindowResizeListener(WINDOW_RESIZE_FUNC pFunc, void *pUser) override;
 	int GetWindowScreen() override;
 
@@ -1120,6 +1122,7 @@ public:
 	int WindowOpen() override;
 
 	void SetWindowGrab(bool Grab) override;
+	void SetWindowFocused() override;
 	void NotifyWindow() override;
 
 	int Init() override;

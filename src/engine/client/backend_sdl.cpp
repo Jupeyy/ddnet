@@ -1,3 +1,5 @@
+#include "SDL_hints.h"
+#include "SDL_video.h"
 #include <base/detect.h>
 
 #if defined(CONF_FAMILY_WINDOWS)
@@ -3990,7 +3992,6 @@ void CCommandProcessorFragment_SDL::Cmd_VSync(const CCommandBuffer::SCommand_VSy
 
 void CCommandProcessorFragment_SDL::Cmd_Resize(const CCommandBuffer::SCommand_Resize *pCommand)
 {
-	SDL_SetWindowSize(m_pWindow, pCommand->m_Width, pCommand->m_Height);
 	glViewport(0, 0, pCommand->m_Width, pCommand->m_Height);
 }
 
@@ -4333,11 +4334,6 @@ int CGraphicsBackend_SDL_OpenGL::Init(const char *pName, int *Screen, int *pWidt
 			dbg_msg("gfx", "unable to init SDL video: %s", SDL_GetError());
 			return EGraphicsBackendErrorCodes::GRAPHICS_BACKEND_ERROR_CODE_SDL_INIT_FAILED;
 		}
-
-#ifdef CONF_FAMILY_WINDOWS
-		if(!getenv("SDL_VIDEO_WINDOW_POS") && !getenv("SDL_VIDEO_CENTERED")) // ignore_convention
-			putenv("SDL_VIDEO_WINDOW_POS=center"); // ignore_convention
-#endif
 	}
 
 	SDL_ClearError();
@@ -4488,13 +4484,11 @@ int CGraphicsBackend_SDL_OpenGL::Init(const char *pName, int *Screen, int *pWidt
 	}
 
 	// set flags
-	int SdlFlags = SDL_WINDOW_OPENGL | SDL_WINDOW_INPUT_GRABBED | SDL_WINDOW_INPUT_FOCUS | SDL_WINDOW_MOUSE_FOCUS;
+	int SdlFlags = SDL_WINDOW_OPENGL | SDL_WINDOW_INPUT_GRABBED | SDL_WINDOW_INPUT_FOCUS | SDL_WINDOW_MOUSE_FOCUS | SDL_WINDOW_ALWAYS_ON_TOP;
 	if(Flags & IGraphicsBackend::INITFLAG_HIGHDPI)
 		SdlFlags |= SDL_WINDOW_ALLOW_HIGHDPI;
-#if defined(SDL_VIDEO_DRIVER_X11)
 	if(Flags & IGraphicsBackend::INITFLAG_RESIZABLE)
 		SdlFlags |= SDL_WINDOW_RESIZABLE;
-#endif
 	if(Flags & IGraphicsBackend::INITFLAG_BORDERLESS)
 		SdlFlags |= SDL_WINDOW_BORDERLESS;
 	if(Flags & IGraphicsBackend::INITFLAG_FULLSCREEN)
@@ -4542,8 +4536,8 @@ int CGraphicsBackend_SDL_OpenGL::Init(const char *pName, int *Screen, int *pWidt
 
 	m_pWindow = SDL_CreateWindow(
 		pName,
-		SDL_WINDOWPOS_UNDEFINED,
-		SDL_WINDOWPOS_UNDEFINED,
+		SDL_WINDOWPOS_CENTERED,
+		SDL_WINDOWPOS_CENTERED,
 		*pWidth,
 		*pHeight,
 		SdlFlags);
@@ -4554,6 +4548,9 @@ int CGraphicsBackend_SDL_OpenGL::Init(const char *pName, int *Screen, int *pWidt
 		dbg_msg("gfx", "unable to create window: %s", SDL_GetError());
 		return EGraphicsBackendErrorCodes::GRAPHICS_BACKEND_ERROR_CODE_SDL_WINDOW_CREATE_FAILED;
 	}
+
+	//SDL_SetHint(SDL_HINT_ALLOW_TOPMOST, const char *value)
+	SetWindowGrab(true);
 
 	m_GLContext = SDL_GL_CreateContext(m_pWindow);
 
@@ -4807,6 +4804,16 @@ int CGraphicsBackend_SDL_OpenGL::WindowOpen()
 void CGraphicsBackend_SDL_OpenGL::SetWindowGrab(bool Grab)
 {
 	SDL_SetWindowGrab(m_pWindow, Grab ? SDL_TRUE : SDL_FALSE);
+}
+
+void CGraphicsBackend_SDL_OpenGL::ResizeWindow(int w, int h)
+{
+	SDL_SetWindowSize(m_pWindow, w, h);
+}
+
+void CGraphicsBackend_SDL_OpenGL::SetWindowFocused()
+{
+	SDL_RaiseWindow(m_pWindow);
 }
 
 void CGraphicsBackend_SDL_OpenGL::NotifyWindow()

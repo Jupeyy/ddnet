@@ -8,6 +8,8 @@
 #include <engine/keys.h>
 #include <engine/shared/config.h>
 
+#include "SDL_events.h"
+#include "SDL_video.h"
 #include "input.h"
 
 //print >>f, "int inp_key_code(const char *key_name) { int i; if (!strcmp(key_name, \"-?-\")) return -1; else for (i = 0; i < 512; i++) if (!strcmp(key_strings[i], key_name)) return i; return -1; }"
@@ -196,10 +198,23 @@ void CInput::SetEditingPosition(float X, float Y)
 	SDL_SetTextInputRect(&ImeWindowRect);
 }
 
-int CInput::Update()
+static bool ReturnedEvent(SDL_Event *pEvent, bool &WaitForEvent)
+{
+	if(WaitForEvent)
+	{
+		WaitForEvent = false;
+		return SDL_WaitEvent(pEvent) == 1;
+	}
+	else
+		return SDL_PollEvent(pEvent) == 1;
+}
+
+int CInput::Update(bool WaitForEvent)
 {
 	// keep the counter between 1..0xFFFF, 0 means not pressed
 	m_InputCounter = (m_InputCounter % 0xFFFF) + 1;
+
+	int ReturnCode = TW_INPUT_RESULT_NONE;
 
 	// these states must always be updated manually because they are not in the GetKeyState from SDL
 	int i = SDL_GetMouseState(NULL, NULL);
@@ -225,7 +240,8 @@ int CInput::Update()
 	{
 		SDL_Event Event;
 		bool IgnoreKeys = false;
-		while(SDL_PollEvent(&Event))
+
+		while(ReturnedEvent(&Event, WaitForEvent))
 		{
 			int Scancode = 0;
 			int Action = IInput::FLAG_PRESS;
@@ -324,12 +340,11 @@ int CInput::Update()
 			case SDL_WINDOWEVENT:
 				// Ignore keys following a focus gain as they may be part of global
 				// shortcuts
+				dbg_msg("testing", "%d", (int)Event.window.event);
 				switch(Event.window.event)
 				{
 				case SDL_WINDOWEVENT_RESIZED:
-#if defined(SDL_VIDEO_DRIVER_X11)
 					Graphics()->Resize(Event.window.data1, Event.window.data2);
-#endif
 					break;
 				case SDL_WINDOWEVENT_FOCUS_GAINED:
 					if(m_InputGrabbed)
@@ -347,6 +362,12 @@ int CInput::Update()
 						m_InputGrabbed = true;
 					}
 					break;
+				case SDL_WINDOWEVENT_TAKE_FOCUS:
+					Graphics()->SetWindowFocused();
+					break;
+				case SDL_WINDOWEVENT_SHOWN:
+					ReturnCode = TW_INPUT_RESULT_WINDOW_SHOWN;
+					break;
 #if defined(CONF_PLATFORM_MACOSX) // Todo: remove this when fixed in SDL
 				case SDL_WINDOWEVENT_MAXIMIZED:
 					MouseModeAbsolute();
@@ -358,7 +379,7 @@ int CInput::Update()
 
 			// other messages
 			case SDL_QUIT:
-				return 1;
+				return TW_INPUT_RESULT_QUIT;
 			}
 
 			if(Scancode > KEY_FIRST && Scancode < g_MaxKeys && !IgnoreKeys && (!SDL_IsTextInputActive() || m_EditingTextLen == -1))
@@ -373,7 +394,7 @@ int CInput::Update()
 		}
 	}
 
-	return 0;
+	return ReturnCode;
 }
 
 int CInput::VideoRestartNeeded()

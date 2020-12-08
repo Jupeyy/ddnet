@@ -385,10 +385,6 @@ void CGameClient::OnInit()
 	m_GameWorld.m_pTuningList = m_aTuningList;
 
 	m_pMapimages->SetTextureScale(g_Config.m_ClTextEntitiesSize);
-
-	// Agressively try to grab window again since some Windows users report
-	// window not being focussed after starting client.
-	Graphics()->SetWindowGrab(true);
 }
 
 void CGameClient::OnUpdate()
@@ -1633,12 +1629,12 @@ void CGameClient::OnNewSnapshot()
 	static float LastScreenAspect = .0;
 	static bool LastDummyConnected = false;
 	float ZoomToSend = m_pCamera->m_ZoomSmoothingTarget == .0 ? m_pCamera->m_Zoom // Initial
-								    :
-								    m_pCamera->m_ZoomSmoothingTarget > m_pCamera->m_Zoom ? m_pCamera->m_ZoomSmoothingTarget // Zooming out
-															   :
-															   m_pCamera->m_ZoomSmoothingTarget < m_pCamera->m_Zoom ? LastZoom // Zooming in
-																						  :
-																						  m_pCamera->m_Zoom; // Not zooming
+			   :
+			   m_pCamera->m_ZoomSmoothingTarget > m_pCamera->m_Zoom ? m_pCamera->m_ZoomSmoothingTarget // Zooming out
+			   :
+			   m_pCamera->m_ZoomSmoothingTarget < m_pCamera->m_Zoom ? LastZoom // Zooming in
+										  :
+                                                                                  m_pCamera->m_Zoom; // Not zooming
 	if(ZoomToSend != LastZoom || Graphics()->ScreenAspect() != LastScreenAspect || (Client()->DummyConnected() && !LastDummyConnected))
 	{
 		CNetMsg_Cl_ShowDistance Msg;

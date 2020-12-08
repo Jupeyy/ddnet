@@ -8,6 +8,13 @@
 
 #include <stddef.h>
 
+enum ETWInputResult
+{
+	TW_INPUT_RESULT_NONE,
+	TW_INPUT_RESULT_QUIT,
+	TW_INPUT_RESULT_WINDOW_SHOWN,
+};
+
 class CInput : public IEngineInput
 {
 	IEngineGraphics *m_pGraphics;
@@ -55,7 +62,7 @@ public:
 	virtual const char *GetClipboardText();
 	virtual void SetClipboardText(const char *Text);
 
-	virtual int Update();
+	virtual int Update(bool WaitForEvent = false);
 	virtual void NextFrame();
 
 	virtual int VideoRestartNeeded();
