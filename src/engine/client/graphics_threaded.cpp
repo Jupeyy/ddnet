@@ -154,8 +154,6 @@ CGraphics_Threaded::CGraphics_Threaded()
 
 	m_RenderEnable = true;
 	m_DoScreenshot = false;
-
-	png_init(0, 0); // ignore_convention
 }
 
 void CGraphics_Threaded::ClipEnable(int x, int y, int w, int h)
