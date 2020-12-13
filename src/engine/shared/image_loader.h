@@ -1,5 +1,5 @@
-#ifndef ENGINE_CLIENT_IMAGE_LOADER_H
-#define ENGINE_CLIENT_IMAGE_LOADER_H
+#ifndef ENGINE_SHARED_IMAGE_LOADER_H
+#define ENGINE_SHARED_IMAGE_LOADER_H
 
 #include <stddef.h>
 #include <stdint.h>

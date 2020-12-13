@@ -1320,7 +1320,6 @@ set(COPY_FILES
   ${CURL_COPY_FILES}
   ${FREETYPE_COPY_FILES}
   ${OPUSFILE_COPY_FILES}
-  ${PNG_COPY_FILES}
   ${SDL2_COPY_FILES}
   ${SQLite3_COPY_FILES}
   ${FFMPEG_COPY_FILES}
@@ -1606,13 +1605,14 @@ set(GAME_GENERATED_SHARED
   src/game/generated/protocolglue.h
 )
 
-set(DEPS ${DEP_JSON} ${DEP_MD5} ${ZLIB_DEP})
+set(DEPS ${DEP_JSON} ${DEP_MD5} ${ZLIB_DEP} ${PNG_DEP})
 
 # Libraries
 set(LIBS
   ${CRYPTO_LIBRARIES}
   ${WEBSOCKETS_LIBRARIES}
   ${ZLIB_LIBRARIES}
+  ${PNG_LIBRARIES}
   ${PLATFORM_LIBS}
   # Add pthreads (on non-Windows) at the end, so that other libraries can depend
   # on it.
@@ -1814,7 +1814,6 @@ if(CLIENT)
     ${CURL_LIBRARIES}
     ${FREETYPE_LIBRARIES}
     ${GLEW_LIBRARIES}
-    ${PNG_LIBRARIES}
     ${SDL2_LIBRARIES}
     ${WAVPACK_LIBRARIES}
     ${FFMPEG_LIBRARIES}
@@ -2010,7 +2009,6 @@ endif()
 # Libraries
 set(LIBS_SERVER
   ${LIBS}
-  ${PNG_LIBRARIES}
   ${MYSQL_LIBRARIES}
   ${SQLite3_LIBRARIES}
   ${TARGET_ANTIBOT}
