@@ -417,7 +417,6 @@ public:
 	enum
 	{
 		CMD_INIT = CCommandBuffer::CMDGROUP_PLATFORM_SDL,
-		CMD_UPDATE_VIEWPORT,
 		CMD_SHUTDOWN,
 	};
 
@@ -442,16 +441,6 @@ public:
 		int m_GlewPatch;
 	};
 
-	struct SCommand_Update_Viewport : public CCommandBuffer::SCommand
-	{
-		SCommand_Update_Viewport() :
-			SCommand(CMD_UPDATE_VIEWPORT) {}
-		int m_X;
-		int m_Y;
-		int m_Width;
-		int m_Height;
-	};
-
 	struct SCommand_Shutdown : public CCommandBuffer::SCommand
 	{
 		SCommand_Shutdown() :
@@ -460,11 +449,10 @@ public:
 
 private:
 	void Cmd_Init(const SCommand_Init *pCommand);
-	void Cmd_Update_Viewport(const SCommand_Update_Viewport *pCommand);
 	void Cmd_Shutdown(const SCommand_Shutdown *pCommand);
 	void Cmd_Swap(const CCommandBuffer::SCommand_Swap *pCommand);
 	void Cmd_VSync(const CCommandBuffer::SCommand_VSync *pCommand);
-	void Cmd_Resize(const CCommandBuffer::SCommand_Resize *pCommand);
+	void Cmd_ResizeViewport(const CCommandBuffer::SCommand_ResizeViewport *pCommand);
 	void Cmd_VideoModes(const CCommandBuffer::SCommand_VideoModes *pCommand);
 
 public:
@@ -519,7 +507,7 @@ public:
 	virtual int WindowOpen();
 	virtual void SetWindowGrab(bool Grab);
 	virtual void ResizeWindow(int w, int h);
-	virtual void GetViewportSize(int &w, int &h);
+	virtual void GetCanvasSize(int &w, int &h);
 	virtual void NotifyWindow();
 
 	virtual bool IsNewOpenGL() { return m_UseNewOpenGL; }

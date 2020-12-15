@@ -124,7 +124,7 @@ public:
 		CMD_VSYNC,
 		CMD_SCREENSHOT,
 		CMD_VIDEOMODES,
-		CMD_RESIZE,
+		CMD_RESIZE_VIEWPORT,
 
 	};
 
@@ -517,11 +517,13 @@ public:
 		bool *m_pRetOk;
 	};
 
-	struct SCommand_Resize : public SCommand
+	struct SCommand_ResizeViewport : public SCommand
 	{
-		SCommand_Resize() :
-			SCommand(CMD_RESIZE) {}
+		SCommand_ResizeViewport() :
+			SCommand(CMD_RESIZE_VIEWPORT) {}
 
+		int m_X;
+		int m_Y;
 		int m_Width;
 		int m_Height;
 	};
@@ -660,7 +662,7 @@ public:
 	virtual int WindowOpen() = 0;
 	virtual void SetWindowGrab(bool Grab) = 0;
 	virtual void ResizeWindow(int w, int h) = 0;
-	virtual void GetViewportSize(int &w, int &h) = 0;
+	virtual void GetCanvasSize(int &w, int &h) = 0;
 	virtual void NotifyWindow() = 0;
 
 	virtual void RunBuffer(CCommandBuffer *pBuffer) = 0;

@@ -2449,7 +2449,7 @@ void CGraphics_Threaded::Resize(int w, int h, bool SetWindowSize)
 	m_DesktopScreenWidth = w;
 	m_DesktopScreenHeight = h;
 
-	m_pBackend->GetViewportSize(m_ScreenWidth, m_ScreenHeight);
+	m_pBackend->GetCanvasSize(m_ScreenWidth, m_ScreenHeight);
 
 	// adjust the viewport to only allow certain aspect ratios
 	if(m_ScreenHeight > 4 * m_ScreenWidth / 5)
@@ -2457,7 +2457,9 @@ void CGraphics_Threaded::Resize(int w, int h, bool SetWindowSize)
 	if(m_ScreenWidth > 21 * m_ScreenHeight / 9)
 		m_ScreenWidth = 21 * m_ScreenHeight / 9;
 
-	CCommandBuffer::SCommand_Resize Cmd;
+	CCommandBuffer::SCommand_ResizeViewport Cmd;
+	Cmd.m_X = 0;
+	Cmd.m_Y = 0;
 	Cmd.m_Width = m_ScreenWidth;
 	Cmd.m_Height = m_ScreenHeight;
 	m_pCommandBuffer->AddCommand(Cmd);
