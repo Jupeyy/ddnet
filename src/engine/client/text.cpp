@@ -20,6 +20,8 @@ enum
 #include <map>
 #include <vector>
 
+#include <limits>
+
 struct SFontSizeChar
 {
 	int m_ID;
@@ -61,8 +63,29 @@ struct STextCharQuad
 
 struct STextureSkyline
 {
-	// the height of each column
-	std::vector<int> m_CurHeightOfPixelColumn;
+	//the section, that define the algorithm
+	struct STextureSkylineSection
+	{
+		int m_X;
+		int m_Width;
+		int m_Y;
+	};
+	typedef std::vector<STextureSkylineSection> TTextureSkylineSectionList;
+	TTextureSkylineSectionList m_CurSections;
+
+	void CheckDublicateSection(int &AtSection)
+	{
+		STextureSkylineSection &Section = m_CurSections[AtSection];
+		if(AtSection > 0)
+		{
+			if(m_CurSections[AtSection - 1].m_Y == Section.m_Y)
+			{
+				m_CurSections[AtSection - 1].m_Width += Section.m_Width;
+				m_CurSections.erase(m_CurSections.begin() + AtSection);
+				--AtSection;
+			}
+		}
+	}
 };
 
 struct CFontSizeData
@@ -345,8 +368,11 @@ class CTextRender : public IEngineTextRender
 
 		delete[] pFont->m_TextureData[TextureIndex];
 		pFont->m_TextureData[TextureIndex] = pTmpTexBuffer;
+		int SectionIndex = pFont->m_TextureSkyline[TextureIndex].m_CurSections.size();
+		pFont->m_TextureSkyline[TextureIndex].m_CurSections.reserve(NewDimensions);
+		pFont->m_TextureSkyline[TextureIndex].m_CurSections.push_back(STextureSkyline::STextureSkylineSection{pFont->m_CurTextureDimensions[TextureIndex], NewDimensions - pFont->m_CurTextureDimensions[TextureIndex], 0});
 		pFont->m_CurTextureDimensions[TextureIndex] = NewDimensions;
-		pFont->m_TextureSkyline[TextureIndex].m_CurHeightOfPixelColumn.resize(NewDimensions, 0);
+		pFont->m_TextureSkyline[TextureIndex].CheckDublicateSection(SectionIndex);
 	}
 
 	int AdjustOutlineThicknessToFontSize(int OutlineThickness, int FontSize)
@@ -381,73 +407,55 @@ class CTextRender : public IEngineTextRender
 		if(pFont->m_CurTextureDimensions[TextureIndex] < Height)
 			return false;
 
-		// skyline bottom left algorithm
-		std::vector<int> &SkylineHeights = pFont->m_TextureSkyline[TextureIndex].m_CurHeightOfPixelColumn;
+		int SmallestPixelLoss = std::numeric_limits<int>::max();
+		int CurSection = std::numeric_limits<int>::max();
 
-		// search a fitting area with less pixel loss
-		int SmallestPixelLossAreaX = 0;
-		int SmallestPixelLossAreaY = pFont->m_CurTextureDimensions[TextureIndex] + 1;
-		int SmallestPixelLossCurPixelLoss = pFont->m_CurTextureDimensions[TextureIndex] * pFont->m_CurTextureDimensions[TextureIndex];
-
-		bool FoundAnyArea = false;
-		for(size_t i = 0; i < SkylineHeights.size(); i++)
+		//skyline bottom left algorithm
+		STextureSkyline::TTextureSkylineSectionList &SkylineSections = pFont->m_TextureSkyline[TextureIndex].m_CurSections;
+		for(int i = 0; i < (int)SkylineSections.size(); ++i)
 		{
-			int CurHeight = SkylineHeights[i];
-			int CurPixelLoss = 0;
-			// find width pixels, and we are happy
-			int AreaWidth = 1;
-			for(size_t n = i + 1; n < i + Width && n < SkylineHeights.size(); ++n)
+			STextureSkyline::STextureSkylineSection &SkylineSection = SkylineSections[i];
+			if(Width <= SkylineSection.m_Width && SkylineSection.m_Y + Height <= pFont->m_CurTextureDimensions[TextureIndex])
 			{
-				++AreaWidth;
-				if(SkylineHeights[n] <= CurHeight)
+				int CurPixelLoss = SkylineSection.m_Width - Width;
+				if(SmallestPixelLoss > CurPixelLoss)
 				{
-					CurPixelLoss += CurHeight - SkylineHeights[n];
-				}
-				// if the height changed, we will use that new height and adjust the pixel loss
-				else
-				{
-					CurPixelLoss = 0;
-					CurHeight = SkylineHeights[n];
-					for(size_t l = i; l <= n; ++l)
-					{
-						CurPixelLoss += CurHeight - SkylineHeights[l];
-					}
-				}
-			}
-
-			// if the area is too high, continue
-			if(CurHeight + Height > pFont->m_CurTextureDimensions[TextureIndex])
-				continue;
-			// if the found area fits our needs, check if we can use it
-			if(AreaWidth == Width)
-			{
-				if(SmallestPixelLossCurPixelLoss >= CurPixelLoss)
-				{
-					if(CurHeight < SmallestPixelLossAreaY)
-					{
-						SmallestPixelLossCurPixelLoss = CurPixelLoss;
-						SmallestPixelLossAreaX = (int)i;
-						SmallestPixelLossAreaY = CurHeight;
-						FoundAnyArea = true;
-						if(CurPixelLoss == 0)
-							break;
-					}
+					SmallestPixelLoss = CurPixelLoss;
+					CurSection = i;
 				}
 			}
 		}
 
-		if(FoundAnyArea)
+		if(CurSection != std::numeric_limits<int>::max())
 		{
-			PosX = SmallestPixelLossAreaX;
-			PosY = SmallestPixelLossAreaY;
-			for(int i = PosX; i < PosX + Width; ++i)
+			int X = SkylineSections[CurSection].m_X;
+			int Y = SkylineSections[CurSection].m_Y;
+			bool Replace = false;
+			if(SkylineSections[CurSection].m_Width == Width)
+				Replace = true;
+			if(Replace)
 			{
-				SkylineHeights[i] = PosY + Height;
+				SkylineSections[CurSection].m_Y += Height;
 			}
+			else
+			{
+				SkylineSections[CurSection].m_Width -= Width;
+				SkylineSections[CurSection].m_X += Width;
+				SkylineSections.insert(SkylineSections.begin() + CurSection, STextureSkyline::STextureSkylineSection{X, Width, Y + Height});
+			}
+			pFont->m_TextureSkyline[TextureIndex].CheckDublicateSection(CurSection);
+			int CheckIndex = CurSection + 1;
+			if(Replace && CheckIndex < (int)SkylineSections.size())
+			{
+				pFont->m_TextureSkyline[TextureIndex].CheckDublicateSection(CheckIndex);
+			}
+
+			PosX = (int)X;
+			PosY = (int)Y;
 			return true;
 		}
-		else
-			return false;
+
+		return false;
 	}
 
 	void RenderGlyph(CFont *pFont, CFontSizeData *pSizeData, int Chr)
@@ -696,8 +704,10 @@ public:
 		pFont->m_aTextures[0] = InitTexture(pFont->m_CurTextureDimensions[0], pFont->m_CurTextureDimensions[0]);
 		pFont->m_aTextures[1] = InitTexture(pFont->m_CurTextureDimensions[1], pFont->m_CurTextureDimensions[1]);
 
-		pFont->m_TextureSkyline[0].m_CurHeightOfPixelColumn.resize(pFont->m_CurTextureDimensions[0], 0);
-		pFont->m_TextureSkyline[1].m_CurHeightOfPixelColumn.resize(pFont->m_CurTextureDimensions[1], 0);
+		pFont->m_TextureSkyline[0].m_CurSections.reserve(pFont->m_CurTextureDimensions[0]);
+		pFont->m_TextureSkyline[0].m_CurSections.push_back(STextureSkyline::STextureSkylineSection{0, pFont->m_CurTextureDimensions[0], 0});
+		pFont->m_TextureSkyline[1].m_CurSections.reserve(pFont->m_CurTextureDimensions[1]);
+		pFont->m_TextureSkyline[1].m_CurSections.push_back(STextureSkyline::STextureSkylineSection{0, pFont->m_CurTextureDimensions[1], 0});
 
 		pFont->InitFontSizes();
 
@@ -1998,8 +2008,8 @@ public:
 			// reset the skylines
 			for(int j = 0; j < 2; ++j)
 			{
-				for(int &k : pFont->m_TextureSkyline[j].m_CurHeightOfPixelColumn)
-					k = 0;
+				pFont->m_TextureSkyline[j].m_CurSections.clear();
+				pFont->m_TextureSkyline[j].m_CurSections.push_back(STextureSkyline::STextureSkylineSection{0, pFont->m_CurTextureDimensions[j], 0});
 
 				mem_zero(pFont->m_TextureData[j], (size_t)pFont->m_CurTextureDimensions[j] * pFont->m_CurTextureDimensions[j] * sizeof(unsigned char));
 				Graphics()->LoadTextureRawSub(pFont->m_aTextures[j], 0, 0, pFont->m_CurTextureDimensions[j], pFont->m_CurTextureDimensions[j], CImageInfo::FORMAT_ALPHA, pFont->m_TextureData[j]);
