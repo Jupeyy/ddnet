@@ -246,17 +246,33 @@ int CSkins::LoadSkin(const char *pName, CImageInfo &Info)
 		for(int x = 0; x < BodySize; x++)
 		{
 			int v = d[y * Pitch + x * 4];
+			int BodyPixelCount = BodySize * 4;
+			int v2 = d[y * Pitch + x * 4 + BodyPixelCount];
 			if(v <= OrgWeight && OrgWeight == 0)
+			{
 				v = 0;
+				v2 = 0;
+			}
 			else if(v <= OrgWeight)
+			{
 				v = (int)(((v / (float)OrgWeight) * NewWeight));
+				v2 = (int)(((v2 / (float)OrgWeight) * NewWeight));
+			}
 			else if(InvOrgWeight == 0)
+			{
 				v = NewWeight;
+			}
 			else
+			{
 				v = (int)(((v - OrgWeight) / (float)InvOrgWeight) * InvNewWeight + NewWeight);
+				v2 = (int)(((v2 - OrgWeight) / (float)InvOrgWeight) * InvNewWeight + NewWeight);
+			}
 			d[y * Pitch + x * 4] = v;
 			d[y * Pitch + x * 4 + 1] = v;
 			d[y * Pitch + x * 4 + 2] = v;
+			d[y * Pitch + x * 4 + BodyPixelCount] = v2;
+			d[y * Pitch + x * 4 + BodyPixelCount + 1] = v2;
+			d[y * Pitch + x * 4 + BodyPixelCount + 2] = v2;
 		}
 
 	Skin.m_ColorableSkin.m_Body = Graphics()->LoadSpriteTexture(Info, &g_pData->m_aSprites[SPRITE_TEE_BODY]);
