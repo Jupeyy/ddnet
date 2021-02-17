@@ -2368,6 +2368,7 @@ set(CPACK_TARGETS
   map_convert_07
   map_diff
   map_extract
+  map_optimize
 )
 if(STEAMAPI_KIND STREQUAL SHARED)
   list(APPEND CPACK_TARGETS ${TARGET_STEAMAPI})
