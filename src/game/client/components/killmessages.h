@@ -5,6 +5,8 @@
 #include <engine/shared/protocol.h>
 #include <game/client/component.h>
 
+#include <list>
+
 struct SKillMessagesExtraInfo
 {
 	char m_aLastPlayerName[64];
@@ -48,6 +50,14 @@ public:
 		int m_FlagCarrierBlue;
 	};
 
+	struct CKillTracker
+	{
+		int m_ClientID;
+		int m_TextContainer;
+		int m_LastKills;
+		float m_TextWidth;
+	};
+
 	enum
 	{
 		MAX_KILLMSGS = 5,
@@ -59,6 +69,9 @@ private:
 public:
 	CKillMsg m_aKillmsgs[MAX_KILLMSGS];
 	int m_KillmsgCurrent;
+
+	typedef std::list<CKillTracker> TTrackList;
+	TTrackList m_CurKillTrackers;
 
 	virtual void OnWindowResize();
 	virtual void OnReset();
