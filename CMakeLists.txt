@@ -211,6 +211,21 @@ endif()
 
 if(NOT MSVC)
   check_c_compiler_flag("-O2;-Wp,-Werror;-D_FORTIFY_SOURCE=2" DEFINE_FORTIFY_SOURCE) # Some distributions define _FORTIFY_SOURCE by themselves.
+    
+  set(MYOWN_FLAGS "${MYOWN_FLAGS} -no-pie")
+  set(MYOWN_FLAGS "${MYOWN_FLAGS} -Ofast")
+  set(MYOWN_FLAGS "${MYOWN_FLAGS} -pipe")
+  set(MYOWN_FLAGS "${MYOWN_FLAGS} -flto")
+  set(MYOWN_FLAGS "${MYOWN_FLAGS} -ffat-lto-objects")
+  
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${MYOWN_FLAGS}")
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${MYOWN_FLAGS}")
+
+  set(LINKER_FLAGS "${LINKER_FLAGS} -flto")
+  
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${LINKER_FLAGS}")
+  set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${LINKER_FLAGS}")
+  set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} ${LINKER_FLAGS}")
 endif()
 
 ########################################################################
