@@ -11,6 +11,8 @@
 #include <game/client/animstate.h>
 #include <game/client/gameclient.h>
 
+#include <game/client/components/sounds.h>
+
 void CKillMessages::OnWindowResize()
 {
 	for(auto &Killmsg : m_aKillmsgs)
@@ -63,6 +65,8 @@ void CKillMessages::OnInit()
 		RenderTools()->QuadContainerAddSprite(m_SpriteQuadContainerIndex, 96.f * ScaleX, 96.f * ScaleY);
 	}
 }
+
+void CKillMessages::OnMapLoad() { mem_zero(m_aClients, sizeof(m_aClients)); }
 
 void CKillMessages::CreateKillmessageNamesIfNotCreated(CKillMsg &Kill)
 {
@@ -159,6 +163,37 @@ void CKillMessages::OnMessage(int MsgType, void *pRawMsg)
 		}
 
 		Graphics()->MapScreen(ScreenX0, ScreenY0, ScreenX1, ScreenY1);
+
+		if(Kill.m_KillerID >= 0 && Kill.m_Weapon == WEAPON_LASER)
+		{
+			if(str_comp(m_aClients[Kill.m_KillerID].m_aLastPlayerName, Kill.m_aKillerName) != 0)
+			{
+				str_copy(m_aClients[Kill.m_KillerID].m_aLastPlayerName, Kill.m_aKillerName, sizeof(m_aClients[Kill.m_KillerID].m_aLastPlayerName));
+				m_aClients[Kill.m_KillerID].m_Kills = 0;
+			}
+
+			++m_aClients[Kill.m_KillerID].m_Kills;
+
+			if(Kill.m_KillerID == GameClient()->m_Snap.m_LocalClientID)
+			{
+				if(m_aClients[Kill.m_KillerID].m_Kills == 5)
+					Sound()->Play(CSounds::CHN_QUAKE, g_aQuakeSounds[QUAKE_SOUND_RAMPAGE], 0);
+				else if(m_aClients[Kill.m_KillerID].m_Kills == 10)
+					Sound()->Play(CSounds::CHN_QUAKE, g_aQuakeSounds[QUAKE_SOUND_KILLINGSPREE], 0);
+				else if(m_aClients[Kill.m_KillerID].m_Kills == 15)
+					Sound()->Play(CSounds::CHN_QUAKE, g_aQuakeSounds[QUAKE_SOUND_UNSTOPPABLE], 0);
+				else if(m_aClients[Kill.m_KillerID].m_Kills == 20)
+					Sound()->Play(CSounds::CHN_QUAKE, g_aQuakeSounds[QUAKE_SOUND_DOMINATING], 0);
+				else if(m_aClients[Kill.m_KillerID].m_Kills == 25)
+					Sound()->Play(CSounds::CHN_QUAKE, g_aQuakeSounds[QUAKE_SOUND_WHICKEDSICK], 0);
+				else if(m_aClients[Kill.m_KillerID].m_Kills == 30)
+					Sound()->Play(CSounds::CHN_QUAKE, g_aQuakeSounds[QUAKE_SOUND_GODLIKE], 0);
+			}
+		}
+		if(Kill.m_VictimID >= 0 && Kill.m_Weapon == WEAPON_LASER)
+		{
+			m_aClients[Kill.m_VictimID].m_Kills = 0;
+		}
 	}
 }
 

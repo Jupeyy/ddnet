@@ -18,6 +18,8 @@ CSoundLoading::CSoundLoading(CGameClient *pGameClient, bool Render) :
 {
 }
 
+int g_aQuakeSounds[QUAKE_SOUND_COUNT] = {};
+
 void CSoundLoading::Run()
 {
 	for(int s = 0; s < g_pData->m_NumSounds; s++)
@@ -31,6 +33,21 @@ void CSoundLoading::Run()
 		if(m_Render)
 			m_pGameClient->m_pMenus->RenderLoading();
 	}
+
+	int Id = m_pGameClient->Sound()->LoadWV("audio/quake/dominating.wv");
+	g_aQuakeSounds[QUAKE_SOUND_DOMINATING] = Id;
+	Id = m_pGameClient->Sound()->LoadWV("audio/quake/godlike.wv");
+	g_aQuakeSounds[QUAKE_SOUND_GODLIKE] = Id;
+	Id = m_pGameClient->Sound()->LoadWV("audio/quake/holyshit.wv");
+	g_aQuakeSounds[QUAKE_SOUND_HOLYSHIT] = Id;
+	Id = m_pGameClient->Sound()->LoadWV("audio/quake/killingspree.wv");
+	g_aQuakeSounds[QUAKE_SOUND_KILLINGSPREE] = Id;
+	Id = m_pGameClient->Sound()->LoadWV("audio/quake/rampage.wv");
+	g_aQuakeSounds[QUAKE_SOUND_RAMPAGE] = Id;
+	Id = m_pGameClient->Sound()->LoadWV("audio/quake/unstoppable.wv");
+	g_aQuakeSounds[QUAKE_SOUND_UNSTOPPABLE] = Id;
+	Id = m_pGameClient->Sound()->LoadWV("audio/quake/whickedsick.wv");
+	g_aQuakeSounds[QUAKE_SOUND_WHICKEDSICK] = Id;
 }
 
 int CSounds::GetSampleId(int SetId)
@@ -63,11 +80,15 @@ void CSounds::OnInit()
 	m_MapSoundVolume = g_Config.m_SndMapSoundVolume / 100.0f;
 	m_BackgroundMusicVolume = g_Config.m_SndBackgroundMusicVolume / 100.0f;
 
+	m_QuakeSoundVolume = g_Config.m_SndQuakeSoundVolume / 100.0f;
+
 	Sound()->SetChannel(CSounds::CHN_GUI, m_GuiSoundVolume, 0.0f);
 	Sound()->SetChannel(CSounds::CHN_MUSIC, m_BackgroundMusicVolume, 1.0f);
 	Sound()->SetChannel(CSounds::CHN_WORLD, 0.9f * m_GameSoundVolume, 1.0f);
 	Sound()->SetChannel(CSounds::CHN_GLOBAL, m_GameSoundVolume, 0.0f);
 	Sound()->SetChannel(CSounds::CHN_MAPSOUND, m_MapSoundVolume, 1.0f);
+
+	Sound()->SetChannel(CSounds::CHN_QUAKE, m_QuakeSoundVolume, 0.0f);
 
 	Sound()->SetListenerPos(0.0f, 0.0f);
 
@@ -144,6 +165,13 @@ void CSounds::OnRender()
 	{
 		m_BackgroundMusicVolume = NewBackgroundMusicVol;
 		Sound()->SetChannel(CSounds::CHN_MUSIC, m_BackgroundMusicVolume, 1.0f);
+	}
+
+	float NewQuakeMusicVol = g_Config.m_SndQuakeSoundVolume / 100.0f;
+	if(NewQuakeMusicVol != m_QuakeSoundVolume)
+	{
+		m_QuakeSoundVolume = NewQuakeMusicVol;
+		Sound()->SetChannel(CSounds::CHN_QUAKE, m_QuakeSoundVolume, 0.0f);
 	}
 
 	// play sound from queue

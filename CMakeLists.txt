@@ -671,6 +671,13 @@ set(EXPECTED_DATA
   audio/hook_noattach-02.wv
   audio/hook_noattach-03.wv
   audio/music_menu.wv
+  audio/quake/dominating.wv
+  audio/quake/godlike.wv
+  audio/quake/holyshit.wv
+  audio/quake/killingspree.wv
+  audio/quake/rampage.wv
+  audio/quake/unstoppable.wv
+  audio/quake/whickedsick.wv
   audio/sfx_ctf_cap_pl.wv
   audio/sfx_ctf_drop.wv
   audio/sfx_ctf_grab_en.wv

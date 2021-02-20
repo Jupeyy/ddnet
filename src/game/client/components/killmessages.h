@@ -2,10 +2,19 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #ifndef GAME_CLIENT_COMPONENTS_KILLMESSAGES_H
 #define GAME_CLIENT_COMPONENTS_KILLMESSAGES_H
+#include <engine/shared/protocol.h>
 #include <game/client/component.h>
+
+struct SKillMessagesExtraInfo
+{
+	char m_aLastPlayerName[64];
+	int m_Kills;
+};
 
 class CKillMessages : public CComponent
 {
+	SKillMessagesExtraInfo m_aClients[MAX_CLIENTS];
+
 	int m_SpriteQuadContainerIndex;
 
 public:
@@ -56,6 +65,8 @@ public:
 	virtual void OnRender();
 	virtual void OnMessage(int MsgType, void *pRawMsg);
 	virtual void OnInit();
+
+	virtual void OnMapLoad();
 
 	void RefindSkins();
 };
