@@ -1413,8 +1413,8 @@ void CMenus::OnInit()
 	if(g_Config.m_ClSkipStartMenu)
 		m_ShowStart = false;
 
-	m_RefreshButton.Init(UI());
-	m_ConnectButton.Init(UI());
+	m_RefreshButton.Init(UI(), -1);
+	m_ConnectButton.Init(UI(), -1);
 
 	Console()->Chain("add_favorite", ConchainServerbrowserUpdate, this);
 	Console()->Chain("remove_favorite", ConchainServerbrowserUpdate, this);

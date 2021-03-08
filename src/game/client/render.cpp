@@ -5,6 +5,8 @@
 #include <base/math.h>
 
 #include "animstate.h"
+#include "base/color.h"
+#include "base/vmath.h"
 #include "render.h"
 #include <engine/graphics.h>
 #include <engine/map.h>
@@ -44,7 +46,7 @@ void CRenderTools::Init(IGraphics *pGraphics, CUI *pUI, CGameClient *pGameClient
 	m_pGraphics = pGraphics;
 	m_pUI = pUI;
 	m_pGameClient = (CGameClient *)pGameClient;
-	m_TeeQuadContainerIndex = Graphics()->CreateQuadContainer();
+	m_TeeQuadContainerIndex = Graphics()->CreateQuadContainer(false);
 	Graphics()->SetColor(1.f, 1.f, 1.f, 1.f);
 
 	Graphics()->QuadsSetSubset(0, 0, 1, 1);
@@ -67,6 +69,7 @@ void CRenderTools::Init(IGraphics *pGraphics, CUI *pUI, CGameClient *pGameClient
 	QuadContainerAddSprite(m_TeeQuadContainerIndex, -32.f, -16.f, 64.f, 32.f);
 	Graphics()->QuadsSetSubset(0, 0, 1, 1);
 	QuadContainerAddSprite(m_TeeQuadContainerIndex, -32.f, -16.f, 64.f, 32.f);
+	Graphics()->QuadContainerUpload(m_TeeQuadContainerIndex);
 }
 
 void CRenderTools::SelectSprite(CDataSprite *pSpr, int Flags, int sx, int sy)
@@ -387,13 +390,55 @@ void CRenderTools::DrawRoundRectExt4(float x, float y, float w, float h, vec4 Co
 	}
 }
 
-int CRenderTools::CreateRoundRectQuadContainer(float x, float y, float w, float h, float r, int Corners)
+void CRenderTools::MapTextureCoordinates(const GL_STexCoord *pOriginalTexCoords, const IGraphics::CFreeformItem &Quad, float X, float Y, float W, float H)
 {
-	int ContainerIndex = Graphics()->CreateQuadContainer();
+	float x0, y0, x1, y1, x2, y2, x3, y3;
+
+	float WTexCoord = pOriginalTexCoords[1].u - pOriginalTexCoords[0].u;
+	float HTexCoord = pOriginalTexCoords[2].v - pOriginalTexCoords[0].v;
+
+	float PercX = (Quad.m_X0 - X) / W;
+	float PercY = (Quad.m_Y0 - Y) / H;
+	x0 = pOriginalTexCoords[0].u + PercX * WTexCoord;
+	y0 = pOriginalTexCoords[0].v + PercY * HTexCoord;
+
+	PercX = (Quad.m_X1 - X) / W;
+	PercY = (Quad.m_Y1 - Y) / H;
+	x1 = pOriginalTexCoords[0].u + PercX * WTexCoord;
+	y1 = pOriginalTexCoords[0].v + PercY * HTexCoord;
+
+	PercX = (Quad.m_X2 - X) / W;
+	PercY = (Quad.m_Y2 - Y) / H;
+	x2 = pOriginalTexCoords[0].u + PercX * WTexCoord;
+	y2 = pOriginalTexCoords[0].v + PercY * HTexCoord;
+
+	PercX = (Quad.m_X3 - X) / W;
+	PercY = (Quad.m_Y3 - Y) / H;
+	x3 = pOriginalTexCoords[0].u + PercX * WTexCoord;
+	y3 = pOriginalTexCoords[0].v + PercY * HTexCoord;
+
+	Graphics()->QuadsSetSubsetFree(x0, y0, x1, y1, x3, y3, x2, y2);
+}
+
+int CRenderTools::CreateRoundRectQuadContainer(float x, float y, float w, float h, float r, int Corners, ERenderToolsQuadTextureMode TextureMode)
+{
+	int ContainerIndex = Graphics()->CreateQuadContainer(false);
+
+	GL_STexCoord aTexCoords[4];
+	mem_copy(aTexCoords, Graphics()->GetCurTextureCoordinates(), sizeof(aTexCoords));
 
 	IGraphics::CFreeformItem ArrayF[32];
 	int NumItems = 0;
 	int Num = 8;
+
+	auto &&CheckTextCoordsMapping = [&]() {
+		if(TextureMode != RENDER_TOOLS_QUAD_TEXTURE_MODE_IGNORE)
+		{
+			MapTextureCoordinates(aTexCoords, ArrayF[--NumItems], x, y, w, h);
+			Graphics()->QuadContainerAddQuads(ContainerIndex, &ArrayF[NumItems], 1);
+		}
+	};
+
 	for(int i = 0; i < Num; i += 2)
 	{
 		float a1 = i / (float)Num * pi / 2;
@@ -407,61 +452,192 @@ int CRenderTools::CreateRoundRectQuadContainer(float x, float y, float w, float 
 		float Sa3 = sinf(a3);
 
 		if(Corners & 1) // TL
+		{
 			ArrayF[NumItems++] = IGraphics::CFreeformItem(
 				x + r, y + r,
 				x + (1 - Ca1) * r, y + (1 - Sa1) * r,
 				x + (1 - Ca3) * r, y + (1 - Sa3) * r,
 				x + (1 - Ca2) * r, y + (1 - Sa2) * r);
+			CheckTextCoordsMapping();
+		}
 
 		if(Corners & 2) // TR
+		{
 			ArrayF[NumItems++] = IGraphics::CFreeformItem(
 				x + w - r, y + r,
 				x + w - r + Ca1 * r, y + (1 - Sa1) * r,
 				x + w - r + Ca3 * r, y + (1 - Sa3) * r,
 				x + w - r + Ca2 * r, y + (1 - Sa2) * r);
+			CheckTextCoordsMapping();
+		}
 
 		if(Corners & 4) // BL
+		{
 			ArrayF[NumItems++] = IGraphics::CFreeformItem(
 				x + r, y + h - r,
 				x + (1 - Ca1) * r, y + h - r + Sa1 * r,
 				x + (1 - Ca3) * r, y + h - r + Sa3 * r,
 				x + (1 - Ca2) * r, y + h - r + Sa2 * r);
+			CheckTextCoordsMapping();
+		}
 
 		if(Corners & 8) // BR
+		{
 			ArrayF[NumItems++] = IGraphics::CFreeformItem(
 				x + w - r, y + h - r,
 				x + w - r + Ca1 * r, y + h - r + Sa1 * r,
 				x + w - r + Ca3 * r, y + h - r + Sa3 * r,
 				x + w - r + Ca2 * r, y + h - r + Sa2 * r);
+			CheckTextCoordsMapping();
+		}
 	}
-	Graphics()->QuadContainerAddQuads(ContainerIndex, ArrayF, NumItems);
+
+	if(NumItems > 0)
+		Graphics()->QuadContainerAddQuads(ContainerIndex, ArrayF, NumItems);
 
 	IGraphics::CQuadItem ArrayQ[9];
+
+	auto &&CheckTextCoordsMapping2 = [&]() {
+		if(TextureMode != RENDER_TOOLS_QUAD_TEXTURE_MODE_IGNORE)
+		{
+			MapTextureCoordinates(aTexCoords, ArrayQ[--NumItems].ToFreeForm(), x, y, w, h);
+			Graphics()->QuadContainerAddQuads(ContainerIndex, &ArrayQ[NumItems], 1);
+		}
+	};
+
 	NumItems = 0;
 	ArrayQ[NumItems++] = IGraphics::CQuadItem(x + r, y + r, w - r * 2, h - r * 2); // center
+	CheckTextCoordsMapping2();
 	ArrayQ[NumItems++] = IGraphics::CQuadItem(x + r, y, w - r * 2, r); // top
+	CheckTextCoordsMapping2();
 	ArrayQ[NumItems++] = IGraphics::CQuadItem(x + r, y + h - r, w - r * 2, r); // bottom
+	CheckTextCoordsMapping2();
 	ArrayQ[NumItems++] = IGraphics::CQuadItem(x, y + r, r, h - r * 2); // left
+	CheckTextCoordsMapping2();
 	ArrayQ[NumItems++] = IGraphics::CQuadItem(x + w - r, y + r, r, h - r * 2); // right
+	CheckTextCoordsMapping2();
 
 	if(!(Corners & 1))
+	{
 		ArrayQ[NumItems++] = IGraphics::CQuadItem(x, y, r, r); // TL
+		CheckTextCoordsMapping2();
+	}
 	if(!(Corners & 2))
+	{
 		ArrayQ[NumItems++] = IGraphics::CQuadItem(x + w, y, -r, r); // TR
+		CheckTextCoordsMapping2();
+	}
 	if(!(Corners & 4))
+	{
 		ArrayQ[NumItems++] = IGraphics::CQuadItem(x, y + h, r, -r); // BL
+		CheckTextCoordsMapping2();
+	}
 	if(!(Corners & 8))
+	{
 		ArrayQ[NumItems++] = IGraphics::CQuadItem(x + w, y + h, -r, -r); // BR
+		CheckTextCoordsMapping2();
+	}
 
-	Graphics()->QuadContainerAddQuads(ContainerIndex, ArrayQ, NumItems);
+	if(NumItems > 0)
+		Graphics()->QuadContainerAddQuads(ContainerIndex, ArrayQ, NumItems);
+
+	Graphics()->QuadContainerUpload(ContainerIndex);
+
+	Graphics()->QuadContainerChangeAutomaticUpload(ContainerIndex, true);
+
+	Graphics()->QuadsSetSubsetFree(aTexCoords[0].u, aTexCoords[0].v, aTexCoords[1].u, aTexCoords[1].v, aTexCoords[2].u, aTexCoords[2].v, aTexCoords[3].u, aTexCoords[3].v);
 
 	return ContainerIndex;
 }
 
-void CRenderTools::DrawUIElRect(CUIElement::SUIElementRect &ElUIRect, const CUIRect *pRect, ColorRGBA Color, int Corners, float Rounding)
+static vec2 Rotate2D(const vec2 &Pos, float a)
+{
+	vec2 PosR;
+	PosR.x = cosf(a) * Pos.x + -sinf(a) * Pos.y;
+	PosR.y = sinf(a) * Pos.x + cosf(a) * Pos.y;
+	return PosR;
+}
+
+int CRenderTools::Create3DRectEffectQuadContainer(float x, float y, float w, float h, float r, ColorRGBA Color, float ColorBackMultiplier)
+{
+	int ContainerIndex = Graphics()->CreateQuadContainer(false);
+
+	const int NumQ = 32;
+	IGraphics::CFreeformItem aArrayF[2][NumQ * 3];
+
+	vec2 DirW(x - (x + w), 0);
+	DirW = normalize(DirW);
+
+	vec2 PosW(x + w - r, y);
+	float Sign = -1;
+	if(w < 0)
+		Sign = 1;
+	vec2 Dir3D(Rotate2D(DirW, ((Sign * 45.0f) / 180.0f) * pi));
+	vec2 PosW2(PosW + Dir3D * absolute(r));
+	vec2 Dir3DInv = -Dir3D;
+
+	int q[2] = {0, 0};
+	bool HalfReached = false;
+	vec2 PosSeg, PosSeg2;
+
+	float Rotation3DEffect = pi / 2;
+
+	for(int i = 0; i < NumQ; ++i)
+	{
+		float CurRot = -Sign * (((float)i / NumQ) * Rotation3DEffect);
+		float CurRot2 = -Sign * (((float)(i + 1) / NumQ) * Rotation3DEffect);
+		float ScaleFactor1 = 1.0f;
+		if(absolute(CurRot) < Rotation3DEffect / 2)
+			ScaleFactor1 = 1.0f + (absolute(CurRot) / (Rotation3DEffect / 2)) / 2.0f;
+		else
+		{
+			ScaleFactor1 = 1.0f + ((Rotation3DEffect)-absolute(CurRot)) / (Rotation3DEffect / 2) / 2.0f;
+			HalfReached = true;
+		}
+		float ScaleFactor2 = 1.0f;
+		if(absolute(CurRot2) < (Rotation3DEffect / 2))
+			ScaleFactor2 = 1.0f + (absolute(CurRot2) / (Rotation3DEffect / 2)) / 2.0f;
+		else
+			ScaleFactor2 = 1.0f + ((Rotation3DEffect)-absolute(CurRot2)) / (Rotation3DEffect / 2) / 2.0f;
+		PosSeg = PosW2 + Rotate2D(Dir3DInv, CurRot) * absolute(r) * ScaleFactor1;
+		PosSeg2 = PosW2 + Rotate2D(Dir3DInv, CurRot2) * absolute(r) * ScaleFactor2;
+
+		int ArrIndex = 0;
+		if(HalfReached)
+			ArrIndex = 1;
+
+		aArrayF[ArrIndex][q[ArrIndex]++] = IGraphics::CFreeformItem(PosSeg.x, PosSeg.y, PosSeg2.x, PosSeg2.y, PosSeg.x, PosSeg.y + h, PosSeg2.x, PosSeg2.y + h);
+	}
+	ColorRGBA ColorNew = ColorRGBA(Color.r * ColorBackMultiplier, Color.g * ColorBackMultiplier, Color.b * ColorBackMultiplier, Color.a);
+	Graphics()->SetColor(ColorNew);
+
+	vec2 PosStart = PosW2 + Rotate2D(Dir3DInv, -Sign * Rotation3DEffect) * absolute(r);
+	vec2 RotForEnd = Rotate2D(Dir3DInv, -Sign * (((float)NumQ * 2 + NumQ / 4) / NumQ) * Rotation3DEffect);
+	float TargetX = x;
+	float AmountFac = absolute(TargetX - PosStart.x) / absolute(RotForEnd.x);
+	vec2 PosEnd = PosStart + RotForEnd * absolute(AmountFac);
+	IGraphics::CFreeformItem EndQ = IGraphics::CFreeformItem(PosStart.x, PosStart.y, PosEnd.x, PosEnd.y, PosStart.x, PosStart.y + h, PosEnd.x, PosEnd.y + h);
+
+	Graphics()->QuadContainerAddQuads(ContainerIndex, &EndQ, 1);
+	Graphics()->QuadContainerAddQuads(ContainerIndex, aArrayF[1], q[1]);
+
+	// create normal quad
+	IGraphics::CFreeformItem NormalQ(x, y, x + w - r, y, x, y + h, x + w - r, y + h);
+
+	Graphics()->SetColor(Color);
+
+	Graphics()->QuadContainerAddQuads(ContainerIndex, aArrayF[0], q[0]);
+
+	Graphics()->QuadContainerAddQuads(ContainerIndex, &NormalQ, 1);
+	Graphics()->QuadContainerUpload(ContainerIndex);
+	Graphics()->QuadContainerChangeAutomaticUpload(ContainerIndex, true);
+	return ContainerIndex;
+}
+
+void CRenderTools::DrawUIElRect(CUIElement::SUIElementRect &ElUIRect, float x, float y, float w, float h, ColorRGBA Color, int Corners, float Rounding, ERenderToolsQuadTextureMode TextureMode)
 {
 	bool NeedsRecreate = false;
-	if(ElUIRect.m_UIRectQuadContainer == -1 || ElUIRect.m_X != pRect->x || ElUIRect.m_Y != pRect->y || ElUIRect.m_Width != pRect->w || ElUIRect.m_Height != pRect->h)
+	if(ElUIRect.m_UIRectQuadContainer == -1 || ElUIRect.m_X != x || ElUIRect.m_Y != y || ElUIRect.m_Width != w || ElUIRect.m_Height != h || mem_comp(&ElUIRect.m_QuadColor, &Color, sizeof(Color)) != 0)
 	{
 		if(ElUIRect.m_UIRectQuadContainer != -1)
 			Graphics()->DeleteQuadContainer(ElUIRect.m_UIRectQuadContainer);
@@ -469,18 +645,79 @@ void CRenderTools::DrawUIElRect(CUIElement::SUIElementRect &ElUIRect, const CUIR
 	}
 	if(NeedsRecreate)
 	{
-		ElUIRect.m_X = pRect->x;
-		ElUIRect.m_Y = pRect->y;
-		ElUIRect.m_Width = pRect->w;
-		ElUIRect.m_Height = pRect->h;
+		ElUIRect.m_X = x;
+		ElUIRect.m_Y = y;
+		ElUIRect.m_Width = w;
+		ElUIRect.m_Height = h;
+		ElUIRect.m_QuadColor = Color;
 
 		Graphics()->SetColor(Color);
-		ElUIRect.m_UIRectQuadContainer = CreateRoundRectQuadContainer(pRect->x, pRect->y, pRect->w, pRect->h, Rounding, Corners);
+		ElUIRect.m_UIRectQuadContainer = CreateRoundRectQuadContainer(x, y, w, h, Rounding, Corners, TextureMode);
+		Graphics()->SetColor(1, 1, 1, 1);
+	}
+
+	if(TextureMode == ERenderToolsQuadTextureMode::RENDER_TOOLS_QUAD_TEXTURE_MODE_IGNORE)
+		Graphics()->TextureClear();
+	Graphics()->RenderQuadContainer(ElUIRect.m_UIRectQuadContainer, 0, -1, TextureMode != ERenderToolsQuadTextureMode::RENDER_TOOLS_QUAD_TEXTURE_MODE_RESPECT_REPEATED);
+}
+
+void CRenderTools::DrawUIElRect(CUIElement::SUIElementRect &ElUIRect, const CUIRect *pRect, ColorRGBA Color, int Corners, float Rounding, ERenderToolsQuadTextureMode TextureMode)
+{
+	DrawUIElRect(ElUIRect, pRect->x, pRect->y, pRect->w, pRect->h, Color, Corners, Rounding, TextureMode);
+}
+
+void CRenderTools::DrawUIElRect3D(CUIElement::SUIElementRect &ElUIRect, float x, float y, float w, float h, ColorRGBA Color, float Rounding, float ColorBackMultiplier)
+{
+	bool NeedsRecreate = false;
+	if(ElUIRect.m_UIRectQuadContainer == -1 || ElUIRect.m_X != x || ElUIRect.m_Y != y || ElUIRect.m_Width != w || ElUIRect.m_Height != h || mem_comp(&ElUIRect.m_QuadColor, &Color, sizeof(Color)) != 0)
+	{
+		if(ElUIRect.m_UIRectQuadContainer != -1)
+			Graphics()->DeleteQuadContainer(ElUIRect.m_UIRectQuadContainer);
+		NeedsRecreate = true;
+	}
+	if(NeedsRecreate)
+	{
+		ElUIRect.m_X = x;
+		ElUIRect.m_Y = y;
+		ElUIRect.m_Width = w;
+		ElUIRect.m_Height = h;
+		ElUIRect.m_QuadColor = Color;
+
+		Graphics()->SetColor(Color);
+		ElUIRect.m_UIRectQuadContainer = Create3DRectEffectQuadContainer(x, y, w, h, Rounding, Color, ColorBackMultiplier);
 		Graphics()->SetColor(1, 1, 1, 1);
 	}
 
 	Graphics()->TextureClear();
 	Graphics()->RenderQuadContainer(ElUIRect.m_UIRectQuadContainer, -1);
+}
+
+void CRenderTools::DrawUIElRectQuad(CUIElement::SUIElementRect &ElUIRect, float x, float y, float w, float h, ColorRGBA Color, bool DidChangeTextureCoords)
+{
+	bool NeedsRecreate = false;
+	if(DidChangeTextureCoords || ElUIRect.m_UIRectQuadContainer == -1 || ElUIRect.m_X != x || ElUIRect.m_Y != y || ElUIRect.m_Width != w || ElUIRect.m_Height != h || mem_comp(&ElUIRect.m_QuadColor, &Color, sizeof(Color)) != 0)
+	{
+		if(ElUIRect.m_UIRectQuadContainer != -1)
+			Graphics()->DeleteQuadContainer(ElUIRect.m_UIRectQuadContainer);
+		NeedsRecreate = true;
+	}
+	if(NeedsRecreate)
+	{
+		ElUIRect.m_X = x;
+		ElUIRect.m_Y = y;
+		ElUIRect.m_Width = w;
+		ElUIRect.m_Height = h;
+		ElUIRect.m_QuadColor = Color;
+
+		Graphics()->SetColor(Color);
+		ElUIRect.m_UIRectQuadContainer = Graphics()->CreateQuadContainer(false);
+		IGraphics::CQuadItem QuadItem(x, y, w, h);
+		Graphics()->QuadContainerAddQuads(ElUIRect.m_UIRectQuadContainer, &QuadItem, 1);
+		Graphics()->QuadContainerUpload(ElUIRect.m_UIRectQuadContainer);
+		Graphics()->SetColor(1, 1, 1, 1);
+	}
+
+	Graphics()->RenderQuadContainer(ElUIRect.m_UIRectQuadContainer, 0, -1, false);
 }
 
 void CRenderTools::DrawRoundRect(float x, float y, float w, float h, float r)

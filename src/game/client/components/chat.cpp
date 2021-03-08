@@ -889,6 +889,15 @@ void CChat::RefindSkins()
 	}
 }
 
+static const float gs_ChatHeight = 300.0f;
+
+float CChat::GetHeightLimit(bool IsScoreboardOpen)
+{
+	return IsScoreboardOpen ?
+		       (((m_pClient->m_pScoreboard->GetCurScoreboardHeight() + m_pClient->m_pScoreboard->GetCurScoreboardYOffset()) / CScoreboard::ms_ScreenHeight) * gs_ChatHeight) :
+		       (m_PrevShowChat ? 50.0f : 200.0f);
+}
+
 void CChat::OnPrepareLines()
 {
 	float x = 5.0f;
@@ -919,9 +928,9 @@ void CChat::OnPrepareLines()
 	}
 
 	int64 Now = time();
-	float LineWidth = (IsScoreBoardOpen ? 85.0f : 200.0f) - (RealMsgPaddingX * 1.5f) - RealMsgPaddingTee;
+	float LineWidth = 200.0f - (RealMsgPaddingX * 1.5f) - RealMsgPaddingTee;
 
-	float HeightLimit = IsScoreBoardOpen ? 180.0f : m_PrevShowChat ? 50.0f : 200.0f;
+	float HeightLimit = GetHeightLimit(IsScoreBoardOpen);
 	float Begin = x;
 	float TextBegin = Begin + RealMsgPaddingX / 2.0f;
 	CTextCursor Cursor;
@@ -997,11 +1006,8 @@ void CChat::OnPrepareLines()
 
 			CTextCursor AppendCursor = Cursor;
 
-			if(!IsScoreBoardOpen)
-			{
-				AppendCursor.m_StartX = Cursor.m_X;
-				AppendCursor.m_LineWidth -= (Cursor.m_LongestLineWidth - Cursor.m_StartX);
-			}
+			AppendCursor.m_StartX = Cursor.m_X;
+			AppendCursor.m_LineWidth -= (Cursor.m_LongestLineWidth - Cursor.m_StartX);
 
 			TextRender()->TextEx(&AppendCursor, m_aLines[r].m_aText, -1);
 
@@ -1109,11 +1115,8 @@ void CChat::OnPrepareLines()
 		TextRender()->TextColor(Color);
 
 		CTextCursor AppendCursor = Cursor;
-		if(!IsScoreBoardOpen)
-		{
-			AppendCursor.m_LineWidth -= (Cursor.m_LongestLineWidth - Cursor.m_StartX);
-			AppendCursor.m_StartX = Cursor.m_X;
-		}
+		AppendCursor.m_LineWidth -= (Cursor.m_LongestLineWidth - Cursor.m_StartX);
+		AppendCursor.m_StartX = Cursor.m_X;
 
 		if(m_aLines[r].m_TextContainerIndex == -1)
 			m_aLines[r].m_TextContainerIndex = TextRender()->CreateTextContainer(&AppendCursor, m_aLines[r].m_aText);
@@ -1152,10 +1155,10 @@ void CChat::OnRender()
 		--m_PendingChatCounter;
 	}
 
-	float Width = 300.0f * Graphics()->ScreenAspect();
-	Graphics()->MapScreen(0.0f, 0.0f, Width, 300.0f);
+	float Width = gs_ChatHeight * Graphics()->ScreenAspect();
+	Graphics()->MapScreen(0.0f, 0.0f, Width, gs_ChatHeight);
 	float x = 5.0f;
-	float y = 300.0f - 20.0f;
+	float y = gs_ChatHeight - 20.0f;
 	if(m_Mode != MODE_NONE)
 	{
 		// render chat input
@@ -1236,7 +1239,7 @@ void CChat::OnRender()
 	bool IsScoreBoardOpen = m_pClient->m_pScoreboard->Active() && (ScreenRatio > 1.7f); // only assume scoreboard when screen ratio is widescreen(something around 16:9)
 
 	int64 Now = time();
-	float HeightLimit = IsScoreBoardOpen ? 180.0f : m_PrevShowChat ? 50.0f : 200.0f;
+	float HeightLimit = GetHeightLimit(IsScoreBoardOpen);
 	int OffsetType = IsScoreBoardOpen ? 1 : 0;
 
 	float RealMsgPaddingX = MESSAGE_PADDING_X;

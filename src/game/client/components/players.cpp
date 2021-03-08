@@ -727,7 +727,7 @@ void CPlayers::OnRender()
 
 void CPlayers::OnInit()
 {
-	m_WeaponEmoteQuadContainerIndex = Graphics()->CreateQuadContainer();
+	m_WeaponEmoteQuadContainerIndex = Graphics()->CreateQuadContainer(false);
 
 	Graphics()->SetColor(1.f, 1.f, 1.f, 1.f);
 
@@ -758,10 +758,11 @@ void CPlayers::OnInit()
 		Graphics()->QuadsSetSubset(0, 0, 1, 1);
 		RenderTools()->QuadContainerAddSprite(m_WeaponEmoteQuadContainerIndex, 64.f);
 	}
+	Graphics()->QuadContainerUpload(m_WeaponEmoteQuadContainerIndex);
 
 	for(int i = 0; i < NUM_WEAPONS; ++i)
 	{
-		m_WeaponSpriteMuzzleQuadContainerIndex[i] = Graphics()->CreateQuadContainer();
+		m_WeaponSpriteMuzzleQuadContainerIndex[i] = Graphics()->CreateQuadContainer(false);
 		for(int n = 0; n < g_pData->m_Weapons.m_aId[i].m_NumSpriteMuzzles; ++n)
 		{
 			if(g_pData->m_Weapons.m_aId[i].m_aSpriteMuzzles[n])
@@ -790,13 +791,15 @@ void CPlayers::OnInit()
 			else
 				RenderTools()->QuadContainerAddSprite(m_WeaponSpriteMuzzleQuadContainerIndex[i], SWidth, SHeight);
 		}
+		Graphics()->QuadContainerUpload(m_WeaponSpriteMuzzleQuadContainerIndex[i]);
 	}
 
 	Graphics()->QuadsSetSubset(0.f, 0.f, 1.f, 1.f);
 	Graphics()->QuadsSetRotation(0.f);
 	// the direction
-	m_DirectionQuadContainerIndex = Graphics()->CreateQuadContainer();
+	m_DirectionQuadContainerIndex = Graphics()->CreateQuadContainer(false);
 
 	IGraphics::CQuadItem QuadItem(0.f, 0.f, 22.f, 22.f);
 	Graphics()->QuadContainerAddQuads(m_DirectionQuadContainerIndex, &QuadItem, 1);
+	Graphics()->QuadContainerUpload(m_DirectionQuadContainerIndex);
 }

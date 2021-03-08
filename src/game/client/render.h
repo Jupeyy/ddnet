@@ -49,6 +49,13 @@ enum
 
 typedef void (*ENVELOPE_EVAL)(int TimeOffsetMillis, int Env, float *pChannels, void *pUser);
 
+enum ERenderToolsQuadTextureMode
+{
+	RENDER_TOOLS_QUAD_TEXTURE_MODE_IGNORE = 0,
+	RENDER_TOOLS_QUAD_TEXTURE_MODE_RESPECT_CLAMPED,
+	RENDER_TOOLS_QUAD_TEXTURE_MODE_RESPECT_REPEATED,
+};
+
 class CRenderTools
 {
 	int m_TeeQuadContainerIndex;
@@ -68,7 +75,7 @@ public:
 
 	void Init(class IGraphics *pGraphics, class CUI *pUI, class CGameClient *pGameClient);
 
-	//typedef struct SPRITE;
+	// typedef struct SPRITE;
 
 	void SelectSprite(struct CDataSprite *pSprite, int Flags = 0, int sx = 0, int sy = 0);
 	void SelectSprite(int id, int Flags = 0, int sx = 0, int sy = 0);
@@ -90,9 +97,19 @@ public:
 	void DrawRoundRectExt(float x, float y, float w, float h, float r, int Corners);
 	void DrawRoundRectExt4(float x, float y, float w, float h, vec4 ColorTopLeft, vec4 ColorTopRight, vec4 ColorBottomLeft, vec4 ColorBottomRight, float r, int Corners);
 
-	int CreateRoundRectQuadContainer(float x, float y, float w, float h, float r, int Corners);
+	void MapTextureCoordinates(const GL_STexCoord *pOriginalTexCoords, const IGraphics::CFreeformItem &Quad, float X, float Y, float W, float H);
 
-	void DrawUIElRect(CUIElement::SUIElementRect &ElUIRect, const CUIRect *pRect, ColorRGBA Color, int Corners, float Rounding);
+	int CreateRoundRectQuadContainer(float x, float y, float w, float h, float r, int Corners, ERenderToolsQuadTextureMode TextureMode = RENDER_TOOLS_QUAD_TEXTURE_MODE_IGNORE);
+
+	int Create3DRectEffectQuadContainer(float x, float y, float w, float h, float r, ColorRGBA Color, float ColorBackMultiplier = 1.0f / 2.0f);
+
+	void DrawUIElRect(CUIElement::SUIElementRect &ElUIRect, float x, float y, float w, float h, ColorRGBA Color, int Corners, float Rounding, ERenderToolsQuadTextureMode TextureMode = RENDER_TOOLS_QUAD_TEXTURE_MODE_IGNORE);
+	void DrawUIElRect(CUIElement::SUIElementRect &ElUIRect, const CUIRect *pRect, ColorRGBA Color, int Corners, float Rounding, ERenderToolsQuadTextureMode TextureMode = RENDER_TOOLS_QUAD_TEXTURE_MODE_IGNORE);
+
+	void DrawUIElRect3D(CUIElement::SUIElementRect &ElUIRect, float x, float y, float w, float h, ColorRGBA Color, float Rounding, float ColorBackMultiplier = 1.0f / 2.0f);
+
+	// does not clear asigned textures
+	void DrawUIElRectQuad(CUIElement::SUIElementRect &ElUIRect, float x, float y, float w, float h, ColorRGBA Color, bool DidChangeTextureCoords);
 
 	void DrawUIRect(const CUIRect *pRect, ColorRGBA Color, int Corners, float Rounding);
 	void DrawUIRect4(const CUIRect *pRect, vec4 ColorTopLeft, vec4 ColorTopRight, vec4 ColorBottomLeft, vec4 ColorBottomRight, int Corners, float Rounding);

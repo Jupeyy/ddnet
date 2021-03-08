@@ -82,6 +82,7 @@ void CHud::OnReset()
 void CHud::OnInit()
 {
 	Graphics()->SetColor(1.f, 1.f, 1.f, 1.f);
+	m_HudQuadContainerIndex = Graphics()->CreateQuadContainer(false);
 	PrepareHealthAmoQuads();
 
 	// all cursors
@@ -98,6 +99,7 @@ void CHud::OnInit()
 	RenderTools()->QuadContainerAddSprite(m_HudQuadContainerIndex, 0.f, 0.f, 8.f, 16.f);
 	Graphics()->QuadsSetSubset(0, 0, 1, 1);
 	RenderTools()->QuadContainerAddSprite(m_HudQuadContainerIndex, 0.f, 0.f, 8.f, 16.f);
+	Graphics()->QuadContainerUpload(m_HudQuadContainerIndex);
 }
 
 void CHud::RenderGameTimer()
@@ -127,7 +129,8 @@ void CHud::RenderGameTimer()
 		float FontSize = 10.0f;
 		float w;
 		w = TextRender()->TextWidth(0, 12,
-			Time >= 3600 * 24 ? "00d 00:00:00" : Time >= 3600 ? "00:00:00" : "00:00",
+			Time >= 3600 * 24 ? "00d 00:00:00" : Time >= 3600 ? "00:00:00" :
+                                                                            "00:00",
 			-1, -1.0f);
 		// last 60 sec red, last 10 sec blink
 		if(m_pClient->m_Snap.m_pGameInfoObj->m_TimeLimit && Time <= 60 && (m_pClient->m_Snap.m_pGameInfoObj->m_WarmupTimer <= 0))
@@ -244,8 +247,8 @@ void CHud::RenderScoreHud()
 				{
 					int BlinkTimer = (m_pClient->m_FlagDropTick[t] != 0 &&
 								 (Client()->GameTick(g_Config.m_ClDummy) - m_pClient->m_FlagDropTick[t]) / Client()->GameTickSpeed() >= 25) ?
-								 10 :
-								 20;
+                                                                 10 :
+                                                                 20;
 					if(FlagCarrier[t] == FLAG_ATSTAND || (FlagCarrier[t] == FLAG_TAKEN && ((Client()->GameTick(g_Config.m_ClDummy) / BlinkTimer) & 1)))
 					{
 						// draw flag
@@ -658,8 +661,6 @@ void CHud::RenderCursor()
 
 void CHud::PrepareHealthAmoQuads()
 {
-	m_HudQuadContainerIndex = Graphics()->CreateQuadContainer();
-
 	float x = 5;
 	float y = 5;
 	IGraphics::CQuadItem Array[10];
