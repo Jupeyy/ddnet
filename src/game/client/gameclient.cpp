@@ -186,7 +186,7 @@ void CGameClient::OnConsoleInit()
 	m_All.Add(m_pRaceDemo);
 	m_All.Add(m_pMapSounds);
 
-	m_All.Add(&gs_BackGround); //render instead of gs_MapLayersBackGround when g_Config.m_ClOverlayEntities == 100
+	m_All.Add(&gs_BackGround); // render instead of gs_MapLayersBackGround when g_Config.m_ClOverlayEntities == 100
 	m_All.Add(&gs_MapLayersBackGround); // first to render
 	m_All.Add(&m_pParticles->m_RenderTrail);
 	m_All.Add(m_pItems);
@@ -667,6 +667,8 @@ void CGameClient::OnRender()
 	for(int i = 0; i < m_All.m_Num; i++)
 		m_All.m_paComponents[i]->OnRender();
 
+	bool Mouse2Clicked = Input()->KeyIsPressed(KEY_MOUSE_2);
+
 	// clear all events/input for this frame
 	Input()->Clear();
 
@@ -719,6 +721,41 @@ void CGameClient::OnRender()
 				m_CheckInfo[1]--;
 		}
 	}
+
+	float ScreenX0, ScreenY0, ScreenX1, ScreenY1;
+	Graphics()->GetScreen(&ScreenX0, &ScreenY0, &ScreenX1, &ScreenY1);
+	Graphics()->MapScreen(0, 0, 900, 600);
+
+	static bool InitQuad = false;
+	static int QuadContainer = -1;
+	if(!InitQuad)
+	{
+		QuadContainer = Graphics()->CreateQuadContainer();
+		IGraphics::CQuadItem aQuads[2];
+		Graphics()->SetColor(ColorRGBA{1, 1, 1, 1});
+		aQuads[0].Set(700, 500, 500, 500);
+		Graphics()->QuadContainerAddQuads(QuadContainer, aQuads, 1);
+		Graphics()->SetColor(ColorRGBA{0, 0, 0, 1});
+		aQuads[1].Set(700, 500, 500, 500);
+		Graphics()->QuadContainerAddQuads(QuadContainer, aQuads + 1, 1);
+	}
+
+	static int64 TimeClicked = time_get_microseconds() - 100000000;
+
+	if(Mouse2Clicked || (time_get_microseconds() - TimeClicked < 1000000))
+	{
+		Graphics()->TextureClear();
+		Graphics()->RenderQuadContainer(QuadContainer, 0, 1);
+		if(Mouse2Clicked)
+			TimeClicked = time_get_microseconds();
+	}
+	else
+	{
+		Graphics()->TextureClear();
+		Graphics()->RenderQuadContainer(QuadContainer, 1, 1);
+	}
+
+	Graphics()->MapScreen(ScreenX0, ScreenY0, ScreenX1, ScreenY1);
 }
 
 void CGameClient::OnDummyDisconnect()
