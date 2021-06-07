@@ -107,15 +107,15 @@ void CMenus::RenderGame(CUIRect MainView)
 
 	bool Paused = false;
 	bool Spec = false;
-	if(m_pClient->m_Snap.m_LocalClientID >= 0)
+	if(m_pClient->GetSnap().m_LocalClientID >= 0)
 	{
-		Paused = m_pClient->m_aClients[m_pClient->m_Snap.m_LocalClientID].m_Paused;
-		Spec = m_pClient->m_aClients[m_pClient->m_Snap.m_LocalClientID].m_Spec;
+		Paused = m_pClient->m_aClients[m_pClient->GetSnap().m_LocalClientID].m_Paused;
+		Spec = m_pClient->m_aClients[m_pClient->GetSnap().m_LocalClientID].m_Spec;
 	}
 
-	if(m_pClient->m_Snap.m_pLocalInfo && m_pClient->m_Snap.m_pGameInfoObj && !Paused && !Spec)
+	if(m_pClient->GetSnap().m_pLocalInfo && m_pClient->GetSnap().m_pGameInfoObj && !Paused && !Spec)
 	{
-		if(m_pClient->m_Snap.m_pLocalInfo->m_Team != TEAM_SPECTATORS)
+		if(m_pClient->GetSnap().m_pLocalInfo->m_Team != TEAM_SPECTATORS)
 		{
 			ButtonBar.VSplitLeft(5.0f, 0, &ButtonBar);
 			ButtonBar.VSplitLeft(120.0f, &Button, &ButtonBar);
@@ -129,9 +129,9 @@ void CMenus::RenderGame(CUIRect MainView)
 			}
 		}
 
-		if(m_pClient->m_Snap.m_pGameInfoObj->m_GameFlags & GAMEFLAG_TEAMS)
+		if(m_pClient->GetSnap().m_pGameInfoObj->m_GameFlags & GAMEFLAG_TEAMS)
 		{
-			if(m_pClient->m_Snap.m_pLocalInfo->m_Team != TEAM_RED)
+			if(m_pClient->GetSnap().m_pLocalInfo->m_Team != TEAM_RED)
 			{
 				ButtonBar.VSplitLeft(5.0f, 0, &ButtonBar);
 				ButtonBar.VSplitLeft(120.0f, &Button, &ButtonBar);
@@ -142,7 +142,7 @@ void CMenus::RenderGame(CUIRect MainView)
 				}
 			}
 
-			if(m_pClient->m_Snap.m_pLocalInfo->m_Team != TEAM_BLUE)
+			if(m_pClient->GetSnap().m_pLocalInfo->m_Team != TEAM_BLUE)
 			{
 				ButtonBar.VSplitLeft(5.0f, 0, &ButtonBar);
 				ButtonBar.VSplitLeft(120.0f, &Button, &ButtonBar);
@@ -155,7 +155,7 @@ void CMenus::RenderGame(CUIRect MainView)
 		}
 		else
 		{
-			if(m_pClient->m_Snap.m_pLocalInfo->m_Team != 0)
+			if(m_pClient->GetSnap().m_pLocalInfo->m_Team != 0)
 			{
 				ButtonBar.VSplitLeft(5.0f, 0, &ButtonBar);
 				ButtonBar.VSplitLeft(120.0f, &Button, &ButtonBar);
@@ -168,9 +168,9 @@ void CMenus::RenderGame(CUIRect MainView)
 		}
 	}
 
-	if(m_pClient->m_Snap.m_pLocalInfo && m_pClient->m_Snap.m_pGameInfoObj)
+	if(m_pClient->GetSnap().m_pLocalInfo && m_pClient->GetSnap().m_pGameInfoObj)
 	{
-		if(m_pClient->m_Snap.m_pLocalInfo->m_Team != TEAM_SPECTATORS)
+		if(m_pClient->GetSnap().m_pLocalInfo->m_Team != TEAM_SPECTATORS)
 		{
 			ButtonBar.VSplitLeft(5.0f, 0, &ButtonBar);
 			ButtonBar.VSplitLeft(65.0f, &Button, &ButtonBar);
@@ -184,9 +184,9 @@ void CMenus::RenderGame(CUIRect MainView)
 		}
 	}
 
-	if(m_pClient->m_ReceivedDDNetPlayer && m_pClient->m_Snap.m_pLocalInfo && m_pClient->m_Snap.m_pGameInfoObj)
+	if(m_pClient->m_ReceivedDDNetPlayer && m_pClient->GetSnap().m_pLocalInfo && m_pClient->GetSnap().m_pGameInfoObj)
 	{
-		if(m_pClient->m_Snap.m_pLocalInfo->m_Team != TEAM_SPECTATORS || Paused || Spec)
+		if(m_pClient->GetSnap().m_pLocalInfo->m_Team != TEAM_SPECTATORS || Paused || Spec)
 		{
 			ButtonBar.VSplitLeft(5.0f, 0, &ButtonBar);
 			ButtonBar.VSplitLeft((!Paused && !Spec) ? 65.0f : 120.0f, &Button, &ButtonBar);
@@ -248,14 +248,14 @@ void CMenus::RenderPlayers(CUIRect MainView)
 
 	int TotalPlayers = 0;
 
-	for(auto &pInfoByName : m_pClient->m_Snap.m_paInfoByName)
+	for(auto &pInfoByName : m_pClient->GetSnap().m_paInfoByName)
 	{
 		if(!pInfoByName)
 			continue;
 
 		int Index = pInfoByName->m_ClientID;
 
-		if(Index == m_pClient->m_Snap.m_LocalClientID)
+		if(Index == m_pClient->GetSnap().m_LocalClientID)
 			continue;
 
 		TotalPlayers++;
@@ -272,12 +272,12 @@ void CMenus::RenderPlayers(CUIRect MainView)
 
 	for(int i = 0, Count = 0; i < MAX_CLIENTS; ++i)
 	{
-		if(!m_pClient->m_Snap.m_paInfoByName[i])
+		if(!m_pClient->GetSnap().m_paInfoByName[i])
 			continue;
 
-		int Index = m_pClient->m_Snap.m_paInfoByName[i]->m_ClientID;
+		int Index = m_pClient->GetSnap().m_paInfoByName[i]->m_ClientID;
 
-		if(Index == m_pClient->m_Snap.m_LocalClientID)
+		if(Index == m_pClient->GetSnap().m_LocalClientID)
 			continue;
 
 		CListboxItem Item = UiDoListboxNextItem(&m_pClient->m_aClients[Index]);
@@ -411,7 +411,7 @@ void CMenus::RenderPlayers(CUIRect MainView)
 
 void CMenus::RenderServerInfo(CUIRect MainView)
 {
-	if(!m_pClient->m_Snap.m_pLocalInfo)
+	if(!m_pClient->GetSnap().m_pLocalInfo)
 		return;
 
 	// fetch server info
@@ -455,7 +455,7 @@ void CMenus::RenderServerInfo(CUIRect MainView)
 		"%s: %s\n",
 		CurrentServerInfo.m_aName,
 		Localize("Address"), CurrentServerInfo.m_aAddress,
-		Localize("Ping"), m_pClient->m_Snap.m_pLocalInfo->m_Latency,
+		Localize("Ping"), m_pClient->GetSnap().m_pLocalInfo->m_Latency,
 		Localize("Version"), CurrentServerInfo.m_aVersion,
 		Localize("Password"), CurrentServerInfo.m_Flags & 1 ? Localize("Yes") : Localize("No"));
 
@@ -487,7 +487,7 @@ void CMenus::RenderServerInfo(CUIRect MainView)
 	TextRender()->Text(0, GameInfo.x + x, GameInfo.y + y, 32, Localize("Game info"), 250.0f);
 	y += 32.0f + 5.0f;
 
-	if(m_pClient->m_Snap.m_pGameInfoObj)
+	if(m_pClient->GetSnap().m_pGameInfoObj)
 	{
 		mem_zero(aBuf, sizeof(aBuf));
 		str_format(
@@ -502,9 +502,9 @@ void CMenus::RenderServerInfo(CUIRect MainView)
 			"%s: %d/%d\n",
 			Localize("Game type"), CurrentServerInfo.m_aGameType,
 			Localize("Map"), CurrentServerInfo.m_aMap,
-			Localize("Score limit"), m_pClient->m_Snap.m_pGameInfoObj->m_ScoreLimit,
-			Localize("Time limit"), m_pClient->m_Snap.m_pGameInfoObj->m_TimeLimit,
-			Localize("Players"), m_pClient->m_Snap.m_NumPlayers, CurrentServerInfo.m_MaxClients);
+			Localize("Score limit"), m_pClient->GetSnap().m_pGameInfoObj->m_ScoreLimit,
+			Localize("Time limit"), m_pClient->GetSnap().m_pGameInfoObj->m_TimeLimit,
+			Localize("Players"), m_pClient->GetSnap().m_NumPlayers, CurrentServerInfo.m_MaxClients);
 		TextRender()->Text(0, GameInfo.x + x, GameInfo.y + y, 20, aBuf, 250.0f);
 	}
 
@@ -568,13 +568,13 @@ bool CMenus::RenderServerControlKick(CUIRect MainView, bool FilterSpectators)
 	int NumOptions = 0;
 	int Selected = 0;
 	static int aPlayerIDs[MAX_CLIENTS];
-	for(auto &pInfoByName : m_pClient->m_Snap.m_paInfoByName)
+	for(auto &pInfoByName : m_pClient->GetSnap().m_paInfoByName)
 	{
 		if(!pInfoByName)
 			continue;
 
 		int Index = pInfoByName->m_ClientID;
-		if(Index == m_pClient->m_Snap.m_LocalClientID || (FilterSpectators && pInfoByName->m_Team == TEAM_SPECTATORS))
+		if(Index == m_pClient->GetSnap().m_LocalClientID || (FilterSpectators && pInfoByName->m_Team == TEAM_SPECTATORS))
 			continue;
 
 		if(!str_find_nocase(m_pClient->m_aClients[Index].m_aName, m_aFilterString))
@@ -706,7 +706,7 @@ void CMenus::RenderServerControl(CUIRect MainView)
 			else if(s_ControlPage == 1)
 			{
 				if(m_CallvoteSelectedPlayer >= 0 && m_CallvoteSelectedPlayer < MAX_CLIENTS &&
-					m_pClient->m_Snap.m_paPlayerInfos[m_CallvoteSelectedPlayer])
+					m_pClient->GetSnap().m_paPlayerInfos[m_CallvoteSelectedPlayer])
 				{
 					m_pClient->m_pVoting->CallvoteKick(m_CallvoteSelectedPlayer, m_aCallvoteReason);
 					SetActive(false);
@@ -715,7 +715,7 @@ void CMenus::RenderServerControl(CUIRect MainView)
 			else if(s_ControlPage == 2)
 			{
 				if(m_CallvoteSelectedPlayer >= 0 && m_CallvoteSelectedPlayer < MAX_CLIENTS &&
-					m_pClient->m_Snap.m_paPlayerInfos[m_CallvoteSelectedPlayer])
+					m_pClient->GetSnap().m_paPlayerInfos[m_CallvoteSelectedPlayer])
 				{
 					m_pClient->m_pVoting->CallvoteSpectate(m_CallvoteSelectedPlayer, m_aCallvoteReason);
 					SetActive(false);
@@ -758,7 +758,7 @@ void CMenus::RenderServerControl(CUIRect MainView)
 				else if(s_ControlPage == 1)
 				{
 					if(m_CallvoteSelectedPlayer >= 0 && m_CallvoteSelectedPlayer < MAX_CLIENTS &&
-						m_pClient->m_Snap.m_paPlayerInfos[m_CallvoteSelectedPlayer])
+						m_pClient->GetSnap().m_paPlayerInfos[m_CallvoteSelectedPlayer])
 					{
 						m_pClient->m_pVoting->CallvoteKick(m_CallvoteSelectedPlayer, m_aCallvoteReason, true);
 						SetActive(false);
@@ -767,7 +767,7 @@ void CMenus::RenderServerControl(CUIRect MainView)
 				else if(s_ControlPage == 2)
 				{
 					if(m_CallvoteSelectedPlayer >= 0 && m_CallvoteSelectedPlayer < MAX_CLIENTS &&
-						m_pClient->m_Snap.m_paPlayerInfos[m_CallvoteSelectedPlayer])
+						m_pClient->GetSnap().m_paPlayerInfos[m_CallvoteSelectedPlayer])
 					{
 						m_pClient->m_pVoting->CallvoteSpectate(m_CallvoteSelectedPlayer, m_aCallvoteReason, true);
 						SetActive(false);

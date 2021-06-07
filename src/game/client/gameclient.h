@@ -237,7 +237,12 @@ public:
 		CCharacterInfo m_aCharacters[MAX_CLIENTS];
 	};
 
-	CSnapState m_Snap;
+private:
+	CSnapState m_Snap[2];
+
+public:
+	CSnapState &GetSnap() { return m_Snap[g_Config.m_ClDummy]; }
+
 	int m_LocalTuneZone[2];
 	bool m_ReceivedTuning[2];
 	int m_ExpectingTuningForZone[2];
@@ -444,12 +449,12 @@ public:
 
 	virtual int GetLastRaceTick();
 
-	bool AntiPingPlayers() { return g_Config.m_ClAntiPing && g_Config.m_ClAntiPingPlayers && !m_Snap.m_SpecInfo.m_Active && Client()->State() != IClient::STATE_DEMOPLAYBACK && (m_Tuning[g_Config.m_ClDummy].m_PlayerCollision || m_Tuning[g_Config.m_ClDummy].m_PlayerHooking); }
-	bool AntiPingGrenade() { return g_Config.m_ClAntiPing && g_Config.m_ClAntiPingGrenade && !m_Snap.m_SpecInfo.m_Active && Client()->State() != IClient::STATE_DEMOPLAYBACK; }
-	bool AntiPingWeapons() { return g_Config.m_ClAntiPing && g_Config.m_ClAntiPingWeapons && !m_Snap.m_SpecInfo.m_Active && Client()->State() != IClient::STATE_DEMOPLAYBACK; }
+	bool AntiPingPlayers() { return g_Config.m_ClAntiPing && g_Config.m_ClAntiPingPlayers && !GetSnap().m_SpecInfo.m_Active && Client()->State() != IClient::STATE_DEMOPLAYBACK && (m_Tuning[g_Config.m_ClDummy].m_PlayerCollision || m_Tuning[g_Config.m_ClDummy].m_PlayerHooking); }
+	bool AntiPingGrenade() { return g_Config.m_ClAntiPing && g_Config.m_ClAntiPingGrenade && !GetSnap().m_SpecInfo.m_Active && Client()->State() != IClient::STATE_DEMOPLAYBACK; }
+	bool AntiPingWeapons() { return g_Config.m_ClAntiPing && g_Config.m_ClAntiPingWeapons && !GetSnap().m_SpecInfo.m_Active && Client()->State() != IClient::STATE_DEMOPLAYBACK; }
 	bool AntiPingGunfire() { return AntiPingGrenade() && AntiPingWeapons() && g_Config.m_ClAntiPingGunfire; }
-	bool Predict() { return g_Config.m_ClPredict && !(m_Snap.m_pGameInfoObj && m_Snap.m_pGameInfoObj->m_GameStateFlags & GAMESTATEFLAG_GAMEOVER) && !m_Snap.m_SpecInfo.m_Active && Client()->State() != IClient::STATE_DEMOPLAYBACK && m_Snap.m_pLocalCharacter; }
-	bool PredictDummy() { return g_Config.m_ClPredictDummy && Client()->DummyConnected() && m_Snap.m_LocalClientID >= 0 && m_PredictedDummyID >= 0 && !m_aClients[m_PredictedDummyID].m_Paused; }
+	bool Predict() { return g_Config.m_ClPredict && !(GetSnap().m_pGameInfoObj && GetSnap().m_pGameInfoObj->m_GameStateFlags & GAMESTATEFLAG_GAMEOVER) && !GetSnap().m_SpecInfo.m_Active && Client()->State() != IClient::STATE_DEMOPLAYBACK && GetSnap().m_pLocalCharacter; }
+	bool PredictDummy() { return g_Config.m_ClPredictDummy && Client()->DummyConnected() && GetSnap().m_LocalClientID >= 0 && m_PredictedDummyID >= 0 && !m_aClients[m_PredictedDummyID].m_Paused; }
 	CTuningParams GetTunes(int i) { return m_aTuningList[i]; }
 
 	CGameWorld m_GameWorld;

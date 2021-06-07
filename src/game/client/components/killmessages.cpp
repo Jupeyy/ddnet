@@ -122,7 +122,7 @@ void CKillMessages::OnMessage(int MsgType, void *pRawMsg)
 		Kill.m_ModeSpecial = pMsg->m_ModeSpecial;
 		Kill.m_Tick = Client()->GameTick(g_Config.m_ClDummy);
 
-		Kill.m_FlagCarrierBlue = m_pClient->m_Snap.m_pGameDataObj ? m_pClient->m_Snap.m_pGameDataObj->m_FlagCarrierBlue : -1;
+		Kill.m_FlagCarrierBlue = m_pClient->GetSnap().m_pGameDataObj ? m_pClient->GetSnap().m_pGameDataObj->m_FlagCarrierBlue : -1;
 
 		Kill.m_VitctimTextWidth = Kill.m_KillerTextWidth = 0.f;
 
@@ -203,7 +203,7 @@ void CKillMessages::OnRender()
 		// render victim tee
 		x -= 24.0f;
 
-		if(m_pClient->m_Snap.m_pGameInfoObj && m_pClient->m_Snap.m_pGameInfoObj->m_GameFlags & GAMEFLAG_FLAGS)
+		if(m_pClient->GetSnap().m_pGameInfoObj && m_pClient->GetSnap().m_pGameInfoObj->m_GameFlags & GAMEFLAG_FLAGS)
 		{
 			if(m_aKillmsgs[r].m_ModeSpecial & 1)
 			{
@@ -245,7 +245,7 @@ void CKillMessages::OnRender()
 
 		if(m_aKillmsgs[r].m_VictimID != m_aKillmsgs[r].m_KillerID)
 		{
-			if(m_pClient->m_Snap.m_pGameInfoObj && m_pClient->m_Snap.m_pGameInfoObj->m_GameFlags & GAMEFLAG_FLAGS)
+			if(m_pClient->GetSnap().m_pGameInfoObj && m_pClient->GetSnap().m_pGameInfoObj->m_GameFlags & GAMEFLAG_FLAGS)
 			{
 				if(m_aKillmsgs[r].m_ModeSpecial & 2)
 				{

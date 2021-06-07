@@ -125,7 +125,7 @@ void CNamePlates::RenderNameplatePos(vec2 Position, const CNetObj_PlayerInfo *pP
 			TOutlineColor.Set(0.0f, 0.0f, 0.0f, 0.5f * a);
 			TColor.Set(rgb.r, rgb.g, rgb.b, a);
 		}
-		if(g_Config.m_ClNameplatesTeamcolors && m_pClient->m_Snap.m_pGameInfoObj && m_pClient->m_Snap.m_pGameInfoObj->m_GameFlags & GAMEFLAG_TEAMS)
+		if(g_Config.m_ClNameplatesTeamcolors && m_pClient->GetSnap().m_pGameInfoObj && m_pClient->GetSnap().m_pGameInfoObj->m_GameFlags & GAMEFLAG_TEAMS)
 		{
 			if(m_pClient->m_aClients[ClientID].m_Team == TEAM_RED)
 				TColor.Set(1.0f, 0.5f, 0.5f, a);
@@ -170,8 +170,8 @@ void CNamePlates::RenderNameplatePos(vec2 Position, const CNetObj_PlayerInfo *pP
 
 		if(g_Config.m_ClNameplatesHA) // render health and armor in nameplate
 		{
-			int Health = m_pClient->m_Snap.m_aCharacters[ClientID].m_Cur.m_Health;
-			int Armor = m_pClient->m_Snap.m_aCharacters[ClientID].m_Cur.m_Armor;
+			int Health = m_pClient->GetSnap().m_aCharacters[ClientID].m_Cur.m_Health;
+			int Armor = m_pClient->GetSnap().m_aCharacters[ClientID].m_Cur.m_Armor;
 
 			if(Health > 0 || Armor > 0)
 			{
@@ -230,7 +230,7 @@ void CNamePlates::OnRender()
 
 	for(int i = 0; i < MAX_CLIENTS; i++)
 	{
-		const CNetObj_PlayerInfo *pInfo = m_pClient->m_Snap.m_paPlayerInfos[i];
+		const CNetObj_PlayerInfo *pInfo = m_pClient->GetSnap().m_paPlayerInfos[i];
 		if(!pInfo)
 		{
 			continue;
@@ -244,11 +244,11 @@ void CNamePlates::OnRender()
 		}
 
 		// only render active characters
-		if(m_pClient->m_Snap.m_aCharacters[i].m_Active)
+		if(m_pClient->GetSnap().m_aCharacters[i].m_Active)
 		{
 			RenderNameplate(
-				&m_pClient->m_Snap.m_aCharacters[i].m_Prev,
-				&m_pClient->m_Snap.m_aCharacters[i].m_Cur,
+				&m_pClient->GetSnap().m_aCharacters[i].m_Prev,
+				&m_pClient->GetSnap().m_aCharacters[i].m_Cur,
 				pInfo);
 		}
 	}

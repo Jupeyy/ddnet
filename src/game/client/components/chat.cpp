@@ -413,10 +413,10 @@ bool CChat::OnInput(IInput::CEvent Event)
 					Index = (m_CompletionChosen + i) % MAX_CLIENTS;
 				}
 
-				if(!m_pClient->m_Snap.m_paInfoByName[Index])
+				if(!m_pClient->GetSnap().m_paInfoByName[Index])
 					continue;
 
-				int Index2 = m_pClient->m_Snap.m_paInfoByName[Index]->m_ClientID;
+				int Index2 = m_pClient->GetSnap().m_paInfoByName[Index]->m_ClientID;
 
 				bool Found = false;
 				if(SearchType == 1)
@@ -598,7 +598,7 @@ void CChat::StoreSave(const char *pText)
 	/*
 	for(int i = 0; i < MAX_CLIENTS; i++)
 	{
-		const CNetObj_PlayerInfo *pInfo = GameClient()->m_Snap.m_paInfoByDDTeam[i];
+		const CNetObj_PlayerInfo *pInfo = GameClient()->GetSnap().m_paInfoByDDTeam[i];
 		if(!pInfo)
 			continue;
 		pInfo->m_Team // All 0
@@ -630,8 +630,8 @@ void CChat::AddLine(int ClientID, int Team, const char *pLine)
 		(ClientID == -1 && !g_Config.m_ClShowChatSystem) ||
 		(ClientID >= 0 && (m_pClient->m_aClients[ClientID].m_aName[0] == '\0' || // unknown client
 					  m_pClient->m_aClients[ClientID].m_ChatIgnore ||
-					  (m_pClient->m_Snap.m_LocalClientID != ClientID && g_Config.m_ClShowChatFriends && !m_pClient->m_aClients[ClientID].m_Friend) ||
-					  (m_pClient->m_Snap.m_LocalClientID != ClientID && m_pClient->m_aClients[ClientID].m_Foe))))
+					  (m_pClient->GetSnap().m_LocalClientID != ClientID && g_Config.m_ClShowChatFriends && !m_pClient->m_aClients[ClientID].m_Friend) ||
+					  (m_pClient->GetSnap().m_LocalClientID != ClientID && m_pClient->m_aClients[ClientID].m_Foe))))
 		return;
 
 	// trim right and set maximum length to 256 utf8-characters
@@ -774,7 +774,7 @@ void CChat::AddLine(int ClientID, int Team, const char *pLine)
 		{
 			// on demo playback use local id from snap directly,
 			// since m_LocalIDs isn't valid there
-			if(LineShouldHighlight(pLine, m_pClient->m_aClients[m_pClient->m_Snap.m_LocalClientID].m_aName))
+			if(LineShouldHighlight(pLine, m_pClient->m_aClients[m_pClient->GetSnap().m_LocalClientID].m_aName))
 				Highlighted = true;
 		}
 
@@ -790,7 +790,7 @@ void CChat::AddLine(int ClientID, int Team, const char *pLine)
 			if(m_pClient->m_aClients[ClientID].m_Team == TEAM_SPECTATORS)
 				pCurrentLine->m_NameColor = TEAM_SPECTATORS;
 
-			if(m_pClient->m_Snap.m_pGameInfoObj && m_pClient->m_Snap.m_pGameInfoObj->m_GameFlags & GAMEFLAG_TEAMS)
+			if(m_pClient->GetSnap().m_pGameInfoObj && m_pClient->GetSnap().m_pGameInfoObj->m_GameFlags & GAMEFLAG_TEAMS)
 			{
 				if(m_pClient->m_aClients[ClientID].m_Team == TEAM_RED)
 					pCurrentLine->m_NameColor = TEAM_RED;

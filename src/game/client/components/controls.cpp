@@ -117,7 +117,7 @@ static void ConKeyInputState(IConsole::IResult *pResult, void *pUserData)
 {
 	CInputState *pState = (CInputState *)pUserData;
 
-	if(pState->m_pControls->GameClient()->m_GameInfo.m_BugDDRaceInput && pState->m_pControls->GameClient()->m_Snap.m_SpecInfo.m_Active)
+	if(pState->m_pControls->GameClient()->m_GameInfo.m_BugDDRaceInput && pState->m_pControls->GameClient()->GetSnap().m_SpecInfo.m_Active)
 		return;
 
 	if(g_Config.m_ClDummy)
@@ -130,7 +130,7 @@ static void ConKeyInputCounter(IConsole::IResult *pResult, void *pUserData)
 {
 	CInputState *pState = (CInputState *)pUserData;
 
-	if(pState->m_pControls->GameClient()->m_GameInfo.m_BugDDRaceInput && pState->m_pControls->GameClient()->m_Snap.m_SpecInfo.m_Active)
+	if(pState->m_pControls->GameClient()->m_GameInfo.m_BugDDRaceInput && pState->m_pControls->GameClient()->GetSnap().m_SpecInfo.m_Active)
 		return;
 
 	int *v;
@@ -374,7 +374,7 @@ int CControls::SnapInput(int *pData)
 		if(time_get() > LastSendTime + time_freq() / 25)
 			Send = true;
 
-		if(m_pClient->m_Snap.m_pLocalCharacter && m_pClient->m_Snap.m_pLocalCharacter->m_Weapon == WEAPON_NINJA && (m_InputData[g_Config.m_ClDummy].m_Direction || m_InputData[g_Config.m_ClDummy].m_Jump || m_InputData[g_Config.m_ClDummy].m_Hook))
+		if(m_pClient->GetSnap().m_pLocalCharacter && m_pClient->GetSnap().m_pLocalCharacter->m_Weapon == WEAPON_NINJA && (m_InputData[g_Config.m_ClDummy].m_Direction || m_InputData[g_Config.m_ClDummy].m_Jump || m_InputData[g_Config.m_ClDummy].m_Hook))
 			Send = true;
 	}
 
@@ -500,41 +500,41 @@ void CControls::OnRender()
 		}
 	}
 
-	if(g_Config.m_ClAutoswitchWeaponsOutOfAmmo && !GameClient()->m_GameInfo.m_UnlimitedAmmo && m_pClient->m_Snap.m_pLocalCharacter)
+	if(g_Config.m_ClAutoswitchWeaponsOutOfAmmo && !GameClient()->m_GameInfo.m_UnlimitedAmmo && m_pClient->GetSnap().m_pLocalCharacter)
 	{
 		// Keep track of ammo count, we know weapon ammo only when we switch to that weapon, this is tracked on server and protocol does not track that
-		m_AmmoCount[m_pClient->m_Snap.m_pLocalCharacter->m_Weapon % NUM_WEAPONS] = m_pClient->m_Snap.m_pLocalCharacter->m_AmmoCount;
+		m_AmmoCount[m_pClient->GetSnap().m_pLocalCharacter->m_Weapon % NUM_WEAPONS] = m_pClient->GetSnap().m_pLocalCharacter->m_AmmoCount;
 		// Autoswitch weapon if we're out of ammo
 		if((m_InputData[g_Config.m_ClDummy].m_Fire % 2 != 0 || FireWasPressed) &&
-			m_pClient->m_Snap.m_pLocalCharacter->m_AmmoCount == 0 &&
-			m_pClient->m_Snap.m_pLocalCharacter->m_Weapon != WEAPON_HAMMER &&
-			m_pClient->m_Snap.m_pLocalCharacter->m_Weapon != WEAPON_NINJA)
+			m_pClient->GetSnap().m_pLocalCharacter->m_AmmoCount == 0 &&
+			m_pClient->GetSnap().m_pLocalCharacter->m_Weapon != WEAPON_HAMMER &&
+			m_pClient->GetSnap().m_pLocalCharacter->m_Weapon != WEAPON_NINJA)
 		{
 			int w;
 			for(w = WEAPON_LASER; w > WEAPON_GUN; w--)
 			{
-				if(w == m_pClient->m_Snap.m_pLocalCharacter->m_Weapon)
+				if(w == m_pClient->GetSnap().m_pLocalCharacter->m_Weapon)
 					continue;
 				if(m_AmmoCount[w] > 0)
 					break;
 			}
-			if(w != m_pClient->m_Snap.m_pLocalCharacter->m_Weapon)
+			if(w != m_pClient->GetSnap().m_pLocalCharacter->m_Weapon)
 				m_InputData[g_Config.m_ClDummy].m_WantedWeapon = w + 1;
 		}
 	}
 
 	// update target pos
-	if(m_pClient->m_Snap.m_pGameInfoObj && !m_pClient->m_Snap.m_SpecInfo.m_Active)
+	if(m_pClient->GetSnap().m_pGameInfoObj && !m_pClient->GetSnap().m_SpecInfo.m_Active)
 		m_TargetPos[g_Config.m_ClDummy] = m_pClient->m_LocalCharacterPos + m_MousePos[g_Config.m_ClDummy];
-	else if(m_pClient->m_Snap.m_SpecInfo.m_Active && m_pClient->m_Snap.m_SpecInfo.m_UsePosition)
-		m_TargetPos[g_Config.m_ClDummy] = m_pClient->m_Snap.m_SpecInfo.m_Position + m_MousePos[g_Config.m_ClDummy];
+	else if(m_pClient->GetSnap().m_SpecInfo.m_Active && m_pClient->GetSnap().m_SpecInfo.m_UsePosition)
+		m_TargetPos[g_Config.m_ClDummy] = m_pClient->GetSnap().m_SpecInfo.m_Position + m_MousePos[g_Config.m_ClDummy];
 	else
 		m_TargetPos[g_Config.m_ClDummy] = m_MousePos[g_Config.m_ClDummy];
 }
 
 bool CControls::OnMouseMove(float x, float y)
 {
-	if((m_pClient->m_Snap.m_pGameInfoObj && m_pClient->m_Snap.m_pGameInfoObj->m_GameStateFlags & GAMESTATEFLAG_PAUSED))
+	if((m_pClient->GetSnap().m_pGameInfoObj && m_pClient->GetSnap().m_pGameInfoObj->m_GameStateFlags & GAMESTATEFLAG_PAUSED))
 		return false;
 
 	if(g_Config.m_ClDyncam && g_Config.m_ClDyncamMousesens)
@@ -543,7 +543,7 @@ bool CControls::OnMouseMove(float x, float y)
 		y = y * g_Config.m_ClDyncamMousesens / g_Config.m_InpMousesens;
 	}
 
-	if(m_pClient->m_Snap.m_SpecInfo.m_Active && m_pClient->m_Snap.m_SpecInfo.m_SpectatorID < 0)
+	if(m_pClient->GetSnap().m_SpecInfo.m_Active && m_pClient->GetSnap().m_SpecInfo.m_SpectatorID < 0)
 	{
 		x = x * m_pClient->m_pCamera->m_Zoom;
 		y = y * m_pClient->m_pCamera->m_Zoom;
@@ -557,7 +557,7 @@ bool CControls::OnMouseMove(float x, float y)
 
 void CControls::ClampMousePos()
 {
-	if(m_pClient->m_Snap.m_SpecInfo.m_Active && m_pClient->m_Snap.m_SpecInfo.m_SpectatorID < 0)
+	if(m_pClient->GetSnap().m_SpecInfo.m_Active && m_pClient->GetSnap().m_SpecInfo.m_SpectatorID < 0)
 	{
 		m_MousePos[g_Config.m_ClDummy].x = clamp(m_MousePos[g_Config.m_ClDummy].x, 200.0f, Collision()->GetWidth() * 32 - 200.0f);
 		m_MousePos[g_Config.m_ClDummy].y = clamp(m_MousePos[g_Config.m_ClDummy].y, 200.0f, Collision()->GetHeight() * 32 - 200.0f);

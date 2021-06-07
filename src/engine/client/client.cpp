@@ -1165,7 +1165,7 @@ void CClient::Render()
 			{
 				W = Graphics()->m_ScreenWidth;
 				H = Graphics()->m_ScreenHeight;
-				Graphics()->UpdateViewport(W / 2, 0, W / 2, H / 2);
+				Graphics()->UpdateViewport(2 * W / 3, 0, W / 3, H / 3);
 
 				Graphics()->MapScreen(0, 0, 1, 1);
 
@@ -1187,7 +1187,9 @@ void CClient::Render()
 			Graphics()->m_ScreenHeight = H;
 			Graphics()->UpdateViewport(0, 0, W, H);
 		}
+
 		g_Config.m_ClDummy ^= 1;
+		GameClient()->OnNewSnapshot();
 	}
 
 	if(State() == IClient::STATE_ONLINE && g_Config.m_ClAntiPingLimit)

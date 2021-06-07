@@ -90,7 +90,7 @@ void CCamera::OnRender()
 		m_Zoom = clamp(m_Zoom, MinZoomLevel(), MaxZoomLevel());
 	}
 
-	if(!(m_pClient->m_Snap.m_SpecInfo.m_Active || GameClient()->m_GameInfo.m_AllowZoom || Client()->State() == IClient::STATE_DEMOPLAYBACK))
+	if(!(m_pClient->GetSnap().m_SpecInfo.m_Active || GameClient()->m_GameInfo.m_AllowZoom || Client()->State() == IClient::STATE_DEMOPLAYBACK))
 	{
 		m_ZoomSet = false;
 		m_Zoom = 1.0f;
@@ -103,7 +103,7 @@ void CCamera::OnRender()
 	}
 
 	// update camera center
-	if(m_pClient->m_Snap.m_SpecInfo.m_Active && !m_pClient->m_Snap.m_SpecInfo.m_UsePosition)
+	if(m_pClient->GetSnap().m_SpecInfo.m_Active && !m_pClient->GetSnap().m_SpecInfo.m_UsePosition)
 	{
 		if(m_CamType != CAMTYPE_SPEC)
 		{
@@ -165,8 +165,8 @@ void CCamera::OnRender()
 		else
 			s_CurrentCameraOffset[g_Config.m_ClDummy] = TargetCameraOffset;
 
-		if(m_pClient->m_Snap.m_SpecInfo.m_Active)
-			m_Center = m_pClient->m_Snap.m_SpecInfo.m_Position + s_CurrentCameraOffset[g_Config.m_ClDummy];
+		if(m_pClient->GetSnap().m_SpecInfo.m_Active)
+			m_Center = m_pClient->GetSnap().m_SpecInfo.m_Position + s_CurrentCameraOffset[g_Config.m_ClDummy];
 		else
 			m_Center = m_pClient->m_LocalCharacterPos + s_CurrentCameraOffset[g_Config.m_ClDummy];
 	}
@@ -196,7 +196,7 @@ void CCamera::OnReset()
 void CCamera::ConZoomPlus(IConsole::IResult *pResult, void *pUserData)
 {
 	CCamera *pSelf = (CCamera *)pUserData;
-	if(pSelf->m_pClient->m_Snap.m_SpecInfo.m_Active || pSelf->GameClient()->m_GameInfo.m_AllowZoom || pSelf->Client()->State() == IClient::STATE_DEMOPLAYBACK)
+	if(pSelf->m_pClient->GetSnap().m_SpecInfo.m_Active || pSelf->GameClient()->m_GameInfo.m_AllowZoom || pSelf->Client()->State() == IClient::STATE_DEMOPLAYBACK)
 	{
 		pSelf->ScaleZoom(ZoomStep);
 	}
@@ -204,7 +204,7 @@ void CCamera::ConZoomPlus(IConsole::IResult *pResult, void *pUserData)
 void CCamera::ConZoomMinus(IConsole::IResult *pResult, void *pUserData)
 {
 	CCamera *pSelf = (CCamera *)pUserData;
-	if(pSelf->m_pClient->m_Snap.m_SpecInfo.m_Active || pSelf->GameClient()->m_GameInfo.m_AllowZoom || pSelf->Client()->State() == IClient::STATE_DEMOPLAYBACK)
+	if(pSelf->m_pClient->GetSnap().m_SpecInfo.m_Active || pSelf->GameClient()->m_GameInfo.m_AllowZoom || pSelf->Client()->State() == IClient::STATE_DEMOPLAYBACK)
 	{
 		pSelf->ScaleZoom(1 / ZoomStep);
 	}

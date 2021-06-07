@@ -48,11 +48,11 @@ void CItems::RenderProjectile(const CProjectileData *pCurrent, int ItemID)
 
 	bool LocalPlayerInGame = false;
 
-	if(m_pClient->m_Snap.m_pLocalInfo)
-		LocalPlayerInGame = m_pClient->m_aClients[m_pClient->m_Snap.m_pLocalInfo->m_ClientID].m_Team != -1;
+	if(m_pClient->GetSnap().m_pLocalInfo)
+		LocalPlayerInGame = m_pClient->m_aClients[m_pClient->GetSnap().m_pLocalInfo->m_ClientID].m_Team != -1;
 
 	static float s_LastGameTickTime = Client()->GameTickTime(g_Config.m_ClDummy);
-	if(m_pClient->m_Snap.m_pGameInfoObj && !(m_pClient->m_Snap.m_pGameInfoObj->m_GameStateFlags & GAMESTATEFLAG_PAUSED))
+	if(m_pClient->GetSnap().m_pGameInfoObj && !(m_pClient->GetSnap().m_pGameInfoObj->m_GameStateFlags & GAMESTATEFLAG_PAUSED))
 		s_LastGameTickTime = Client()->GameTickTime(g_Config.m_ClDummy);
 
 	bool IsOtherTeam = (pCurrent->m_ExtraInfo && pCurrent->m_Owner >= 0 && m_pClient->IsOtherTeam(pCurrent->m_Owner));
@@ -92,7 +92,7 @@ void CItems::RenderProjectile(const CProjectileData *pCurrent, int ItemID)
 		}
 		else
 		{
-			if(m_pClient->m_Snap.m_pGameInfoObj && !(m_pClient->m_Snap.m_pGameInfoObj->m_GameStateFlags & GAMESTATEFLAG_PAUSED))
+			if(m_pClient->GetSnap().m_pGameInfoObj && !(m_pClient->GetSnap().m_pGameInfoObj->m_GameStateFlags & GAMESTATEFLAG_PAUSED))
 				s_Time += LocalTime() - s_LastLocalTime;
 		}
 
@@ -178,7 +178,7 @@ void CItems::RenderPickup(const CNetObj_Pickup *pPrev, const CNetObj_Pickup *pCu
 	}
 	else
 	{
-		if(m_pClient->m_Snap.m_pGameInfoObj && !(m_pClient->m_Snap.m_pGameInfoObj->m_GameStateFlags & GAMESTATEFLAG_PAUSED))
+		if(m_pClient->GetSnap().m_pGameInfoObj && !(m_pClient->GetSnap().m_pGameInfoObj->m_GameStateFlags & GAMESTATEFLAG_PAUSED))
 			s_Time += LocalTime() - s_LastLocalTime;
 	}
 	Pos.x += cosf(s_Time * 2.0f + Offset) * 2.5f;
@@ -212,7 +212,7 @@ void CItems::RenderFlag(const CNetObj_Flag *pPrev, const CNetObj_Flag *pCurrent,
 	{
 		int FlagCarrier = (pCurrent->m_Team == TEAM_RED) ? pCurGameData->m_FlagCarrierRed : pCurGameData->m_FlagCarrierBlue;
 		// use the flagcarriers position if available
-		if(FlagCarrier >= 0 && m_pClient->m_Snap.m_aCharacters[FlagCarrier].m_Active)
+		if(FlagCarrier >= 0 && m_pClient->GetSnap().m_aCharacters[FlagCarrier].m_Active)
 			Pos = m_pClient->m_aClients[FlagCarrier].m_RenderPos;
 
 		// make sure that the flag isn't interpolated between capture and return
@@ -404,9 +404,9 @@ void CItems::OnRender()
 			const void *pPrev = Client()->SnapFindItem(IClient::SNAP_PREV, Item.m_Type, Item.m_ID);
 			if(pPrev)
 			{
-				const void *pPrevGameData = Client()->SnapFindItem(IClient::SNAP_PREV, NETOBJTYPE_GAMEDATA, m_pClient->m_Snap.m_GameDataSnapID);
+				const void *pPrevGameData = Client()->SnapFindItem(IClient::SNAP_PREV, NETOBJTYPE_GAMEDATA, m_pClient->GetSnap().m_GameDataSnapID);
 				RenderFlag(static_cast<const CNetObj_Flag *>(pPrev), static_cast<const CNetObj_Flag *>(pData),
-					static_cast<const CNetObj_GameData *>(pPrevGameData), m_pClient->m_Snap.m_pGameDataObj);
+					static_cast<const CNetObj_GameData *>(pPrevGameData), m_pClient->GetSnap().m_pGameDataObj);
 			}
 		}
 	}
@@ -502,8 +502,8 @@ void CItems::ReconstructSmokeTrail(const CProjectileData *pCurrent, int DestroyT
 {
 	bool LocalPlayerInGame = false;
 
-	if(m_pClient->m_Snap.m_pLocalInfo)
-		LocalPlayerInGame = m_pClient->m_aClients[m_pClient->m_Snap.m_pLocalInfo->m_ClientID].m_Team != -1;
+	if(m_pClient->GetSnap().m_pLocalInfo)
+		LocalPlayerInGame = m_pClient->m_aClients[m_pClient->GetSnap().m_pLocalInfo->m_ClientID].m_Team != -1;
 	if(!m_pClient->AntiPingGunfire() || !LocalPlayerInGame)
 		return;
 	if(Client()->PredGameTick(g_Config.m_ClDummy) == pCurrent->m_StartTick)

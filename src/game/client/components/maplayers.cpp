@@ -102,8 +102,8 @@ void CMapLayers::EnvelopeEval(int TimeOffsetMillis, int Env, float *pChannels, v
 			if(pItem->m_Version < 2 || pItem->m_Synchronized)
 			{
 				// get the lerp of the current tick and prev
-				int MinTick = pThis->Client()->PrevGameTick(g_Config.m_ClDummy) - pThis->m_pClient->m_Snap.m_pGameInfoObj->m_RoundStartTick;
-				int CurTick = pThis->Client()->GameTick(g_Config.m_ClDummy) - pThis->m_pClient->m_Snap.m_pGameInfoObj->m_RoundStartTick;
+				int MinTick = pThis->Client()->PrevGameTick(g_Config.m_ClDummy) - pThis->m_pClient->GetSnap().m_pGameInfoObj->m_RoundStartTick;
+				int CurTick = pThis->Client()->GameTick(g_Config.m_ClDummy) - pThis->m_pClient->GetSnap().m_pGameInfoObj->m_RoundStartTick;
 				s_Time = (int64)(mix<double>(
 							 0,
 							 (CurTick - MinTick),
@@ -127,11 +127,11 @@ void CMapLayers::EnvelopeEval(int TimeOffsetMillis, int Env, float *pChannels, v
 	{
 		if(pThis->m_OnlineOnly && (pItem->m_Version < 2 || pItem->m_Synchronized))
 		{
-			if(pThis->m_pClient->m_Snap.m_pGameInfoObj) // && !(pThis->m_pClient->m_Snap.m_pGameInfoObj->m_GameStateFlags&GAMESTATEFLAG_PAUSED))
+			if(pThis->m_pClient->GetSnap().m_pGameInfoObj) // && !(pThis->m_pClient->GetSnap().m_pGameInfoObj->m_GameStateFlags&GAMESTATEFLAG_PAUSED))
 			{
 				// get the lerp of the current tick and prev
-				int MinTick = pThis->Client()->PrevGameTick(g_Config.m_ClDummy) - pThis->m_pClient->m_Snap.m_pGameInfoObj->m_RoundStartTick;
-				int CurTick = pThis->Client()->GameTick(g_Config.m_ClDummy) - pThis->m_pClient->m_Snap.m_pGameInfoObj->m_RoundStartTick;
+				int MinTick = pThis->Client()->PrevGameTick(g_Config.m_ClDummy) - pThis->m_pClient->GetSnap().m_pGameInfoObj->m_RoundStartTick;
+				int CurTick = pThis->Client()->GameTick(g_Config.m_ClDummy) - pThis->m_pClient->GetSnap().m_pGameInfoObj->m_RoundStartTick;
 				s_Time = (int64)(mix<double>(
 							 0,
 							 (CurTick - MinTick),

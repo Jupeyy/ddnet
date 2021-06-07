@@ -21,7 +21,7 @@ CEmoticon::CEmoticon()
 void CEmoticon::ConKeyEmoticon(IConsole::IResult *pResult, void *pUserData)
 {
 	CEmoticon *pSelf = (CEmoticon *)pUserData;
-	if(!pSelf->m_pClient->m_Snap.m_SpecInfo.m_Active && pSelf->Client()->State() != IClient::STATE_DEMOPLAYBACK)
+	if(!pSelf->m_pClient->GetSnap().m_SpecInfo.m_Active && pSelf->Client()->State() != IClient::STATE_DEMOPLAYBACK)
 		pSelf->m_Active = pResult->GetInteger(0) != 0;
 }
 
@@ -76,7 +76,7 @@ void CEmoticon::OnRender()
 		return;
 	}
 
-	if(m_pClient->m_Snap.m_SpecInfo.m_Active)
+	if(m_pClient->GetSnap().m_SpecInfo.m_Active)
 	{
 		m_Active = false;
 		m_WasActive = false;

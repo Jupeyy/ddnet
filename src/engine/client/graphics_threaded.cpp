@@ -2349,17 +2349,7 @@ void CGraphics_Threaded::Resize(int w, int h, bool SetWindowSize)
 	if(m_ScreenWidth > 21 * m_ScreenHeight / 9)
 		m_ScreenWidth = 21 * m_ScreenHeight / 9;
 
-	CCommandBuffer::SCommand_Update_Viewport Cmd;
-	Cmd.m_X = 0;
-	Cmd.m_Y = 0;
-	Cmd.m_Width = m_ScreenWidth;
-	Cmd.m_Height = m_ScreenHeight;
-
-	if(!AddCmd(
-		   Cmd, [] { return true; }, "failed to add resize command"))
-	{
-		return;
-	}
+	UpdateViewport(0, 0, m_ScreenWidth, m_ScreenHeight);
 
 	// kick the command buffer
 	KickCommandBuffer();

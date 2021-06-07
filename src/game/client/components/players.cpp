@@ -92,7 +92,7 @@ void CPlayers::RenderHook(
 	CTeeRenderInfo RenderInfo = *pRenderInfo;
 
 	// don't render hooks to not active character cores
-	if(pPlayerChar->m_HookedPlayer != -1 && !m_pClient->m_Snap.m_aCharacters[pPlayerChar->m_HookedPlayer].m_Active)
+	if(pPlayerChar->m_HookedPlayer != -1 && !m_pClient->GetSnap().m_aCharacters[pPlayerChar->m_HookedPlayer].m_Active)
 		return;
 
 	float IntraTick = Intra;
@@ -172,7 +172,7 @@ void CPlayers::RenderPlayer(
 
 	CTeeRenderInfo RenderInfo = *pRenderInfo;
 
-	bool Local = m_pClient->m_Snap.m_LocalClientID == ClientID;
+	bool Local = m_pClient->GetSnap().m_LocalClientID == ClientID;
 	bool OtherTeam = m_pClient->IsOtherTeam(ClientID);
 	float Alpha = OtherTeam ? g_Config.m_ClShowOthersAlpha / 100.0f : 1.0f;
 
@@ -185,7 +185,7 @@ void CPlayers::RenderPlayer(
 
 	static float s_LastGameTickTime = Client()->GameTickTime(g_Config.m_ClDummy);
 	static float s_LastPredIntraTick = Client()->PredIntraGameTick(g_Config.m_ClDummy);
-	if(m_pClient->m_Snap.m_pGameInfoObj && !(m_pClient->m_Snap.m_pGameInfoObj->m_GameStateFlags & GAMESTATEFLAG_PAUSED))
+	if(m_pClient->GetSnap().m_pGameInfoObj && !(m_pClient->GetSnap().m_pGameInfoObj->m_GameStateFlags & GAMESTATEFLAG_PAUSED))
 	{
 		s_LastGameTickTime = Client()->GameTickTime(g_Config.m_ClDummy);
 		s_LastPredIntraTick = Client()->PredIntraGameTick(g_Config.m_ClDummy);
@@ -423,7 +423,7 @@ void CPlayers::RenderPlayer(
 				}
 				else
 				{
-					if(m_pClient->m_Snap.m_pGameInfoObj && m_pClient->m_Snap.m_pGameInfoObj->m_GameStateFlags & GAMESTATEFLAG_PAUSED)
+					if(m_pClient->GetSnap().m_pGameInfoObj && m_pClient->GetSnap().m_pGameInfoObj->m_GameStateFlags & GAMESTATEFLAG_PAUSED)
 						IteX = s_LastIteX;
 					else
 						s_LastIteX = IteX;
@@ -434,7 +434,7 @@ void CPlayers::RenderPlayer(
 					if(PredictLocalWeapons)
 						Dir = vec2(pPlayerChar->m_X, pPlayerChar->m_Y) - vec2(pPrevChar->m_X, pPrevChar->m_Y);
 					else
-						Dir = vec2(m_pClient->m_Snap.m_aCharacters[ClientID].m_Cur.m_X, m_pClient->m_Snap.m_aCharacters[ClientID].m_Cur.m_Y) - vec2(m_pClient->m_Snap.m_aCharacters[ClientID].m_Prev.m_X, m_pClient->m_Snap.m_aCharacters[ClientID].m_Prev.m_Y);
+						Dir = vec2(m_pClient->GetSnap().m_aCharacters[ClientID].m_Cur.m_X, m_pClient->GetSnap().m_aCharacters[ClientID].m_Cur.m_Y) - vec2(m_pClient->GetSnap().m_aCharacters[ClientID].m_Prev.m_X, m_pClient->GetSnap().m_aCharacters[ClientID].m_Prev.m_Y);
 					float HadOkenAngle = 0;
 					if(absolute(Dir.x) > 0.0001f || absolute(Dir.y) > 0.0001f)
 					{
@@ -494,7 +494,7 @@ void CPlayers::RenderPlayer(
 				}
 				else
 				{
-					if(m_pClient->m_Snap.m_pGameInfoObj && m_pClient->m_Snap.m_pGameInfoObj->m_GameStateFlags & GAMESTATEFLAG_PAUSED)
+					if(m_pClient->GetSnap().m_pGameInfoObj && m_pClient->GetSnap().m_pGameInfoObj->m_GameStateFlags & GAMESTATEFLAG_PAUSED)
 						IteX = s_LastIteX;
 					else
 						s_LastIteX = IteX;
@@ -530,8 +530,8 @@ void CPlayers::RenderPlayer(
 		vec2 GhostPosition = Position;
 		if(ClientID >= 0)
 			GhostPosition = mix(
-				vec2(m_pClient->m_Snap.m_aCharacters[ClientID].m_Prev.m_X, m_pClient->m_Snap.m_aCharacters[ClientID].m_Prev.m_Y),
-				vec2(m_pClient->m_Snap.m_aCharacters[ClientID].m_Cur.m_X, m_pClient->m_Snap.m_aCharacters[ClientID].m_Cur.m_Y),
+				vec2(m_pClient->GetSnap().m_aCharacters[ClientID].m_Prev.m_X, m_pClient->GetSnap().m_aCharacters[ClientID].m_Prev.m_Y),
+				vec2(m_pClient->GetSnap().m_aCharacters[ClientID].m_Cur.m_X, m_pClient->GetSnap().m_aCharacters[ClientID].m_Cur.m_Y),
 				Client()->IntraGameTick(g_Config.m_ClDummy));
 
 		CTeeRenderInfo Ghost = RenderInfo;
@@ -639,12 +639,12 @@ void CPlayers::OnRender()
 {
 	// update RenderInfo for ninja
 	bool IsTeamplay = false;
-	if(m_pClient->m_Snap.m_pGameInfoObj)
-		IsTeamplay = (m_pClient->m_Snap.m_pGameInfoObj->m_GameFlags & GAMEFLAG_TEAMS) != 0;
+	if(m_pClient->GetSnap().m_pGameInfoObj)
+		IsTeamplay = (m_pClient->GetSnap().m_pGameInfoObj->m_GameFlags & GAMEFLAG_TEAMS) != 0;
 	for(int i = 0; i < MAX_CLIENTS; ++i)
 	{
 		m_aRenderInfo[i] = m_pClient->m_aClients[i].m_RenderInfo;
-		if(m_pClient->m_Snap.m_aCharacters[i].m_Cur.m_Weapon == WEAPON_NINJA && g_Config.m_ClShowNinja)
+		if(m_pClient->GetSnap().m_aCharacters[i].m_Cur.m_Weapon == WEAPON_NINJA && g_Config.m_ClShowNinja)
 		{
 			// change the skin for the player to the ninja
 			int Skin = m_pClient->m_pSkins->Find("x_ninja");
@@ -682,7 +682,7 @@ void CPlayers::OnRender()
 			// only render active characters
 			if(p % 3 == 0 && !m_pClient->m_aClients[i].m_SpecCharPresent)
 				continue;
-			if(p % 3 != 0 && !m_pClient->m_Snap.m_aCharacters[i].m_Active)
+			if(p % 3 != 0 && !m_pClient->GetSnap().m_aCharacters[i].m_Active)
 				continue;
 
 			if(p % 3 == 0)
@@ -705,7 +705,7 @@ void CPlayers::OnRender()
 					continue;
 				}
 
-				bool Local = m_pClient->m_Snap.m_LocalClientID == i;
+				bool Local = m_pClient->GetSnap().m_LocalClientID == i;
 				if((p % 3) == 1 && Local)
 					continue;
 				if((p % 3) == 2 && !Local)

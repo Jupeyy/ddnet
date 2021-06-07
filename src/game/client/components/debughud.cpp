@@ -19,7 +19,7 @@
 
 void CDebugHud::RenderNetCorrections()
 {
-	if(!g_Config.m_Debug || g_Config.m_DbgGraphs || !m_pClient->m_Snap.m_pLocalCharacter || !m_pClient->m_Snap.m_pLocalPrevCharacter)
+	if(!g_Config.m_Debug || g_Config.m_DbgGraphs || !m_pClient->GetSnap().m_pLocalCharacter || !m_pClient->GetSnap().m_pLocalPrevCharacter)
 		return;
 
 	float Width = 300 * Graphics()->ScreenAspect();
@@ -28,7 +28,7 @@ void CDebugHud::RenderNetCorrections()
 	/*float speed = distance(vec2(netobjects.local_prev_character->x, netobjects.local_prev_character->y),
 		vec2(netobjects.local_character->x, netobjects.local_character->y));*/
 
-	float Velspeed = length(vec2(m_pClient->m_Snap.m_pLocalCharacter->m_VelX / 256.0f, m_pClient->m_Snap.m_pLocalCharacter->m_VelY / 256.0f)) * 50;
+	float Velspeed = length(vec2(m_pClient->GetSnap().m_pLocalCharacter->m_VelX / 256.0f, m_pClient->GetSnap().m_pLocalCharacter->m_VelY / 256.0f)) * 50;
 	float Ramp = VelocityRamp(Velspeed, m_pClient->m_Tuning[g_Config.m_ClDummy].m_VelrampStart, m_pClient->m_Tuning[g_Config.m_ClDummy].m_VelrampRange, m_pClient->m_Tuning[g_Config.m_ClDummy].m_VelrampCurvature);
 
 	const char *paStrings[] = {"velspeed:", "velspeed*ramp:", "ramp:", "checkpoint:", "Pos", " x:", " y:", "angle:", "netobj corrections", " num:", " on:"};
@@ -54,7 +54,7 @@ void CDebugHud::RenderNetCorrections()
 	w = TextRender()->TextWidth(0, Fontsize, aBuf, -1, -1.0f);
 	TextRender()->Text(0, x - w, y, Fontsize, aBuf, -1.0f);
 	y += LineHeight;
-	const CCharacter *pCharacter = m_pClient->m_GameWorld.GetCharacterByID(m_pClient->m_Snap.m_LocalClientID);
+	const CCharacter *pCharacter = m_pClient->m_GameWorld.GetCharacterByID(m_pClient->GetSnap().m_LocalClientID);
 	if(pCharacter)
 		str_format(aBuf, sizeof(aBuf), "%d", pCharacter->m_TeleCheckpoint);
 	else
@@ -62,15 +62,15 @@ void CDebugHud::RenderNetCorrections()
 	w = TextRender()->TextWidth(0, Fontsize, aBuf, -1, -1.0f);
 	TextRender()->Text(0, x - w, y, Fontsize, aBuf, -1.0f);
 	y += 2 * LineHeight;
-	str_format(aBuf, sizeof(aBuf), "%.2f", static_cast<float>(m_pClient->m_Snap.m_pLocalCharacter->m_X) / 32.0f);
+	str_format(aBuf, sizeof(aBuf), "%.2f", static_cast<float>(m_pClient->GetSnap().m_pLocalCharacter->m_X) / 32.0f);
 	w = TextRender()->TextWidth(0, Fontsize, aBuf, -1, -1.0f);
 	TextRender()->Text(0, x - w, y, Fontsize, aBuf, -1.0f);
 	y += LineHeight;
-	str_format(aBuf, sizeof(aBuf), "%.2f", static_cast<float>(m_pClient->m_Snap.m_pLocalCharacter->m_Y) / 32.0f);
+	str_format(aBuf, sizeof(aBuf), "%.2f", static_cast<float>(m_pClient->GetSnap().m_pLocalCharacter->m_Y) / 32.0f);
 	w = TextRender()->TextWidth(0, Fontsize, aBuf, -1, -1.0f);
 	TextRender()->Text(0, x - w, y, Fontsize, aBuf, -1.0f);
 	y += LineHeight;
-	str_format(aBuf, sizeof(aBuf), "%d", m_pClient->m_Snap.m_pLocalCharacter->m_Angle);
+	str_format(aBuf, sizeof(aBuf), "%d", m_pClient->GetSnap().m_pLocalCharacter->m_Angle);
 	w = TextRender()->TextWidth(0, Fontsize, aBuf, -1, -1.0f);
 	TextRender()->Text(0, x - w, y, Fontsize, aBuf, -1.0f);
 	y += 2 * LineHeight;
