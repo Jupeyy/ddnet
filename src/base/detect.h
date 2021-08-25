@@ -17,11 +17,13 @@
 #define CONF_FAMILY_STRING "windows"
 #define CONF_PLATFORM_WIN64 1
 #define PLATFORM_STRING "win64"
+#define CONF_BACKEND_OPENGL_ES 1
 #elif defined(WIN32) || defined(_WIN32) || defined(__CYGWIN32__) || defined(__MINGW32__)
 #define CONF_FAMILY_WINDOWS 1
 #define CONF_FAMILY_STRING "windows"
 #define CONF_PLATFORM_WIN32 1
 #define PLATFORM_STRING "win32"
+#define CONF_BACKEND_OPENGL_ES 1
 #endif
 
 /* unix family */

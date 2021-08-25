@@ -21,6 +21,7 @@
 #ifndef CONF_BACKEND_OPENGL_ES3
 #include <GLES/gl.h>
 #define glOrtho glOrthof
+#define BACKEND_GL_ES_API 1
 #else
 #define BACKEND_GL_MODERN_API 1
 #endif
@@ -1283,7 +1284,7 @@ void CCommandProcessorFragment_OpenGL2::SetState(const CCommandBuffer::SState &S
 	}
 }
 
-#ifndef BACKEND_GL_MODERN_API
+#if !defined(BACKEND_GL_MODERN_API) && !defined(BACKEND_GL_ES_API)
 bool CCommandProcessorFragment_OpenGL2::DoAnalyzeStep(size_t StepN, size_t CheckCount, size_t VerticesCount, uint8_t aFakeTexture[], size_t SingleImageSize)
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -2331,6 +2332,10 @@ void CCommandProcessorFragment_OpenGL2::Cmd_RenderTileLayer(const CCommandBuffer
 
 #ifdef BACKEND_GL_MODERN_API
 #undef BACKEND_GL_MODERN_API
+#endif
+
+#ifdef BACKEND_GL_ES_API
+#undef BACKEND_GL_ES_API
 #endif
 
 #endif

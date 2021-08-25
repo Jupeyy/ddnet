@@ -598,6 +598,12 @@ void CGraphicsBackend_SDL_OpenGL::ClampDriverVersion(EBackendType BackendType)
 			// GLES also doesnt know GL_QUAD
 			g_Config.m_GfxQuadAsTriangle = 1;
 		}
+		else
+		{
+			g_Config.m_GfxOpenGLMajor = 3;
+			g_Config.m_GfxOpenGLMinor = 0;
+			g_Config.m_GfxOpenGLPatch = 0;
+		}
 #else
 		g_Config.m_GfxOpenGLMajor = 3;
 		g_Config.m_GfxOpenGLMinor = 0;
@@ -902,6 +908,8 @@ int CGraphicsBackend_SDL_OpenGL::Init(const char *pName, int *pScreen, int *pWid
 
 	if(g_Config.m_InpMouseOld)
 		SDL_SetHint(SDL_HINT_MOUSE_RELATIVE_MODE_WARP, "1");
+
+	SDL_SetHint(SDL_HINT_OPENGL_ES_DRIVER, "1");
 
 	m_pWindow = SDL_CreateWindow(
 		pName,

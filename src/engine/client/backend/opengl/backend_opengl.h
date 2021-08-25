@@ -21,8 +21,12 @@ class CGLSLTextProgram;
 class CGLSLPrimitiveExProgram;
 class CGLSLSpriteMultipleProgram;
 
-#if defined(BACKEND_AS_OPENGL_ES) && defined(CONF_BACKEND_OPENGL_ES3)
+#if defined(BACKEND_AS_OPENGL_ES)
+#if defined(CONF_BACKEND_OPENGL_ES3)
 #define BACKEND_GL_MODERN_API 1
+#else
+#define BACKEND_GL_ES_API 1
+#endif
 #endif
 
 // takes care of opengl related rendering
@@ -153,7 +157,7 @@ class CCommandProcessorFragment_OpenGL2 : public CCommandProcessorFragment_OpenG
 
 	std::vector<SBufferObject> m_BufferObjectIndices;
 
-#ifndef BACKEND_GL_MODERN_API
+#if !defined(BACKEND_GL_MODERN_API) && !defined(BACKEND_GL_ES_API)
 	bool DoAnalyzeStep(size_t StepN, size_t CheckCount, size_t VerticesCount, uint8_t aFakeTexture[], size_t SingleImageSize);
 	bool IsTileMapAnalysisSucceeded();
 
@@ -166,7 +170,7 @@ class CCommandProcessorFragment_OpenGL2 : public CCommandProcessorFragment_OpenG
 protected:
 	void SetState(const CCommandBuffer::SState &State, CGLSLTWProgram *pProgram, bool Use2DArrayTextures = false);
 
-#ifndef BACKEND_GL_MODERN_API
+#if !defined(BACKEND_GL_MODERN_API) && !defined(BACKEND_GL_ES_API)
 	bool Cmd_Init(const SCommand_Init *pCommand) override;
 
 	void Cmd_RenderTex3D(const CCommandBuffer::SCommand_RenderTex3D *pCommand) override;
@@ -214,8 +218,12 @@ class CCommandProcessorFragment_OpenGL3 : public CCommandProcessorFragment_OpenG
 {
 };
 
-#if defined(BACKEND_AS_OPENGL_ES) && defined(CONF_BACKEND_OPENGL_ES3)
+#ifdef BACKEND_GL_MODERN_API
 #undef BACKEND_GL_MODERN_API
+#endif
+
+#ifdef BACKEND_GL_ES_API
+#undef BACKEND_GL_ES_API
 #endif
 
 #endif
