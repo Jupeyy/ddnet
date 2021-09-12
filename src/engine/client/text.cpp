@@ -851,272 +851,17 @@ public:
 
 	virtual void TextEx(CTextCursor *pCursor, const char *pText, int Length)
 	{
-		dbg_assert(pText != NULL, "null text pointer");
-
-		if(!*pText)
-			return;
-
-		CFont *pFont = pCursor->m_pFont;
-		CFontSizeData *pSizeData = NULL;
-
-		float ScreenX0, ScreenY0, ScreenX1, ScreenY1;
-		float FakeToScreenX, FakeToScreenY;
-
-		int ActualSize;
-		int GotNewLine = 0;
-		int GotNewLineLast = 0;
-		float DrawX = 0.0f, DrawY = 0.0f;
-		int LineCount = 0;
-		float CursorX, CursorY;
-
-		float Size = pCursor->m_FontSize;
-
-		// calculate the font size of the displayed glyphs
-		Graphics()->GetScreen(&ScreenX0, &ScreenY0, &ScreenX1, &ScreenY1);
-
-		FakeToScreenX = (Graphics()->ScreenWidth() / (ScreenX1 - ScreenX0));
-		FakeToScreenY = (Graphics()->ScreenHeight() / (ScreenY1 - ScreenY0));
-
-		int ActualX = (int)((pCursor->m_X * FakeToScreenX) + 0.5f);
-		int ActualY = (int)((pCursor->m_Y * FakeToScreenY) + 0.5f);
-		CursorX = ActualX / FakeToScreenX;
-		CursorY = ActualY / FakeToScreenY;
-
-		// same with size
-		ActualSize = (int)(Size * FakeToScreenY);
-		Size = ActualSize / FakeToScreenY;
-
-		pCursor->m_AlignedFontSize = Size;
-
-		// fetch pFont data
-		if(!pFont)
-			pFont = m_pCurFont;
-
-		if(!pFont)
-			return;
-
-		pSizeData = pFont->GetFontSize(ActualSize);
-
-		// set length
-		if(Length < 0)
-			Length = str_length(pText);
-
-		float Scale = 1.0f / pSizeData->m_FontSize;
-
-		//the outlined texture is always the same size as the current
-		float UVScale = 1.0f / pFont->m_CurTextureDimensions[0];
-
-		const char *pCurrent = pText;
-		const char *pEnd = pCurrent + Length;
-
-		if((m_RenderFlags & TEXT_RENDER_FLAG_NO_PIXEL_ALIGMENT) != 0)
+		int TextCont = CreateTextContainer(pCursor, pText, Length);
+		if(TextCont != -1)
 		{
-			DrawX = pCursor->m_X;
-			DrawY = pCursor->m_Y;
+			if((pCursor->m_Flags & TEXTFLAG_RENDER) != 0)
+			{
+				STextRenderColor TextColor = DefaultTextColor();
+				STextRenderColor TextColorOutline = DefaultTextOutlineColor();
+				RenderTextContainer(TextCont, &TextColor, &TextColorOutline);
+			}
+			FreeTextContainer(TextCont);
 		}
-		else
-		{
-			DrawX = CursorX;
-			DrawY = CursorY;
-		}
-
-		LineCount = pCursor->m_LineCount;
-
-		if(pCursor->m_Flags & TEXTFLAG_RENDER)
-		{
-			// make sure there are no vertices
-			Graphics()->FlushVertices();
-
-			if(Graphics()->IsTextBufferingEnabled())
-			{
-				Graphics()->TextureClear();
-				Graphics()->TextQuadsBegin();
-				Graphics()->SetColor(m_Color);
-			}
-			else
-			{
-				Graphics()->TextureSet(pFont->m_aTextures[1]);
-				Graphics()->QuadsBegin();
-				Graphics()->SetColor(m_OutlineColor.r, m_OutlineColor.g, m_OutlineColor.b, m_OutlineColor.a * m_Color.a);
-			}
-		}
-
-		FT_UInt LastCharGlyphIndex = 0;
-		size_t CharacterCounter = 0;
-
-		while(pCurrent < pEnd && (pCursor->m_MaxLines < 1 || LineCount <= pCursor->m_MaxLines))
-		{
-			int NewLine = 0;
-			const char *pBatchEnd = pEnd;
-			if(pCursor->m_LineWidth > 0 && !(pCursor->m_Flags & TEXTFLAG_STOP_AT_END))
-			{
-				int Wlen = minimum(WordLength(pCurrent), (int)(pEnd - pCurrent));
-				CTextCursor Compare = *pCursor;
-				Compare.m_X = DrawX;
-				Compare.m_Y = DrawY;
-				Compare.m_Flags &= ~TEXTFLAG_RENDER;
-				Compare.m_LineWidth = -1;
-				TextEx(&Compare, pCurrent, Wlen);
-
-				if(Compare.m_X - DrawX > pCursor->m_LineWidth)
-				{
-					// word can't be fitted in one line, cut it
-					CTextCursor Cutter = *pCursor;
-					Cutter.m_GlyphCount = 0;
-					Cutter.m_CharCount = 0;
-					Cutter.m_X = DrawX;
-					Cutter.m_Y = DrawY;
-					Cutter.m_Flags &= ~TEXTFLAG_RENDER;
-					Cutter.m_Flags |= TEXTFLAG_STOP_AT_END;
-
-					TextEx(&Cutter, pCurrent, Wlen);
-					int WordGlyphs = Cutter.m_GlyphCount;
-					Wlen = Cutter.m_CharCount;
-					NewLine = 1;
-
-					if(WordGlyphs <= 3 && GotNewLineLast == 0) // if we can't place 3 chars of the word on this line, take the next
-						Wlen = 0;
-				}
-				else if(Compare.m_X - pCursor->m_StartX > pCursor->m_LineWidth && GotNewLineLast == 0)
-				{
-					NewLine = 1;
-					Wlen = 0;
-				}
-
-				pBatchEnd = pCurrent + Wlen;
-			}
-
-			const char *pTmp = pCurrent;
-			int NextCharacter = str_utf8_decode(&pTmp);
-			while(pCurrent < pBatchEnd)
-			{
-				pCursor->m_CharCount += pTmp - pCurrent;
-				int Character = NextCharacter;
-				pCurrent = pTmp;
-				NextCharacter = str_utf8_decode(&pTmp);
-
-				if(Character == '\n')
-				{
-					++CharacterCounter;
-					LastCharGlyphIndex = 0;
-
-					DrawX = pCursor->m_StartX;
-					DrawY += Size;
-					if((m_RenderFlags & TEXT_RENDER_FLAG_NO_PIXEL_ALIGMENT) == 0)
-					{
-						DrawX = (int)((DrawX * FakeToScreenX) + 0.5f) / FakeToScreenX; // realign
-						DrawY = (int)((DrawY * FakeToScreenY) + 0.5f) / FakeToScreenY;
-					}
-					++LineCount;
-					if(pCursor->m_MaxLines > 0 && LineCount > pCursor->m_MaxLines)
-						break;
-					continue;
-				}
-
-				SFontSizeChar *pChr = GetChar(pFont, pSizeData, Character);
-				if(pChr)
-				{
-					bool ApplyBearingX = !(((m_RenderFlags & TEXT_RENDER_FLAG_NO_X_BEARING) != 0) || (CharacterCounter == 0 && (m_RenderFlags & TEXT_RENDER_FLAG_NO_FIRST_CHARACTER_X_BEARING) != 0));
-					float Advance = ((((m_RenderFlags & TEXT_RENDER_FLAG_ONLY_ADVANCE_WIDTH) != 0) ? (pChr->m_Width) : (pChr->m_AdvanceX + ((!ApplyBearingX) ? (-pChr->m_OffsetX) : 0.f)))) * Scale;
-
-					float CharKerning = 0.f;
-					if((m_RenderFlags & TEXT_RENDER_FLAG_KERNING) != 0)
-						CharKerning = Kerning(pFont, LastCharGlyphIndex, pChr->m_GlyphIndex) * Scale * Size;
-
-					LastCharGlyphIndex = pChr->m_GlyphIndex;
-					if(pCursor->m_Flags & TEXTFLAG_STOP_AT_END && (DrawX + CharKerning) + Advance * Size - pCursor->m_StartX > pCursor->m_LineWidth)
-					{
-						// we hit the end of the line, no more to render or count
-						pCurrent = pEnd;
-						break;
-					}
-
-					float BearingX = (!ApplyBearingX ? 0.f : pChr->m_OffsetX) * Scale * Size;
-					float CharWidth = pChr->m_Width * Scale * Size;
-
-					float BearingY = 0.f;
-					BearingY = (((m_RenderFlags & TEXT_RENDER_FLAG_NO_Y_BEARING) != 0) ? 0.f : (pChr->m_OffsetY * Scale * Size));
-					float CharHeight = pChr->m_Height * Scale * Size;
-
-					if((m_RenderFlags & TEXT_RENDER_FLAG_NO_OVERSIZE) != 0)
-					{
-						if(CharHeight + BearingY > Size)
-						{
-							BearingY = 0;
-							float ScaleChar = (CharHeight + BearingY) / Size;
-							CharHeight = Size;
-							CharWidth /= ScaleChar;
-						}
-					}
-
-					if(pCursor->m_Flags & TEXTFLAG_RENDER && m_Color.a != 0.f)
-					{
-						if(Graphics()->IsTextBufferingEnabled())
-							Graphics()->QuadsSetSubset(pChr->m_aUVs[0], pChr->m_aUVs[3], pChr->m_aUVs[2], pChr->m_aUVs[1]);
-						else
-							Graphics()->QuadsSetSubset(pChr->m_aUVs[0] * UVScale, pChr->m_aUVs[3] * UVScale, pChr->m_aUVs[2] * UVScale, pChr->m_aUVs[1] * UVScale);
-						float Y = (DrawY + Size);
-
-						IGraphics::CQuadItem QuadItem((DrawX + CharKerning) + BearingX, Y - BearingY, CharWidth, -CharHeight);
-						Graphics()->QuadsDrawTL(&QuadItem, 1);
-					}
-
-					pCursor->m_MaxCharacterHeight = maximum(pCursor->m_MaxCharacterHeight, CharHeight + BearingY);
-
-					if(NextCharacter == 0 && (m_RenderFlags & TEXT_RENDER_FLAG_NO_LAST_CHARACTER_ADVANCE) != 0 && Character != ' ')
-						DrawX += BearingX + CharKerning + CharWidth;
-					else
-						DrawX += Advance * Size + CharKerning;
-					pCursor->m_GlyphCount++;
-
-					++CharacterCounter;
-				}
-
-				if(DrawX > pCursor->m_LongestLineWidth)
-					pCursor->m_LongestLineWidth = DrawX;
-			}
-
-			if(NewLine)
-			{
-				DrawX = pCursor->m_StartX;
-				DrawY += Size;
-				if((m_RenderFlags & TEXT_RENDER_FLAG_NO_PIXEL_ALIGMENT) == 0)
-				{
-					DrawX = (int)((DrawX * FakeToScreenX) + 0.5f) / FakeToScreenX; // realign
-					DrawY = (int)((DrawY * FakeToScreenY) + 0.5f) / FakeToScreenY;
-				}
-				GotNewLine = 1;
-				GotNewLineLast = 1;
-				++LineCount;
-			}
-			else
-				GotNewLineLast = 0;
-		}
-
-		if(pCursor->m_Flags & TEXTFLAG_RENDER)
-		{
-			if(Graphics()->IsTextBufferingEnabled())
-			{
-				float OutlineColor[4] = {m_OutlineColor.r, m_OutlineColor.g, m_OutlineColor.b, m_OutlineColor.a * m_Color.a};
-				Graphics()->TextQuadsEnd(pFont->m_CurTextureDimensions[0], pFont->m_aTextures[0].Id(), pFont->m_aTextures[1].Id(), OutlineColor);
-			}
-			else
-			{
-				Graphics()->QuadsEndKeepVertices();
-
-				Graphics()->TextureSet(pFont->m_aTextures[0]);
-				Graphics()->ChangeColorOfCurrentQuadVertices(m_Color.r, m_Color.g, m_Color.b, m_Color.a);
-
-				// render non outlined
-				Graphics()->QuadsDrawCurrentVertices(false);
-			}
-		}
-
-		pCursor->m_X = DrawX;
-		pCursor->m_LineCount = LineCount;
-
-		if(GotNewLine)
-			pCursor->m_Y = DrawY;
 	}
 
 	virtual int CreateTextContainer(CTextCursor *pCursor, const char *pText, int Length = -1)
@@ -1175,7 +920,7 @@ public:
 
 		AppendTextContainer(pCursor, ContainerIndex, pText, Length);
 
-		if(TextContainer.m_StringInfo.m_CharacterQuads.size() == 0)
+		if(TextContainer.m_StringInfo.m_CharacterQuads.size() == 0 && (pCursor->m_Flags & TEXTFLAG_RENDER) != 0)
 		{
 			FreeTextContainer(ContainerIndex);
 			return -1;
@@ -1183,7 +928,7 @@ public:
 		else
 		{
 			TextContainer.m_StringInfo.m_QuadNum = TextContainer.m_StringInfo.m_CharacterQuads.size();
-			if(Graphics()->IsTextBufferingEnabled())
+			if(Graphics()->IsTextBufferingEnabled() && (pCursor->m_Flags & TEXTFLAG_RENDER) != 0)
 			{
 				if((TextContainer.m_RenderFlags & TEXT_RENDER_FLAG_NO_AUTOMATIC_QUAD_UPLOAD) == 0)
 				{
@@ -1315,7 +1060,7 @@ public:
 
 			while(pCurrent < pBatchEnd)
 			{
-				TextContainer.m_CharCount += pTmp - pCurrent;
+				pCursor->m_CharCount += pTmp - pCurrent;
 				int Character = NextCharacter;
 				pCurrent = pTmp;
 				NextCharacter = str_utf8_decode(&pTmp);
@@ -1374,7 +1119,7 @@ public:
 					}
 
 					// don't add text that isn't drawn, the color overwrite is used for that
-					if(m_Color.a != 0.f)
+					if(m_Color.a != 0.f && (pCursor->m_Flags & TEXTFLAG_RENDER) != 0)
 					{
 						TextContainer.m_StringInfo.m_CharacterQuads.push_back(STextCharQuad());
 						STextCharQuad &TextCharQuad = TextContainer.m_StringInfo.m_CharacterQuads.back();
@@ -1449,7 +1194,7 @@ public:
 				GotNewLineLast = 0;
 		}
 
-		if(TextContainer.m_StringInfo.m_CharacterQuads.size() != 0)
+		if(TextContainer.m_StringInfo.m_CharacterQuads.size() != 0 && (pCursor->m_Flags & TEXTFLAG_RENDER) != 0)
 		{
 			TextContainer.m_StringInfo.m_QuadNum = TextContainer.m_StringInfo.m_CharacterQuads.size();
 			// setup the buffers
