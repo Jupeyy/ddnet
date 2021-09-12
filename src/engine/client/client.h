@@ -3,6 +3,7 @@
 #ifndef ENGINE_CLIENT_CLIENT_H
 #define ENGINE_CLIENT_CLIENT_H
 
+#include <cstdint>
 #include <list>
 #include <memory>
 
@@ -31,25 +32,24 @@
 
 #define CONNECTLINK "ddnet:"
 
+template<size_t TMaxValues = 128>
 class CGraph
 {
-public:
-	enum
-	{
-		// restrictions: Must be power of two
-		MAX_VALUES = 128,
-	};
+	int IndicesInUse();
 
+public:
 	float m_Min, m_Max;
 	float m_MinRange, m_MaxRange;
-	float m_aValues[MAX_VALUES];
-	float m_aColors[MAX_VALUES][3];
-	int m_Index;
+	float m_aValues[TMaxValues];
+	float m_aColors[TMaxValues][3];
+	int64_t m_aTimes[TMaxValues];
+	int m_CurSmallestIndex;
+	int m_CurIndex;
 
 	void Init(float Min, float Max);
 
-	void ScaleMax();
 	void ScaleMin();
+	void ScaleMax();
 
 	void Add(float v, float r, float g, float b);
 	void Render(IGraphics *pGraphics, IGraphics::CTextureHandle FontTexture, float x, float y, float w, float h, const char *pDescription);
@@ -61,7 +61,7 @@ class CSmoothTime
 	int64_t m_Current;
 	int64_t m_Target;
 
-	CGraph m_Graph;
+	CGraph<512> m_Graph;
 
 	int m_SpikeCounter;
 
@@ -73,7 +73,7 @@ public:
 	int64_t Get(int64_t Now);
 
 	void UpdateInt(int64_t Target);
-	void Update(CGraph *pGraph, int64_t Target, int TimeLeft, int AdjustDirection);
+	void Update(CGraph<512> *pGraph, int64_t Target, int TimeLeft, int AdjustDirection);
 };
 
 class CServerCapabilities
@@ -216,9 +216,9 @@ class CClient : public IClient, public CDemoPlayer::IListener
 	bool m_DummySendConnInfo;
 
 	// graphs
-	CGraph m_InputtimeMarginGraph;
-	CGraph m_GametimeMarginGraph;
-	CGraph m_FpsGraph;
+	CGraph<512> m_InputtimeMarginGraph;
+	CGraph<512> m_GametimeMarginGraph;
+	CGraph<(size_t)1024u * 32u> m_FpsGraph;
 
 	// the game snapshots are modifiable by the game
 	class CSnapshotStorage m_SnapshotStorage[NUM_DUMMIES];

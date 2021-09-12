@@ -1,6 +1,7 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 
+#include <cstdint>
 #define _WIN32_WINNT 0x0501
 
 #include <new>
@@ -80,48 +81,85 @@
 #include "SDL_rwops.h"
 #include "base/hash.h"
 
+#include <cmath>
+
 static const ColorRGBA ClientNetworkPrintColor{0.7f, 1, 0.7f, 1.0f};
 static const ColorRGBA ClientNetworkErrPrintColor{1.0f, 0.25f, 0.25f, 1.0f};
 
-void CGraph::Init(float Min, float Max)
+static float GetNextMax(float CurMax)
+{
+	float Num = 100;
+	if(CurMax >= 1000)
+	{
+		Num = 1000;
+	}
+	return (std::floor(CurMax / Num) + 1) * Num;
+}
+
+template<size_t TMaxValues>
+int CGraph<TMaxValues>::IndicesInUse()
+{
+	int HighIndex = m_CurIndex < m_CurSmallestIndex ? (m_CurIndex + TMaxValues) : m_CurIndex;
+	return (HighIndex - m_CurSmallestIndex) + 1;
+}
+
+template<size_t TMaxValues>
+void CGraph<TMaxValues>::Init(float Min, float Max)
 {
 	m_MinRange = m_Min = Min;
 	m_MaxRange = m_Max = Max;
-	m_Index = 0;
+	m_CurSmallestIndex = 0;
+	m_CurIndex = 0;
 }
 
-void CGraph::ScaleMax()
+template<size_t TMaxValues>
+void CGraph<TMaxValues>::ScaleMax()
 {
 	int i = 0;
 	m_Max = m_MaxRange;
-	for(i = 0; i < MAX_VALUES; i++)
+	for(i = 0; i < IndicesInUse(); i++)
 	{
-		if(m_aValues[i] > m_Max)
-			m_Max = m_aValues[i];
+		int RealIndex = ((m_CurSmallestIndex + TMaxValues) + i) % TMaxValues;
+		if(m_aValues[RealIndex] > m_Max)
+			m_Max = m_aValues[RealIndex];
+	}
+	if(m_Max != m_MaxRange)
+	{
+		m_Max = GetNextMax(m_Max);
 	}
 }
 
-void CGraph::ScaleMin()
+template<size_t TMaxValues>
+void CGraph<TMaxValues>::ScaleMin()
 {
 	int i = 0;
 	m_Min = m_MinRange;
-	for(i = 0; i < MAX_VALUES; i++)
+	for(i = 0; i < IndicesInUse(); i++)
 	{
-		if(m_aValues[i] < m_Min)
-			m_Min = m_aValues[i];
+		int RealIndex = ((m_CurSmallestIndex + TMaxValues) + i) % TMaxValues;
+		if(m_aValues[RealIndex] < m_Min)
+			m_Min = m_aValues[RealIndex];
 	}
 }
 
-void CGraph::Add(float v, float r, float g, float b)
+template<size_t TMaxValues>
+void CGraph<TMaxValues>::Add(float v, float r, float g, float b)
 {
-	m_Index = (m_Index + 1) & (MAX_VALUES - 1);
-	m_aValues[m_Index] = v;
-	m_aColors[m_Index][0] = r;
-	m_aColors[m_Index][1] = g;
-	m_aColors[m_Index][2] = b;
+	int64_t CurTime = time_get_microseconds();
+	m_CurIndex = (m_CurIndex + 1) & (TMaxValues - 1);
+	m_aValues[m_CurIndex] = v;
+	m_aColors[m_CurIndex][0] = r;
+	m_aColors[m_CurIndex][1] = g;
+	m_aColors[m_CurIndex][2] = b;
+	m_aTimes[m_CurIndex] = CurTime;
+	while(m_aTimes[m_CurSmallestIndex] + 10000000 < CurTime && IndicesInUse() > 1)
+	{
+		m_CurSmallestIndex = (m_CurSmallestIndex + 1) & (TMaxValues - 1);
+	}
 }
 
-void CGraph::Render(IGraphics *pGraphics, IGraphics::CTextureHandle FontTexture, float x, float y, float w, float h, const char *pDescription)
+template<size_t TMaxValues>
+void CGraph<TMaxValues>::Render(IGraphics *pGraphics, IGraphics::CTextureHandle FontTexture, float x, float y, float w, float h, const char *pDescription)
 {
 	//m_pGraphics->BlendNormal();
 
@@ -134,20 +172,39 @@ void CGraph::Render(IGraphics *pGraphics, IGraphics::CTextureHandle FontTexture,
 	pGraphics->QuadsEnd();
 
 	pGraphics->LinesBegin();
-	pGraphics->SetColor(0.95f, 0.95f, 0.95f, 1.00f);
-	IGraphics::CLineItem LineItem(x, y + h / 2, x + w, y + h / 2);
-	pGraphics->LinesDraw(&LineItem, 1);
 	pGraphics->SetColor(0.5f, 0.5f, 0.5f, 0.75f);
-	IGraphics::CLineItem Array[2] = {
+	IGraphics::CLineItem Array[3] = {
+		IGraphics::CLineItem(x, y + h / 2, x + w, y + h / 2),
 		IGraphics::CLineItem(x, y + (h * 3) / 4, x + w, y + (h * 3) / 4),
 		IGraphics::CLineItem(x, y + h / 4, x + w, y + h / 4)};
-	pGraphics->LinesDraw(Array, 2);
-	for(int i = 1; i < MAX_VALUES; i++)
+	pGraphics->LinesDraw(Array, 3);
+
+	int64_t TimeGroupStart = m_aTimes[m_CurSmallestIndex] / 1000000;
+	const int NumTimeGroups = 11;
+	int aNumTimeGroups[NumTimeGroups] = {};
+	int aNumTimeGroupsFirstIndexPlusOne[NumTimeGroups] = {};
+
+	for(int i = 0; i < IndicesInUse(); i++)
 	{
-		float a0 = (i - 1) / (float)MAX_VALUES;
-		float a1 = i / (float)MAX_VALUES;
-		int i0 = (m_Index + i - 1) & (MAX_VALUES - 1);
-		int i1 = (m_Index + i) & (MAX_VALUES - 1);
+		int i0 = ((m_CurSmallestIndex + TMaxValues) + i) % TMaxValues;
+		int64_t TimeGroup = (m_aTimes[i0] / 1000000) - TimeGroupStart;
+		aNumTimeGroups[TimeGroup]++;
+		if(aNumTimeGroupsFirstIndexPlusOne[TimeGroup] == 0)
+			aNumTimeGroupsFirstIndexPlusOne[TimeGroup] = i + 1;
+	}
+
+	for(int i = 0; i < IndicesInUse() - 1; i++)
+	{
+		int i0 = ((m_CurSmallestIndex + TMaxValues) + i) % TMaxValues;
+		int i1 = ((m_CurSmallestIndex + TMaxValues) + 1 + i) % TMaxValues;
+
+		int64_t TimeGroup = (m_aTimes[i0] / 1000000) - TimeGroupStart;
+
+		float TimeGroupPerc1 = (float)TimeGroup / NumTimeGroups;
+		float TimeGroupPerc2 = (float)1 / NumTimeGroups;
+
+		float a0 = TimeGroupPerc1 + (i - (aNumTimeGroupsFirstIndexPlusOne[TimeGroup] - 1)) / (float)aNumTimeGroups[TimeGroup] * TimeGroupPerc2;
+		float a1 = TimeGroupPerc1 + ((i - (aNumTimeGroupsFirstIndexPlusOne[TimeGroup] - 1)) + 1) / (float)aNumTimeGroups[TimeGroup] * TimeGroupPerc2;
 
 		float v0 = (m_aValues[i0] - m_Min) / (m_Max - m_Min);
 		float v1 = (m_aValues[i1] - m_Min) / (m_Max - m_Min);
@@ -220,7 +277,7 @@ void CSmoothTime::UpdateInt(int64_t Target)
 	m_Target = Target;
 }
 
-void CSmoothTime::Update(CGraph *pGraph, int64_t Target, int TimeLeft, int AdjustDirection)
+void CSmoothTime::Update(CGraph<512> *pGraph, int64_t Target, int TimeLeft, int AdjustDirection)
 {
 	int UpdateTimer = 1;
 
@@ -1084,8 +1141,8 @@ void CClient::DebugRender()
 		float sp = Graphics()->ScreenWidth() / 100.0f;
 		float x = Graphics()->ScreenWidth() - w - sp;
 
-		m_FpsGraph.ScaleMax();
 		m_FpsGraph.ScaleMin();
+		m_FpsGraph.ScaleMax();
 		m_FpsGraph.Render(Graphics(), m_DebugFont, x, sp * 5, w, h, "FPS");
 		m_InputtimeMarginGraph.ScaleMin();
 		m_InputtimeMarginGraph.ScaleMax();
