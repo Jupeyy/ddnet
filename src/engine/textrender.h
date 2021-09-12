@@ -55,6 +55,17 @@ public:
 	CFont *m_pFont;
 	float m_FontSize;
 	float m_AlignedFontSize;
+
+	bool m_CalculateSelection;
+	int m_PressMouseX;
+	int m_PressMouseY;
+	int m_ReleaseMouseX;
+	int m_ReleaseMouseY;
+
+	// note m_SelectionStart can be bigger than m_SelectionEnd, depending on how the mouse cursor was dragged
+	// also note, that these are the character offsets decoded
+	int m_SelectionStart;
+	int m_SelectionEnd;
 };
 
 struct STextRenderColor
@@ -114,7 +125,6 @@ public:
 	// just deletes and creates text container
 	virtual void RecreateTextContainer(CTextCursor *pCursor, int TextContainerIndex, const char *pText, int Length = -1) = 0;
 	virtual void RecreateTextContainerSoft(CTextCursor *pCursor, int TextContainerIndex, const char *pText, int Length = -1) = 0;
-	virtual void SetTextContainerSelection(int TextContainerIndex, const char *pText, int CursorPos, int SelectionStart, int SelectionEnd) = 0;
 	virtual void DeleteTextContainer(int TextContainerIndex) = 0;
 
 	virtual void UploadTextContainer(int TextContainerIndex) = 0;

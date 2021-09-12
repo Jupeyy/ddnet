@@ -9,6 +9,7 @@
 
 // ft2 texture
 #include <ft2build.h>
+#include <limits>
 #include FT_FREETYPE_H
 
 // TODO: Refactor: clean this up
@@ -772,6 +773,14 @@ public:
 		pCursor->m_CharCount = 0;
 		pCursor->m_MaxCharacterHeight = 0;
 		pCursor->m_LongestLineWidth = 0;
+
+		pCursor->m_CalculateSelection = false;
+		pCursor->m_PressMouseX = 0;
+		pCursor->m_PressMouseY = 0;
+		pCursor->m_ReleaseMouseX = 0;
+		pCursor->m_ReleaseMouseY = 0;
+		pCursor->m_SelectionStart = 0;
+		pCursor->m_SelectionEnd = 0;
 	}
 
 	virtual void MoveCursor(CTextCursor *pCursor, float x, float y)
@@ -860,7 +869,7 @@ public:
 				STextRenderColor TextColorOutline = DefaultTextOutlineColor();
 				RenderTextContainer(TextCont, &TextColor, &TextColorOutline);
 			}
-			FreeTextContainer(TextCont);
+			DeleteTextContainer(TextCont);
 		}
 	}
 
@@ -1013,6 +1022,59 @@ public:
 		FT_UInt LastCharGlyphIndex = 0;
 		size_t CharacterCounter = 0;
 
+		bool IsRendered = (pCursor->m_Flags & TEXTFLAG_RENDER) != 0;
+
+		std::vector<IGraphics::CQuadItem> SelectionQuads;
+		bool SelectionStarted = false;
+		bool SelectionUsedPress = false;
+		bool SelectionUsedRelease = false;
+		int SelectionStartChar = -1;
+		int SelectionEndChar = -1;
+
+		auto &&CheckSelectionStart = [&](bool CheckOuter, int CursorX, int CursorY, int &SelectionChar, bool &SelectionUsedCase, float LastCharX, float LastCharWidth, float CharX, float CharWidth, float CharY) {
+			if(pCursor->m_CalculateSelection && !SelectionStarted && !SelectionUsedCase)
+			{
+				if((LastCharX - LastCharWidth / 2 <= CursorX &&
+					   CharX + CharWidth / 2 > CursorX &&
+					   CharY - Size <= CursorY &&
+					   CharY > CursorY) ||
+					(CheckOuter &&
+						CharY - Size > CursorY))
+				{
+					SelectionChar = CharacterCounter;
+					SelectionStarted = !SelectionStarted;
+					SelectionUsedCase = true;
+				}
+			}
+		};
+		auto &&CheckSelectionEnd = [&](bool CheckOuter, int CursorX, int CursorY, int &SelectionChar, bool &SelectionUsedCase, float CharX, float CharWidth, float CharY) {
+			if(pCursor->m_CalculateSelection && SelectionStarted && !SelectionUsedCase)
+			{
+				if((CharX + CharWidth / 2 > CursorX &&
+					   CharY - Size <= CursorY &&
+					   CharY > CursorY) ||
+					(CheckOuter &&
+						CharY <= CursorY))
+				{
+					SelectionChar = CharacterCounter;
+					SelectionStarted = !SelectionStarted;
+					SelectionUsedCase = true;
+				}
+			}
+		};
+
+		float LastCharX = 0;
+		float LastCharWidth = 0;
+
+		if(pCursor->m_CalculateSelection)
+		{
+			if(IsRendered)
+			{
+				if(TextContainer.m_StringInfo.m_SelectionQuadContainerIndex != -1)
+					Graphics()->QuadContainerReset(TextContainer.m_StringInfo.m_SelectionQuadContainerIndex);
+			}
+		}
+
 		while(pCurrent < pEnd && (pCursor->m_MaxLines < 1 || LineCount <= pCursor->m_MaxLines))
 		{
 			int NewLine = 0;
@@ -1118,16 +1180,18 @@ public:
 						}
 					}
 
+					float TmpY = (DrawY + Size);
+					float CharX = (DrawX + CharKerning) + BearingX;
+					float CharY = TmpY - BearingY;
+
 					// don't add text that isn't drawn, the color overwrite is used for that
-					if(m_Color.a != 0.f && (pCursor->m_Flags & TEXTFLAG_RENDER) != 0)
+					if(m_Color.a != 0.f && IsRendered)
 					{
 						TextContainer.m_StringInfo.m_CharacterQuads.push_back(STextCharQuad());
 						STextCharQuad &TextCharQuad = TextContainer.m_StringInfo.m_CharacterQuads.back();
 
-						float Y = (DrawY + Size);
-
-						TextCharQuad.m_Vertices[0].m_X = (DrawX + CharKerning) + BearingX;
-						TextCharQuad.m_Vertices[0].m_Y = Y - BearingY;
+						TextCharQuad.m_Vertices[0].m_X = CharX;
+						TextCharQuad.m_Vertices[0].m_Y = CharY;
 						TextCharQuad.m_Vertices[0].m_U = pChr->m_aUVs[0];
 						TextCharQuad.m_Vertices[0].m_V = pChr->m_aUVs[3];
 						TextCharQuad.m_Vertices[0].m_Color.m_R = (unsigned char)(m_Color.r * 255.f);
@@ -1135,8 +1199,8 @@ public:
 						TextCharQuad.m_Vertices[0].m_Color.m_B = (unsigned char)(m_Color.b * 255.f);
 						TextCharQuad.m_Vertices[0].m_Color.m_A = (unsigned char)(m_Color.a * 255.f);
 
-						TextCharQuad.m_Vertices[1].m_X = (DrawX + CharKerning) + BearingX + CharWidth;
-						TextCharQuad.m_Vertices[1].m_Y = Y - BearingY;
+						TextCharQuad.m_Vertices[1].m_X = CharX + CharWidth;
+						TextCharQuad.m_Vertices[1].m_Y = CharY;
 						TextCharQuad.m_Vertices[1].m_U = pChr->m_aUVs[2];
 						TextCharQuad.m_Vertices[1].m_V = pChr->m_aUVs[3];
 						TextCharQuad.m_Vertices[1].m_Color.m_R = (unsigned char)(m_Color.r * 255.f);
@@ -1144,8 +1208,8 @@ public:
 						TextCharQuad.m_Vertices[1].m_Color.m_B = (unsigned char)(m_Color.b * 255.f);
 						TextCharQuad.m_Vertices[1].m_Color.m_A = (unsigned char)(m_Color.a * 255.f);
 
-						TextCharQuad.m_Vertices[2].m_X = (DrawX + CharKerning) + BearingX + CharWidth;
-						TextCharQuad.m_Vertices[2].m_Y = Y - BearingY - CharHeight;
+						TextCharQuad.m_Vertices[2].m_X = CharX + CharWidth;
+						TextCharQuad.m_Vertices[2].m_Y = CharY - CharHeight;
 						TextCharQuad.m_Vertices[2].m_U = pChr->m_aUVs[2];
 						TextCharQuad.m_Vertices[2].m_V = pChr->m_aUVs[1];
 						TextCharQuad.m_Vertices[2].m_Color.m_R = (unsigned char)(m_Color.r * 255.f);
@@ -1153,8 +1217,8 @@ public:
 						TextCharQuad.m_Vertices[2].m_Color.m_B = (unsigned char)(m_Color.b * 255.f);
 						TextCharQuad.m_Vertices[2].m_Color.m_A = (unsigned char)(m_Color.a * 255.f);
 
-						TextCharQuad.m_Vertices[3].m_X = (DrawX + CharKerning) + BearingX;
-						TextCharQuad.m_Vertices[3].m_Y = Y - BearingY - CharHeight;
+						TextCharQuad.m_Vertices[3].m_X = CharX;
+						TextCharQuad.m_Vertices[3].m_Y = CharY - CharHeight;
 						TextCharQuad.m_Vertices[3].m_U = pChr->m_aUVs[0];
 						TextCharQuad.m_Vertices[3].m_V = pChr->m_aUVs[1];
 						TextCharQuad.m_Vertices[3].m_Color.m_R = (unsigned char)(m_Color.r * 255.f);
@@ -1162,6 +1226,23 @@ public:
 						TextCharQuad.m_Vertices[3].m_Color.m_B = (unsigned char)(m_Color.b * 255.f);
 						TextCharQuad.m_Vertices[3].m_Color.m_A = (unsigned char)(m_Color.a * 255.f);
 					}
+
+					if(CharacterCounter == 0)
+					{
+						CheckSelectionStart(true, pCursor->m_PressMouseX, pCursor->m_PressMouseY, SelectionStartChar, SelectionUsedPress, LastCharX, LastCharWidth, CharX, CharWidth, CharY);
+						CheckSelectionStart(true, pCursor->m_ReleaseMouseX, pCursor->m_ReleaseMouseY, SelectionEndChar, SelectionUsedRelease, LastCharX, LastCharWidth, CharX, CharWidth, CharY);
+					}
+
+					// if selection didn't start and the mouse pos is atleast on 50% of the right side of the character start
+					CheckSelectionStart(false, pCursor->m_PressMouseX, pCursor->m_PressMouseY, SelectionStartChar, SelectionUsedPress, LastCharX, LastCharWidth, CharX, CharWidth, CharY);
+					CheckSelectionStart(false, pCursor->m_ReleaseMouseX, pCursor->m_ReleaseMouseY, SelectionEndChar, SelectionUsedRelease, LastCharX, LastCharWidth, CharX, CharWidth, CharY);
+					CheckSelectionEnd(false, pCursor->m_ReleaseMouseX, pCursor->m_ReleaseMouseY, SelectionEndChar, SelectionUsedRelease, CharX, CharWidth, CharY);
+					CheckSelectionEnd(false, pCursor->m_PressMouseX, pCursor->m_PressMouseY, SelectionStartChar, SelectionUsedPress, CharX, CharWidth, CharY);
+
+					LastCharX = CharX;
+					LastCharWidth = CharWidth;
+
+					float OldDrawX = DrawX;
 
 					pCursor->m_MaxCharacterHeight = maximum(pCursor->m_MaxCharacterHeight, CharHeight + BearingY);
 
@@ -1171,6 +1252,11 @@ public:
 						DrawX += Advance * Size + CharKerning;
 					pCursor->m_GlyphCount++;
 					++CharacterCounter;
+
+					if(pCursor->m_CalculateSelection && SelectionStarted && IsRendered)
+					{
+						SelectionQuads.push_back(IGraphics::CQuadItem(OldDrawX, DrawY, DrawX - OldDrawX, Size));
+					}
 				}
 
 				if(DrawX > pCursor->m_LongestLineWidth)
@@ -1194,7 +1280,7 @@ public:
 				GotNewLineLast = 0;
 		}
 
-		if(TextContainer.m_StringInfo.m_CharacterQuads.size() != 0 && (pCursor->m_Flags & TEXTFLAG_RENDER) != 0)
+		if(TextContainer.m_StringInfo.m_CharacterQuads.size() != 0 && IsRendered)
 		{
 			TextContainer.m_StringInfo.m_QuadNum = TextContainer.m_StringInfo.m_CharacterQuads.size();
 			// setup the buffers
@@ -1209,6 +1295,30 @@ public:
 					Graphics()->IndicesNumRequiredNotify(TextContainer.m_StringInfo.m_QuadNum * 6);
 				}
 			}
+		}
+
+		pCursor->m_SelectionStart = -1;
+		pCursor->m_SelectionEnd = -1;
+
+		if(SelectionStarted)
+		{
+			CheckSelectionEnd(true, pCursor->m_ReleaseMouseX, pCursor->m_ReleaseMouseY, SelectionEndChar, SelectionUsedRelease, std::numeric_limits<float>::max(), 0, DrawY + Size);
+			CheckSelectionEnd(true, pCursor->m_PressMouseX, pCursor->m_PressMouseY, SelectionStartChar, SelectionUsedPress, std::numeric_limits<float>::max(), 0, DrawY + Size);
+		}
+
+		if(!SelectionQuads.empty() && SelectionUsedPress && SelectionUsedRelease)
+		{
+			Graphics()->SetColor(0.f, 0.f, 1.f, 0.8f);
+			if(SelectionQuads.size() > 0)
+			{
+				if(TextContainer.m_StringInfo.m_SelectionQuadContainerIndex == -1)
+					TextContainer.m_StringInfo.m_SelectionQuadContainerIndex = Graphics()->CreateQuadContainer();
+				Graphics()->QuadContainerAddQuads(TextContainer.m_StringInfo.m_SelectionQuadContainerIndex, &SelectionQuads[0], (int)SelectionQuads.size());
+
+				pCursor->m_SelectionStart = SelectionStartChar;
+				pCursor->m_SelectionEnd = SelectionEndChar;
+			}
+			Graphics()->SetColor(1.f, 1.f, 1.f, 1.f);
 		}
 
 		// even if no text is drawn the cursor position will be adjusted
@@ -1235,223 +1345,6 @@ public:
 		AppendTextContainer(pCursor, TextContainerIndex, pText, Length);
 	}
 
-	virtual void SetTextContainerSelection(int TextContainerIndex, const char *pText, int CursorPos, int SelectionStart, int SelectionEnd)
-	{
-		STextContainer &TextContainer = GetTextContainer(TextContainerIndex);
-
-		CFontSizeData *pSizeData = NULL;
-
-		float ScreenX0, ScreenY0, ScreenX1, ScreenY1;
-		float FakeToScreenX, FakeToScreenY;
-
-		int ActualSize;
-		float DrawX = 0.0f, DrawY = 0.0f;
-		int LineCount = 0;
-
-		float Size = TextContainer.m_UnscaledFontSize;
-
-		// calculate the font size of the displayed glyphs
-		Graphics()->GetScreen(&ScreenX0, &ScreenY0, &ScreenX1, &ScreenY1);
-
-		FakeToScreenX = (Graphics()->ScreenWidth() / (ScreenX1 - ScreenX0));
-		FakeToScreenY = (Graphics()->ScreenHeight() / (ScreenY1 - ScreenY0));
-
-		// same with size
-		ActualSize = (int)(Size * FakeToScreenY);
-		Size = ActualSize / FakeToScreenY;
-
-		pSizeData = TextContainer.m_pFont->GetFontSize(TextContainer.m_FontSize);
-
-		FT_Set_Pixel_Sizes(TextContainer.m_pFont->m_FtFace, 0, TextContainer.m_FontSize);
-
-		// string length
-		int Length = str_length(pText);
-
-		float Scale = 1.0f / pSizeData->m_FontSize;
-		float MaxRowHeight = (TextContainer.m_pFont->m_FtFace->size->metrics.height >> 6) * Scale * Size;
-
-		const char *pCurrent = (char *)pText;
-		const char *pCurrentLast = (char *)pText;
-		const char *pEnd = pCurrent + Length;
-
-		int RenderFlags = TextContainer.m_RenderFlags;
-
-		if((RenderFlags & TEXT_RENDER_FLAG_NO_PIXEL_ALIGMENT) != 0)
-		{
-			DrawX = TextContainer.m_X;
-			DrawY = TextContainer.m_Y;
-		}
-		else
-		{
-			DrawX = TextContainer.m_AlignedStartX;
-			DrawY = TextContainer.m_AlignedStartY;
-		}
-
-		LineCount = TextContainer.m_LineCount;
-
-		if(TextContainer.m_StringInfo.m_SelectionQuadContainerIndex == -1)
-			TextContainer.m_StringInfo.m_SelectionQuadContainerIndex = Graphics()->CreateQuadContainer();
-
-		Graphics()->QuadContainerReset(TextContainer.m_StringInfo.m_SelectionQuadContainerIndex);
-
-		std::vector<IGraphics::CQuadItem> SelectionQuads;
-		IGraphics::CQuadItem CursorQuad;
-
-		FT_UInt LastCharGlyphIndex = 0;
-		size_t CharacterCounter = 0;
-
-		while(pCurrent < pEnd && (TextContainer.m_MaxLines < 1 || LineCount <= TextContainer.m_MaxLines))
-		{
-			int NewLine = 0;
-			const char *pBatchEnd = pEnd;
-			if(TextContainer.m_LineWidth > 0 && !(TextContainer.m_Flags & TEXTFLAG_STOP_AT_END))
-			{
-				CTextCursor FakeCursor;
-				SetCursor(&FakeCursor, DrawX, DrawY, TextContainer.m_UnscaledFontSize, TextContainer.m_Flags);
-				FakeCursor.m_LineCount = TextContainer.m_LineCount;
-				FakeCursor.m_GlyphCount = TextContainer.m_GlyphCount;
-				FakeCursor.m_CharCount = TextContainer.m_CharCount;
-				FakeCursor.m_MaxLines = TextContainer.m_MaxLines;
-				FakeCursor.m_StartX = TextContainer.m_StartX;
-				FakeCursor.m_StartY = TextContainer.m_StartY;
-				FakeCursor.m_LineWidth = TextContainer.m_LineWidth;
-				FakeCursor.m_pFont = TextContainer.m_pFont;
-
-				int Wlen = minimum(WordLength((char *)pCurrent), (int)(pEnd - pCurrent));
-				CTextCursor Compare = FakeCursor;
-				Compare.m_X = DrawX;
-				Compare.m_Y = DrawY;
-				Compare.m_Flags &= ~TEXTFLAG_RENDER;
-				Compare.m_LineWidth = -1;
-				TextEx(&Compare, pCurrent, Wlen);
-
-				if(Compare.m_X - DrawX > TextContainer.m_LineWidth)
-				{
-					// word can't be fitted in one line, cut it
-					CTextCursor Cutter = FakeCursor;
-					Cutter.m_GlyphCount = 0;
-					Cutter.m_CharCount = 0;
-					Cutter.m_X = DrawX;
-					Cutter.m_Y = DrawY;
-					Cutter.m_Flags &= ~TEXTFLAG_RENDER;
-					Cutter.m_Flags |= TEXTFLAG_STOP_AT_END;
-
-					TextEx(&Cutter, pCurrent, Wlen);
-					int WordGlyphs = Cutter.m_GlyphCount;
-					Wlen = Cutter.m_CharCount;
-					NewLine = 1;
-
-					if(WordGlyphs <= 3) // if we can't place 3 chars of the word on this line, take the next
-						Wlen = 0;
-				}
-				else if(Compare.m_X - TextContainer.m_StartX > TextContainer.m_LineWidth)
-				{
-					NewLine = 1;
-					Wlen = 0;
-				}
-
-				pBatchEnd = pCurrent + Wlen;
-			}
-
-			pCurrentLast = pCurrent;
-			const char *pTmp = pCurrent;
-			int NextCharacter = str_utf8_decode(&pTmp);
-			while(pCurrent < pBatchEnd)
-			{
-				TextContainer.m_CharCount += pTmp - pCurrent;
-				int Character = NextCharacter;
-				pCurrent = pTmp;
-				NextCharacter = str_utf8_decode(&pTmp);
-
-				if(Character == '\n')
-				{
-					LastCharGlyphIndex = 0;
-					++CharacterCounter;
-
-					DrawX = TextContainer.m_StartX;
-					DrawY += Size;
-					if((RenderFlags & TEXT_RENDER_FLAG_NO_PIXEL_ALIGMENT) == 0)
-					{
-						DrawX = (int)((DrawX * FakeToScreenX) + 0.5f) / FakeToScreenX; // realign
-						DrawY = (int)((DrawY * FakeToScreenY) + 0.5f) / FakeToScreenY;
-					}
-					++LineCount;
-					if(TextContainer.m_MaxLines > 0 && LineCount > TextContainer.m_MaxLines)
-						break;
-					continue;
-				}
-
-				SFontSizeChar *pChr = GetChar(TextContainer.m_pFont, pSizeData, Character);
-				if(pChr)
-				{
-					bool ApplyBearingX = !(((RenderFlags & TEXT_RENDER_FLAG_NO_X_BEARING) != 0) || (CharacterCounter == 0 && (RenderFlags & TEXT_RENDER_FLAG_NO_FIRST_CHARACTER_X_BEARING) != 0));
-					float Advance = ((((RenderFlags & TEXT_RENDER_FLAG_ONLY_ADVANCE_WIDTH) != 0) ? (pChr->m_Width) : (pChr->m_AdvanceX + (!ApplyBearingX ? (-pChr->m_OffsetX) : 0.f)))) * Scale;
-
-					float CharKerning = 0.f;
-					if((RenderFlags & TEXT_RENDER_FLAG_KERNING) != 0)
-						CharKerning = Kerning(TextContainer.m_pFont, LastCharGlyphIndex, pChr->m_GlyphIndex) * Scale * Size;
-					LastCharGlyphIndex = pChr->m_GlyphIndex;
-
-					if(TextContainer.m_Flags & TEXTFLAG_STOP_AT_END && (DrawX + CharKerning) + Advance * Size - TextContainer.m_StartX > TextContainer.m_LineWidth)
-					{
-						// we hit the end of the line, no more to render or count
-						pCurrent = pEnd;
-						break;
-					}
-
-					int CharBytePos = (int)((size_t)(pCurrentLast - pText));
-
-					if(CharBytePos == CursorPos)
-					{
-						CursorQuad.Set((DrawX + CharKerning), DrawY, 2.f * Scale * Size, MaxRowHeight);
-					}
-
-					if(CharBytePos >= SelectionStart && CharBytePos < SelectionEnd)
-					{
-						SelectionQuads.push_back(IGraphics::CQuadItem((DrawX + CharKerning), DrawY, Advance * Size, MaxRowHeight));
-					}
-
-					float BearingX = (!ApplyBearingX ? 0.f : pChr->m_OffsetX) * Scale * Size;
-					float CharWidth = pChr->m_Width * Scale * Size;
-
-					if(NextCharacter == 0 && (RenderFlags & TEXT_RENDER_FLAG_NO_LAST_CHARACTER_ADVANCE) != 0)
-						DrawX += BearingX + CharKerning + CharWidth;
-					else
-						DrawX += Advance * Size + CharKerning;
-
-					TextContainer.m_GlyphCount++;
-					++CharacterCounter;
-				}
-				pCurrentLast = pCurrent;
-			}
-
-			if(NewLine)
-			{
-				DrawX = TextContainer.m_StartX;
-				DrawY += Size;
-				if((RenderFlags & TEXT_RENDER_FLAG_NO_PIXEL_ALIGMENT) == 0)
-				{
-					DrawX = (int)((DrawX * FakeToScreenX) + 0.5f) / FakeToScreenX; // realign
-					DrawY = (int)((DrawY * FakeToScreenY) + 0.5f) / FakeToScreenY;
-				}
-				++LineCount;
-			}
-		}
-
-		int CharBytePos = (int)((size_t)(pCurrentLast - pText));
-		if(CharBytePos == CursorPos)
-		{
-			CursorQuad.Set(DrawX, DrawY, 2.f * Scale * Size, MaxRowHeight);
-		}
-
-		Graphics()->SetColor(1.f, 1.f, 1.f, 1.f);
-		Graphics()->QuadContainerAddQuads(TextContainer.m_StringInfo.m_SelectionQuadContainerIndex, &CursorQuad, 1);
-		Graphics()->SetColor(0.f, 0.f, 1.f, 0.8f);
-		if(SelectionQuads.size() > 0)
-			Graphics()->QuadContainerAddQuads(TextContainer.m_StringInfo.m_SelectionQuadContainerIndex, &SelectionQuads[0], (int)SelectionQuads.size());
-		Graphics()->SetColor(1.f, 1.f, 1.f, 1.f);
-	}
-
 	virtual void DeleteTextContainer(int TextContainerIndex)
 	{
 		STextContainer &TextContainer = GetTextContainer(TextContainerIndex);
@@ -1459,9 +1352,9 @@ public:
 		{
 			if(TextContainer.m_StringInfo.m_QuadBufferContainerIndex != -1)
 				Graphics()->DeleteBufferContainer(TextContainer.m_StringInfo.m_QuadBufferContainerIndex, true);
-			if(TextContainer.m_StringInfo.m_SelectionQuadContainerIndex != -1)
-				Graphics()->DeleteQuadContainer(TextContainer.m_StringInfo.m_SelectionQuadContainerIndex);
 		}
+		if(TextContainer.m_StringInfo.m_SelectionQuadContainerIndex != -1)
+			Graphics()->DeleteQuadContainer(TextContainer.m_StringInfo.m_SelectionQuadContainerIndex);
 		FreeTextContainer(TextContainerIndex);
 	}
 
@@ -1487,14 +1380,14 @@ public:
 		if(TextContainer.m_StringInfo.m_SelectionQuadContainerIndex != -1)
 		{
 			Graphics()->SetColor(1.f, 1.f, 1.f, 1.f);
-			Graphics()->RenderQuadContainer(TextContainer.m_StringInfo.m_SelectionQuadContainerIndex, 1, -1);
+			Graphics()->RenderQuadContainer(TextContainer.m_StringInfo.m_SelectionQuadContainerIndex, 0, -1);
 
-			static int64_t s_CursorRenderTime = time_get_microseconds();
+			/*static int64_t s_CursorRenderTime = time_get_microseconds();
 
 			if((time_get_microseconds() - s_CursorRenderTime) > 500000)
 				Graphics()->RenderQuadContainer(TextContainer.m_StringInfo.m_SelectionQuadContainerIndex, 0, 1);
 			if((time_get_microseconds() - s_CursorRenderTime) > 1000000)
-				s_CursorRenderTime = time_get_microseconds();
+				s_CursorRenderTime = time_get_microseconds();*/
 		}
 
 		if(Graphics()->IsTextBufferingEnabled())
