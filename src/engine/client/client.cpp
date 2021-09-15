@@ -3308,9 +3308,9 @@ void CClient::Run()
 
 				// keep the overflow time - it's used to make sure the gfx refreshrate is reached
 				int64_t AdditionalTime = g_Config.m_GfxRefreshRate ? ((Now - LastRenderTime) - (time_freq() / (int64_t)g_Config.m_GfxRefreshRate)) : 0;
-				// if the value is over a second time loose, reset the additional time (drop the frames, that are lost already)
-				if(AdditionalTime > time_freq())
-					AdditionalTime = time_freq();
+				// if the value is over 20% frame loss, reset the additional time (drop the frame, that are lost already)
+				if(g_Config.m_GfxRefreshRate && AdditionalTime > time_freq() / ((g_Config.m_GfxRefreshRate * 80) / 100))
+					AdditionalTime = time_freq() / ((g_Config.m_GfxRefreshRate * 80) / 100);
 				LastRenderTime = Now - AdditionalTime;
 				m_LastRenderTime = Now;
 
@@ -3393,6 +3393,7 @@ void CClient::Run()
 		int64_t Now = time_get_microseconds();
 		int64_t SleepTimeInMicroSeconds = 0;
 		bool Slept = false;
+		int RefreshRate = -1;
 		if(
 #ifdef CONF_DEBUG
 			g_Config.m_DbgStress ||
@@ -3402,6 +3403,7 @@ void CClient::Run()
 			SleepTimeInMicroSeconds = ((int64_t)1000000 / (int64_t)g_Config.m_ClRefreshRateInactive) - (Now - LastTime);
 			if(SleepTimeInMicroSeconds / (int64_t)1000 > (int64_t)0)
 				thread_sleep(SleepTimeInMicroSeconds);
+			RefreshRate = g_Config.m_ClRefreshRateInactive;
 			Slept = true;
 		}
 		else if(g_Config.m_ClRefreshRate)
@@ -3410,15 +3412,17 @@ void CClient::Run()
 			if(SleepTimeInMicroSeconds > (int64_t)0)
 				net_socket_read_wait(m_NetClient[CLIENT_MAIN].m_Socket, SleepTimeInMicroSeconds);
 			Slept = true;
+			RefreshRate = g_Config.m_ClRefreshRate;
 		}
 		if(Slept)
 		{
-			// if the diff gets too small it shouldn't get even smaller (drop the updates, that could not be handled)
-			if(SleepTimeInMicroSeconds < (int64_t)-1000000)
-				SleepTimeInMicroSeconds = (int64_t)-1000000;
+			// if the diff gets smaller / higher than 20% of the refresh rate, drop them, they are not recoverable
+			int RefreshRateUntilDrop = ((RefreshRate * 80) / 100);
+			if(SleepTimeInMicroSeconds < (int64_t)-1000000 / RefreshRateUntilDrop)
+				SleepTimeInMicroSeconds = (int64_t)-1000000 / RefreshRateUntilDrop;
 			// don't go higher than the game ticks speed, because the network is waking up the client with the server's snapshots anyway
-			else if(SleepTimeInMicroSeconds > (int64_t)1000000 / m_GameTickSpeed)
-				SleepTimeInMicroSeconds = (int64_t)1000000 / m_GameTickSpeed;
+			else if(SleepTimeInMicroSeconds > (int64_t)minimum(1000000 / RefreshRateUntilDrop, 1000000 / m_GameTickSpeed))
+				SleepTimeInMicroSeconds = (int64_t)minimum(1000000 / RefreshRateUntilDrop, 1000000 / m_GameTickSpeed);
 			// the time diff between the time that was used actually used and the time the thread should sleep/wait
 			// will be calculated in the sleep time of the next update tick by faking the time it should have slept/wait.
 			// so two cases (and the case it slept exactly the time it should):
