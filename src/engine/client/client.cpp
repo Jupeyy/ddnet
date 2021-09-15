@@ -1157,19 +1157,55 @@ const char *CClient::ErrorString() const
 
 void CClient::Render()
 {
+	ColorRGBA bg;
 	if(g_Config.m_ClOverlayEntities)
 	{
-		ColorRGBA bg = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClBackgroundEntitiesColor));
+		bg = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClBackgroundEntitiesColor));
 		Graphics()->Clear(bg.r, bg.g, bg.b);
 	}
 	else
 	{
-		ColorRGBA bg = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClBackgroundColor));
+		bg = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClBackgroundColor));
 		Graphics()->Clear(bg.r, bg.g, bg.b);
 	}
+	int W, H;
+	for(size_t i = 0; i < 2; ++i)
+	{
+		GameClient()->OnRender();
+		DebugRender();
 
-	GameClient()->OnRender();
-	DebugRender();
+		if(i == 0)
+		{
+			if(State() == IClient::STATE_ONLINE && DummyConnected())
+			{
+				W = Graphics()->m_ScreenWidth;
+				H = Graphics()->m_ScreenHeight;
+				Graphics()->UpdateViewport(2 * W / 3, 0, W / 3, H / 3);
+
+				Graphics()->MapScreen(0, 0, 1, 1);
+
+				Graphics()->TextureClear();
+				Graphics()->QuadsBegin();
+				Graphics()->SetColor(bg.r, bg.g, bg.b, 1.0f);
+				IGraphics::CQuadItem QuadItem(0, 0, 1, 1);
+				Graphics()->QuadsDrawTL(&QuadItem, 1);
+				Graphics()->QuadsEnd();
+			}
+			else
+			{
+				return;
+			}
+		}
+		else
+		{
+			Graphics()->m_ScreenWidth = W;
+			Graphics()->m_ScreenHeight = H;
+			Graphics()->UpdateViewport(0, 0, W, H);
+		}
+
+		g_Config.m_ClDummy ^= 1;
+		GameClient()->OnNewSnapshot();
+	}
 
 	if(State() == IClient::STATE_ONLINE && g_Config.m_ClAntiPingLimit)
 	{

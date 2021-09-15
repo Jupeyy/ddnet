@@ -168,7 +168,7 @@ struct CDataSprite; // NOLINT(bugprone-forward-declaration-namespace)
 class IGraphics : public IInterface
 {
 	MACRO_INTERFACE("graphics", 0)
-protected:
+public:
 	int m_ScreenWidth;
 	int m_ScreenHeight;
 	int m_ScreenRefreshRate;
@@ -207,6 +207,8 @@ public:
 	float ScreenHiDPIScale() const { return m_ScreenHiDPIScale; }
 	int WindowWidth() const { return m_ScreenWidth / m_ScreenHiDPIScale; }
 	int WindowHeight() const { return m_ScreenHeight / m_ScreenHiDPIScale; }
+
+	virtual void UpdateViewport(int X, int Y, int W, int H) = 0;
 
 	virtual void SetWindowParams(int FullscreenMode, bool IsBorderless) = 0;
 	virtual bool SetWindowScreen(int Index) = 0;
