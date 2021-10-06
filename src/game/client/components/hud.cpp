@@ -104,7 +104,7 @@ void CHud::OnInit()
 
 void CHud::RenderGameTimer()
 {
-	float Half = 300.0f * Graphics()->ScreenAspect() / 2.0f;
+	float Half = 300.0f * Graphics()->CanvasAspect() / 2.0f;
 
 	if(!(m_pClient->m_Snap.m_pGameInfoObj->m_GameStateFlags & GAMESTATEFLAG_SUDDENDEATH))
 	{
@@ -150,7 +150,7 @@ void CHud::RenderPauseNotification()
 		const char *pText = Localize("Game paused");
 		float FontSize = 20.0f;
 		float w = TextRender()->TextWidth(0, FontSize, pText, -1, -1.0f);
-		TextRender()->Text(0, 150.0f * Graphics()->ScreenAspect() + -w / 2.0f, 50.0f, FontSize, pText, -1.0f);
+		TextRender()->Text(0, 150.0f * Graphics()->CanvasAspect() + -w / 2.0f, 50.0f, FontSize, pText, -1.0f);
 	}
 }
 
@@ -158,7 +158,7 @@ void CHud::RenderSuddenDeath()
 {
 	if(m_pClient->m_Snap.m_pGameInfoObj->m_GameStateFlags & GAMESTATEFLAG_SUDDENDEATH)
 	{
-		float Half = 300.0f * Graphics()->ScreenAspect() / 2.0f;
+		float Half = 300.0f * Graphics()->CanvasAspect() / 2.0f;
 		const char *pText = Localize("Sudden Death");
 		float FontSize = 12.0f;
 		float w = TextRender()->TextWidth(0, FontSize, pText, -1, -1.0f);
@@ -172,7 +172,7 @@ void CHud::RenderScoreHud()
 	if(!(m_pClient->m_Snap.m_pGameInfoObj->m_GameStateFlags & GAMESTATEFLAG_GAMEOVER))
 	{
 		int GameFlags = m_pClient->m_Snap.m_pGameInfoObj->m_GameFlags;
-		float Whole = 300 * Graphics()->ScreenAspect();
+		float Whole = 300 * Graphics()->CanvasAspect();
 		float StartY = 229.0f;
 
 		const float ScoreSingleBoxHeight = 18.0f;
@@ -507,7 +507,7 @@ void CHud::RenderWarmupTimer()
 		char aBuf[256];
 		float FontSize = 20.0f;
 		float w = TextRender()->TextWidth(0, FontSize, Localize("Warmup"), -1, -1.0f);
-		TextRender()->Text(0, 150 * Graphics()->ScreenAspect() + -w / 2, 50, FontSize, Localize("Warmup"), -1.0f);
+		TextRender()->Text(0, 150 * Graphics()->CanvasAspect() + -w / 2, 50, FontSize, Localize("Warmup"), -1.0f);
 
 		int Seconds = m_pClient->m_Snap.m_pGameInfoObj->m_WarmupTimer / SERVER_TICK_SPEED;
 		if(Seconds < 5)
@@ -515,7 +515,7 @@ void CHud::RenderWarmupTimer()
 		else
 			str_format(aBuf, sizeof(aBuf), "%d", Seconds);
 		w = TextRender()->TextWidth(0, FontSize, aBuf, -1, -1.0f);
-		TextRender()->Text(0, 150 * Graphics()->ScreenAspect() + -w / 2, 75, FontSize, aBuf, -1.0f);
+		TextRender()->Text(0, 150 * Graphics()->CanvasAspect() + -w / 2, 75, FontSize, aBuf, -1.0f);
 	}
 }
 
@@ -523,8 +523,8 @@ void CHud::MapscreenToGroup(float CenterX, float CenterY, CMapItemGroup *pGroup)
 {
 	float Points[4];
 	RenderTools()->MapscreenToWorld(CenterX, CenterY, pGroup->m_ParallaxX, pGroup->m_ParallaxY,
-		pGroup->m_OffsetX, pGroup->m_OffsetY, Graphics()->ScreenAspect(), 1.0f, Points);
-	Graphics()->MapScreen(Points[0], Points[1], Points[2], Points[3]);
+		pGroup->m_OffsetX, pGroup->m_OffsetY, Graphics()->CanvasAspect(), 1.0f, Points);
+	Graphics()->MapCanvas(Points[0], Points[1], Points[2], Points[3]);
 }
 
 void CHud::RenderTextInfo()
@@ -581,7 +581,7 @@ void CHud::RenderConnectionWarning()
 	{
 		const char *pText = Localize("Connection Problems...");
 		float w = TextRender()->TextWidth(0, 24, pText, -1, -1.0f);
-		TextRender()->Text(0, 150 * Graphics()->ScreenAspect() - w / 2, 50, 24, pText, -1.0f);
+		TextRender()->Text(0, 150 * Graphics()->CanvasAspect() - w / 2, 50, 24, pText, -1.0f);
 	}
 }
 
@@ -827,9 +827,9 @@ void CHud::OnRender()
 	if(!m_pClient->m_Snap.m_pGameInfoObj)
 		return;
 
-	m_Width = 300.0f * Graphics()->ScreenAspect();
+	m_Width = 300.0f * Graphics()->CanvasAspect();
 	m_Height = 300.0f;
-	Graphics()->MapScreen(0.0f, 0.0f, m_Width, m_Height);
+	Graphics()->MapCanvas(0.0f, 0.0f, m_Width, m_Height);
 
 #if defined(CONF_VIDEORECORDER)
 	if((IVideo::Current() && g_Config.m_ClVideoShowhud) || (!IVideo::Current() && g_Config.m_ClShowhud))
@@ -934,7 +934,7 @@ void CHud::RenderDDRaceEffects()
 		{
 			str_time(m_DDRaceTime, TIME_HOURS_CENTISECS, aTime, sizeof(aTime));
 			str_format(aBuf, sizeof(aBuf), "Finish time: %s", aTime);
-			TextRender()->Text(0, 150 * Graphics()->ScreenAspect() - TextRender()->TextWidth(0, 12, aBuf, -1, -1.0f) / 2, 20, 12, aBuf, -1.0f);
+			TextRender()->Text(0, 150 * Graphics()->CanvasAspect() - TextRender()->TextWidth(0, 12, aBuf, -1, -1.0f) / 2, 20, 12, aBuf, -1.0f);
 		}
 		else if(m_CheckpointTick + Client()->GameTickSpeed() * 6 > Client()->GameTick(g_Config.m_ClDummy))
 		{
@@ -954,7 +954,7 @@ void CHud::RenderDDRaceEffects()
 				TextRender()->TextColor(0.5f, 1.0f, 0.5f, a); // green
 			else if(!m_CheckpointDiff)
 				TextRender()->TextColor(1, 1, 1, a); // white
-			TextRender()->Text(0, 150 * Graphics()->ScreenAspect() - TextRender()->TextWidth(0, 10, aBuf, -1, -1.0f) / 2, 20, 10, aBuf, -1.0f);
+			TextRender()->Text(0, 150 * Graphics()->CanvasAspect() - TextRender()->TextWidth(0, 10, aBuf, -1, -1.0f) / 2, 20, 10, aBuf, -1.0f);
 
 			TextRender()->TextColor(1, 1, 1, 1);
 		}

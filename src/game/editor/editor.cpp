@@ -144,7 +144,7 @@ void CLayerGroup::Mapping(float *pPoints)
 	m_pMap->m_pEditor->RenderTools()->MapscreenToWorld(
 		m_pMap->m_pEditor->m_WorldOffsetX, m_pMap->m_pEditor->m_WorldOffsetY,
 		m_ParallaxX, m_ParallaxY, m_OffsetX, m_OffsetY,
-		m_pMap->m_pEditor->Graphics()->ScreenAspect(), m_pMap->m_pEditor->m_WorldZoom, pPoints);
+		m_pMap->m_pEditor->Graphics()->CanvasAspect(), m_pMap->m_pEditor->m_WorldZoom, pPoints);
 
 	pPoints[0] += m_pMap->m_pEditor->m_EditorOffsetX;
 	pPoints[1] += m_pMap->m_pEditor->m_EditorOffsetY;
@@ -152,16 +152,16 @@ void CLayerGroup::Mapping(float *pPoints)
 	pPoints[3] += m_pMap->m_pEditor->m_EditorOffsetY;
 }
 
-void CLayerGroup::MapScreen()
+void CLayerGroup::MapCanvas()
 {
 	float aPoints[4];
 	Mapping(aPoints);
-	m_pMap->m_pEditor->Graphics()->MapScreen(aPoints[0], aPoints[1], aPoints[2], aPoints[3]);
+	m_pMap->m_pEditor->Graphics()->MapCanvas(aPoints[0], aPoints[1], aPoints[2], aPoints[3]);
 }
 
 void CLayerGroup::Render()
 {
-	MapScreen();
+	MapCanvas();
 	IGraphics *pGraphics = m_pMap->m_pEditor->Graphics();
 
 	if(m_UseClipping)
@@ -173,8 +173,8 @@ void CLayerGroup::Render()
 		float x1 = ((m_ClipX + m_ClipW) - aPoints[0]) / (aPoints[2] - aPoints[0]);
 		float y1 = ((m_ClipY + m_ClipH) - aPoints[1]) / (aPoints[3] - aPoints[1]);
 
-		pGraphics->ClipEnable((int)(x0 * pGraphics->ScreenWidth()), (int)(y0 * pGraphics->ScreenHeight()),
-			(int)((x1 - x0) * pGraphics->ScreenWidth()), (int)((y1 - y0) * pGraphics->ScreenHeight()));
+		pGraphics->ClipEnable((int)(x0 * pGraphics->CanvasWidth()), (int)(y0 * pGraphics->CanvasHeight()),
+			(int)((x1 - x0) * pGraphics->CanvasWidth()), (int)((y1 - y0) * pGraphics->CanvasHeight()));
 	}
 
 	for(int i = 0; i < m_lLayers.size(); i++)
@@ -564,8 +564,8 @@ void CEditor::RenderGrid(CLayerGroup *pGroup)
 	float aGroupPoints[4];
 	pGroup->Mapping(aGroupPoints);
 
-	float w = UI()->Screen()->w;
-	float h = UI()->Screen()->h;
+	float w = UI()->Canvas()->w;
+	float h = UI()->Canvas()->h;
 
 	int LineDistance = GetLineDistance();
 
@@ -2171,7 +2171,7 @@ void CEditor::DoMapEditor(CUIRect View)
 		// render the game, tele, speedup, front, tune and switch above everything else
 		if(m_Map.m_pGameGroup->m_Visible)
 		{
-			m_Map.m_pGameGroup->MapScreen();
+			m_Map.m_pGameGroup->MapCanvas();
 			for(int i = 0; i < m_Map.m_pGameGroup->m_lLayers.size(); i++)
 			{
 				if(
@@ -2189,7 +2189,7 @@ void CEditor::DoMapEditor(CUIRect View)
 		CLayerTiles *pT = static_cast<CLayerTiles *>(GetSelectedLayerType(0, LAYERTYPE_TILES));
 		if(m_ShowTileInfo && pT && pT->m_Visible && m_ZoomLevel <= 300)
 		{
-			GetSelectedGroup()->MapScreen();
+			GetSelectedGroup()->MapCanvas();
 			pT->ShowInfo();
 		}
 	}
@@ -2225,18 +2225,18 @@ void CEditor::DoMapEditor(CUIRect View)
 	// remap the screen so it can display the whole tileset
 	if(m_ShowPicker)
 	{
-		CUIRect Screen = *UI()->Screen();
+		CUIRect Canvas = *UI()->Canvas();
 		float Size = 32.0 * 16.0f;
-		float w = Size * (Screen.w / View.w);
-		float h = Size * (Screen.h / View.h);
-		float x = -(View.x / Screen.w) * w;
-		float y = -(View.y / Screen.h) * h;
-		wx = x + w * mx / Screen.w;
-		wy = y + h * my / Screen.h;
+		float w = Size * (Canvas.w / View.w);
+		float h = Size * (Canvas.h / View.h);
+		float x = -(View.x / Canvas.w) * w;
+		float y = -(View.y / Canvas.h) * h;
+		wx = x + w * mx / Canvas.w;
+		wy = y + h * my / Canvas.h;
 		CLayerTiles *t = (CLayerTiles *)GetSelectedLayerType(0, LAYERTYPE_TILES);
 		if(t)
 		{
-			Graphics()->MapScreen(x, y, x + w, y + h);
+			Graphics()->MapCanvas(x, y, x + w, y + h);
 			m_TilesetPicker.m_Image = t->m_Image;
 			m_TilesetPicker.m_Texture = t->m_Texture;
 			if(m_BrushColorEnabled)
@@ -2324,7 +2324,7 @@ void CEditor::DoMapEditor(CUIRect View)
 		CLayerGroup *g = GetSelectedGroup();
 		if(g)
 		{
-			g->MapScreen();
+			g->MapCanvas();
 
 			RenderGrid(g);
 
@@ -2497,7 +2497,7 @@ void CEditor::DoMapEditor(CUIRect View)
 						//editor.map.groups[selected_group]->mapscreen();
 						for(int k = 0; k < NumEditLayers; k++)
 							pEditLayers[k]->BrushSelecting(r);
-						UI()->MapScreen();
+						UI()->MapCanvas();
 					}
 				}
 				else if(s_Operation == OP_BRUSH_PAINT)
@@ -2517,7 +2517,7 @@ void CEditor::DoMapEditor(CUIRect View)
 						//editor.map.groups[selected_group]->mapscreen();
 						for(int k = 0; k < NumEditLayers; k++)
 							pEditLayers[k]->BrushSelecting(r);
-						UI()->MapScreen();
+						UI()->MapCanvas();
 					}
 				}
 			}
@@ -2603,7 +2603,7 @@ void CEditor::DoMapEditor(CUIRect View)
 				// fetch layers
 				CLayerGroup *g = GetSelectedGroup();
 				if(g)
-					g->MapScreen();
+					g->MapCanvas();
 
 				for(int k = 0; k < NumEditLayers; k++)
 				{
@@ -2640,7 +2640,7 @@ void CEditor::DoMapEditor(CUIRect View)
 					}
 				}
 
-				UI()->MapScreen();
+				UI()->MapCanvas();
 			}
 		}
 
@@ -2682,7 +2682,7 @@ void CEditor::DoMapEditor(CUIRect View)
 	if(!m_ShowPicker && GetSelectedGroup() && GetSelectedGroup()->m_UseClipping)
 	{
 		CLayerGroup *g = m_Map.m_pGameGroup;
-		g->MapScreen();
+		g->MapCanvas();
 
 		Graphics()->TextureClear();
 		Graphics()->LinesBegin();
@@ -2708,7 +2708,7 @@ void CEditor::DoMapEditor(CUIRect View)
 	if(m_ProofBorders && !m_ShowPicker)
 	{
 		CLayerGroup *g = m_Map.m_pGameGroup;
-		g->MapScreen();
+		g->MapCanvas();
 
 		Graphics()->TextureClear();
 		Graphics()->LinesBegin();
@@ -2798,7 +2798,7 @@ void CEditor::DoMapEditor(CUIRect View)
 
 	if(!m_ShowPicker && m_ShowTileInfo && m_ShowEnvelopePreview != 0 && GetSelectedLayer(0) && GetSelectedLayer(0)->m_Type == LAYERTYPE_QUADS)
 	{
-		GetSelectedGroup()->MapScreen();
+		GetSelectedGroup()->MapCanvas();
 
 		CLayerQuads *pLayer = (CLayerQuads *)GetSelectedLayer(0);
 		IGraphics::CTextureHandle Texture;
@@ -2809,7 +2809,7 @@ void CEditor::DoMapEditor(CUIRect View)
 		m_ShowEnvelopePreview = 0;
 	}
 
-	UI()->MapScreen();
+	UI()->MapCanvas();
 	//UI()->ClipDisable();
 }
 
@@ -4182,8 +4182,8 @@ void CEditor::AddFileDialogEntry(int Index, CUIRect *pView)
 void CEditor::RenderFileDialog()
 {
 	// GUI coordsys
-	UI()->MapScreen();
-	CUIRect View = *UI()->Screen();
+	UI()->MapCanvas();
+	CUIRect View = *UI()->Canvas();
 	CUIRect Preview;
 	float Width = View.w, Height = View.h;
 
@@ -5016,7 +5016,7 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 				pEnvelope->Eval(0.000001f, aResults);
 				float PrevValue = aResults[c];
 
-				int Steps = (int)((View.w / UI()->Screen()->w) * Graphics()->ScreenWidth());
+				int Steps = (int)((View.w / UI()->Canvas()->w) * Graphics()->CanvasWidth());
 				for(int i = 1; i <= Steps; i++)
 				{
 					float a = i / (float)Steps;
@@ -5628,8 +5628,8 @@ void CEditor::Render()
 {
 	// basic start
 	Graphics()->Clear(1.0f, 0.0f, 1.0f);
-	CUIRect View = *UI()->Screen();
-	UI()->MapScreen();
+	CUIRect View = *UI()->Canvas();
+	UI()->MapCanvas();
 
 	float Width = View.w;
 	float Height = View.h;
@@ -5888,7 +5888,7 @@ void CEditor::Render()
 			RenderSounds(ToolBox, View);
 	}
 
-	UI()->MapScreen();
+	UI()->MapCanvas();
 
 	if(m_GuiActive)
 	{
@@ -5954,7 +5954,7 @@ void CEditor::Render()
 	//
 	if(g_Config.m_EdShowkeys)
 	{
-		UI()->MapScreen();
+		UI()->MapCanvas();
 		CTextCursor Cursor;
 		TextRender()->SetCursor(&Cursor, View.x + 10, View.y + View.h - 24 - 10, 24.0f, TEXTFLAG_RENDER);
 
@@ -6078,13 +6078,13 @@ void CEditor::ZoomMouseTarget(float ZoomFactor)
 	float aPoints[4];
 	RenderTools()->MapscreenToWorld(
 		m_WorldOffsetX, m_WorldOffsetY,
-		100.0f, 100.0f, 0.0f, 0.0f, Graphics()->ScreenAspect(), m_WorldZoom, aPoints);
+		100.0f, 100.0f, 0.0f, 0.0f, Graphics()->CanvasAspect(), m_WorldZoom, aPoints);
 
 	float WorldWidth = aPoints[2] - aPoints[0];
 	float WorldHeight = aPoints[3] - aPoints[1];
 
-	float Mwx = aPoints[0] + WorldWidth * (UI()->MouseX() / UI()->Screen()->w);
-	float Mwy = aPoints[1] + WorldHeight * (UI()->MouseY() / UI()->Screen()->h);
+	float Mwx = aPoints[0] + WorldWidth * (UI()->MouseX() / UI()->Canvas()->w);
+	float Mwy = aPoints[1] + WorldHeight * (UI()->MouseY() / UI()->Canvas()->h);
 
 	// adjust camera
 	m_WorldOffsetX += (Mwx - m_WorldOffsetX) * (1 - ZoomFactor);
@@ -6346,8 +6346,8 @@ void CEditor::UpdateAndRender()
 	// handle mouse movement
 	{
 		// update the ui
-		mx = UI()->Screen()->w * ((float)rx / Graphics()->WindowWidth());
-		my = UI()->Screen()->h * ((float)ry / Graphics()->WindowHeight());
+		mx = UI()->Canvas()->w * ((float)rx / Graphics()->WindowWidth());
+		my = UI()->Canvas()->h * ((float)ry / Graphics()->WindowHeight());
 
 		// fix correct world x and y
 		CLayerGroup *g = GetSelectedGroup();
@@ -6362,8 +6362,8 @@ void CEditor::UpdateAndRender()
 			Mwx = aPoints[0] + WorldWidth * ((float)rx / Graphics()->WindowWidth());
 			Mwy = aPoints[1] + WorldHeight * ((float)ry / Graphics()->WindowHeight());
 
-			m_MouseDeltaWx = m_MouseDeltaX * (WorldWidth / Graphics()->ScreenWidth());
-			m_MouseDeltaWy = m_MouseDeltaY * (WorldHeight / Graphics()->ScreenHeight());
+			m_MouseDeltaWx = m_MouseDeltaX * (WorldWidth / Graphics()->CanvasWidth());
+			m_MouseDeltaWy = m_MouseDeltaY * (WorldHeight / Graphics()->CanvasHeight());
 		}
 
 		int Buttons = 0;

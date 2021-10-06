@@ -22,8 +22,8 @@ void CDebugHud::RenderNetCorrections()
 	if(!g_Config.m_Debug || g_Config.m_DbgGraphs || !m_pClient->m_Snap.m_pLocalCharacter || !m_pClient->m_Snap.m_pLocalPrevCharacter)
 		return;
 
-	float Width = 300 * Graphics()->ScreenAspect();
-	Graphics()->MapScreen(0, 0, Width, 300);
+	float Width = 300 * Graphics()->CanvasAspect();
+	Graphics()->MapCanvas(0, 0, Width, 300);
 
 	/*float speed = distance(vec2(netobjects.local_prev_character->x, netobjects.local_prev_character->y),
 		vec2(netobjects.local_character->x, netobjects.local_character->y));*/
@@ -90,7 +90,7 @@ void CDebugHud::RenderTuning()
 
 	CTuningParams StandardTuning;
 
-	Graphics()->MapScreen(0, 0, 300 * Graphics()->ScreenAspect(), 300);
+	Graphics()->MapCanvas(0, 0, 300 * Graphics()->CanvasAspect(), 300);
 
 	float y = 27.0f;
 	int Count = 0;
@@ -152,8 +152,8 @@ void CDebugHud::RenderHint()
 	if(!g_Config.m_Debug)
 		return;
 
-	float Width = 300 * Graphics()->ScreenAspect();
-	Graphics()->MapScreen(0, 0, Width, 300);
+	float Width = 300 * Graphics()->CanvasAspect();
+	Graphics()->MapCanvas(0, 0, Width, 300);
 	TextRender()->TextColor(1, 1, 1, 1);
 	TextRender()->Text(0x0, 5, 290, 5, Localize("Debug mode enabled. Press Ctrl+Shift+D to disable debug mode."), -1.0f);
 }

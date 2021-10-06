@@ -32,10 +32,10 @@ void CMotd::OnRender()
 	if(!IsActive())
 		return;
 
-	float Width = 400 * 3.0f * Graphics()->ScreenAspect();
+	float Width = 400 * 3.0f * Graphics()->CanvasAspect();
 	float Height = 400 * 3.0f;
 
-	Graphics()->MapScreen(0, 0, Width, Height);
+	Graphics()->MapCanvas(0, 0, Width, Height);
 
 	float h = 800.0f;
 	float w = 650.0f;

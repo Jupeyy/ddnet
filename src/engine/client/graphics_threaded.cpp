@@ -125,10 +125,10 @@ void CGraphics_Threaded::AddVertices(int Count, CCommandBuffer::SVertexTex3DStre
 
 CGraphics_Threaded::CGraphics_Threaded()
 {
-	m_State.m_ScreenTL.x = 0;
-	m_State.m_ScreenTL.y = 0;
-	m_State.m_ScreenBR.x = 0;
-	m_State.m_ScreenBR.y = 0;
+	m_State.m_CanvasTL.x = 0;
+	m_State.m_CanvasTL.y = 0;
+	m_State.m_CanvasBR.x = 0;
+	m_State.m_CanvasBR.y = 0;
 	m_State.m_ClipEnable = false;
 	m_State.m_ClipX = 0;
 	m_State.m_ClipY = 0;
@@ -145,9 +145,8 @@ CGraphics_Threaded::CGraphics_Threaded()
 
 	m_NumVertices = 0;
 
-	m_ScreenWidth = -1;
-	m_ScreenHeight = -1;
-	m_ScreenRefreshRate = -1;
+	m_CanvasWidth = -1;
+	m_CanvasHeight = -1;
 
 	m_Rotation = 0;
 	m_Drawing = 0;
@@ -167,14 +166,14 @@ void CGraphics_Threaded::ClipEnable(int x, int y, int w, int h)
 	if(y < 0)
 		h += y;
 
-	x = clamp(x, 0, ScreenWidth());
-	y = clamp(y, 0, ScreenHeight());
-	w = clamp(w, 0, ScreenWidth() - x);
-	h = clamp(h, 0, ScreenHeight() - y);
+	x = clamp(x, 0, CanvasWidth());
+	y = clamp(y, 0, CanvasHeight());
+	w = clamp(w, 0, CanvasWidth() - x);
+	h = clamp(h, 0, CanvasHeight() - y);
 
 	m_State.m_ClipEnable = true;
 	m_State.m_ClipX = x;
-	m_State.m_ClipY = ScreenHeight() - (y + h);
+	m_State.m_ClipY = CanvasHeight() - (y + h);
 	m_State.m_ClipW = w;
 	m_State.m_ClipH = h;
 }
@@ -214,20 +213,20 @@ int CGraphics_Threaded::MemoryUsage() const
 	return m_pBackend->MemoryUsage();
 }
 
-void CGraphics_Threaded::MapScreen(float TopLeftX, float TopLeftY, float BottomRightX, float BottomRightY)
+void CGraphics_Threaded::MapCanvas(float TopLeftX, float TopLeftY, float BottomRightX, float BottomRightY)
 {
-	m_State.m_ScreenTL.x = TopLeftX;
-	m_State.m_ScreenTL.y = TopLeftY;
-	m_State.m_ScreenBR.x = BottomRightX;
-	m_State.m_ScreenBR.y = BottomRightY;
+	m_State.m_CanvasTL.x = TopLeftX;
+	m_State.m_CanvasTL.y = TopLeftY;
+	m_State.m_CanvasBR.x = BottomRightX;
+	m_State.m_CanvasBR.y = BottomRightY;
 }
 
-void CGraphics_Threaded::GetScreen(float *pTopLeftX, float *pTopLeftY, float *pBottomRightX, float *pBottomRightY)
+void CGraphics_Threaded::GetCanvas(float *pTopLeftX, float *pTopLeftY, float *pBottomRightX, float *pBottomRightY)
 {
-	*pTopLeftX = m_State.m_ScreenTL.x;
-	*pTopLeftY = m_State.m_ScreenTL.y;
-	*pBottomRightX = m_State.m_ScreenBR.x;
-	*pBottomRightY = m_State.m_ScreenBR.y;
+	*pTopLeftX = m_State.m_CanvasTL.x;
+	*pTopLeftY = m_State.m_CanvasTL.y;
+	*pBottomRightX = m_State.m_CanvasBR.x;
+	*pBottomRightY = m_State.m_CanvasBR.y;
 }
 
 void CGraphics_Threaded::LinesBegin()
@@ -1513,11 +1512,11 @@ void CGraphics_Threaded::RenderQuadContainerEx(int ContainerIndex, int QuadOffse
 
 		WrapClamp();
 
-		float ScreenX0, ScreenY0, ScreenX1, ScreenY1;
-		GetScreen(&ScreenX0, &ScreenY0, &ScreenX1, &ScreenY1);
-		MapScreen((ScreenX0 - X) / ScaleX, (ScreenY0 - Y) / ScaleY, (ScreenX1 - X) / ScaleX, (ScreenY1 - Y) / ScaleY);
+		float CanvasX0, CanvasY0, CanvasX1, CanvasY1;
+		GetCanvas(&CanvasX0, &CanvasY0, &CanvasX1, &CanvasY1);
+		MapCanvas((CanvasX0 - X) / ScaleX, (CanvasY0 - Y) / ScaleY, (CanvasX1 - X) / ScaleX, (CanvasY1 - Y) / ScaleY);
 		Cmd.m_State = m_State;
-		MapScreen(ScreenX0, ScreenY0, ScreenX1, ScreenY1);
+		MapCanvas(CanvasX0, CanvasY0, CanvasX1, CanvasY1);
 
 		Cmd.m_DrawNum = QuadDrawNum * 6;
 		Cmd.m_pOffset = (void *)(QuadOffset * 6 * sizeof(unsigned int));
@@ -2088,7 +2087,7 @@ int CGraphics_Threaded::IssueInit()
 	if(g_Config.m_GfxHighdpi)
 		Flags |= IGraphicsBackend::INITFLAG_HIGHDPI;
 
-	int r = m_pBackend->Init("DDNet Client", &g_Config.m_GfxScreen, &g_Config.m_GfxScreenWidth, &g_Config.m_GfxScreenHeight, &g_Config.m_GfxScreenRefreshRate, g_Config.m_GfxFsaaSamples, Flags, &g_Config.m_GfxDesktopWidth, &g_Config.m_GfxDesktopHeight, &m_ScreenWidth, &m_ScreenHeight, m_pStorage);
+	int r = m_pBackend->Init("DDNet Client", &g_Config.m_GfxScreen, &g_Config.m_GfxScreenWidth, &g_Config.m_GfxScreenHeight, &g_Config.m_GfxScreenRefreshRate, g_Config.m_GfxFsaaSamples, Flags, &g_Config.m_GfxDesktopWidth, &g_Config.m_GfxDesktopHeight, &m_CanvasWidth, &m_CanvasHeight, m_pStorage);
 	AddBackEndWarningIfExists();
 	m_IsNewOpenGL = m_pBackend->IsNewOpenGL();
 	m_OpenGLTileBufferingEnabled = m_IsNewOpenGL || m_pBackend->HasTileBuffering();
@@ -2096,8 +2095,7 @@ int CGraphics_Threaded::IssueInit()
 	m_OpenGLQuadContainerBufferingEnabled = m_IsNewOpenGL || m_pBackend->HasQuadContainerBuffering();
 	m_OpenGLTextBufferingEnabled = m_IsNewOpenGL || (m_OpenGLQuadContainerBufferingEnabled && m_pBackend->HasTextBuffering());
 	m_OpenGLHasTextureArrays = m_IsNewOpenGL || m_pBackend->Has2DTextureArrays();
-	m_ScreenHiDPIScale = m_ScreenWidth / (float)g_Config.m_GfxScreenWidth;
-	m_ScreenRefreshRate = g_Config.m_GfxScreenRefreshRate;
+	m_CanvasHiDPIScale = m_CanvasWidth / (float)g_Config.m_GfxScreenWidth;
 	return r;
 }
 
@@ -2248,8 +2246,8 @@ int CGraphics_Threaded::Init()
 
 	for(auto &FakeMode : g_aFakeModes)
 	{
-		FakeMode.m_WindowWidth = FakeMode.m_CanvasWidth / m_ScreenHiDPIScale;
-		FakeMode.m_WindowHeight = FakeMode.m_CanvasHeight / m_ScreenHiDPIScale;
+		FakeMode.m_WindowWidth = FakeMode.m_WindowWidth * m_CanvasHiDPIScale;
+		FakeMode.m_WindowHeight = FakeMode.m_WindowHeight * m_CanvasHiDPIScale;
 		FakeMode.m_RefreshRate = g_Config.m_GfxScreenRefreshRate;
 	}
 
@@ -2314,8 +2312,8 @@ void CGraphics_Threaded::SetWindowParams(int FullscreenMode, bool IsBorderless)
 {
 	m_pBackend->SetWindowParams(FullscreenMode, IsBorderless);
 	CVideoMode CurMode;
-	m_pBackend->GetCurrentVideoMode(CurMode, m_ScreenHiDPIScale, g_Config.m_GfxDesktopWidth, g_Config.m_GfxDesktopHeight, g_Config.m_GfxScreen);
-	Resize(CurMode.m_WindowWidth, CurMode.m_WindowHeight, CurMode.m_RefreshRate, false, true);
+	m_pBackend->GetCurrentVideoMode(CurMode, m_CanvasHiDPIScale, g_Config.m_GfxDesktopWidth, g_Config.m_GfxDesktopHeight, g_Config.m_GfxScreen);
+	Resize(CurMode.m_WindowWidth, CurMode.m_WindowHeight, CurMode.m_RefreshRate, true);
 }
 
 bool CGraphics_Threaded::SetWindowScreen(int Index)
@@ -2323,43 +2321,39 @@ bool CGraphics_Threaded::SetWindowScreen(int Index)
 	return m_pBackend->SetWindowScreen(Index);
 }
 
-void CGraphics_Threaded::Resize(int w, int h, int RefreshRate, bool SetWindowSize, bool ForceResizeEvent)
+void CGraphics_Threaded::Resize(int w, int h, int RefreshRate, bool SetWindowSize)
 {
 #if defined(CONF_VIDEORECORDER)
 	if(IVideo::Current() && IVideo::Current()->IsRecording())
 		return;
 #endif
 
-	if(!ForceResizeEvent && WindowWidth() == w && WindowHeight() == h && (RefreshRate != -1 && RefreshRate == m_ScreenRefreshRate))
-		return;
-
 	// if the size is changed manually, only set the window resize, a window size changed event is triggered anyway
 	if(SetWindowSize)
 	{
 		m_pBackend->ResizeWindow(w, h, RefreshRate);
+		// refresh rate can only change, if the request was triggered by a user
+		g_Config.m_GfxScreenRefreshRate = RefreshRate;
 	}
 	else
 	{
 		// if the size change event is triggered, set all parameters and change the viewport
-		m_pBackend->GetViewportSize(m_ScreenWidth, m_ScreenHeight);
+		m_pBackend->GetViewportSize(m_CanvasWidth, m_CanvasHeight);
 
 		// adjust the viewport to only allow certain aspect ratios
-		if(m_ScreenHeight > 4 * m_ScreenWidth / 5)
-			m_ScreenHeight = 4 * m_ScreenWidth / 5;
-		if(m_ScreenWidth > 21 * m_ScreenHeight / 9)
-			m_ScreenWidth = 21 * m_ScreenHeight / 9;
-
-		m_ScreenRefreshRate = RefreshRate == -1 ? m_ScreenRefreshRate : RefreshRate;
+		if(m_CanvasHeight > 4 * m_CanvasWidth / 5)
+			m_CanvasHeight = 4 * m_CanvasWidth / 5;
+		if(m_CanvasWidth > 21 * m_CanvasHeight / 9)
+			m_CanvasWidth = 21 * m_CanvasHeight / 9;
 
 		g_Config.m_GfxScreenWidth = w;
 		g_Config.m_GfxScreenHeight = h;
-		g_Config.m_GfxScreenRefreshRate = m_ScreenRefreshRate;
 
 		CCommandBuffer::SCommand_Update_Viewport Cmd;
 		Cmd.m_X = 0;
 		Cmd.m_Y = 0;
-		Cmd.m_Width = m_ScreenWidth;
-		Cmd.m_Height = m_ScreenHeight;
+		Cmd.m_Width = m_CanvasWidth;
+		Cmd.m_Height = m_CanvasHeight;
 
 		if(!AddCmd(
 			   Cmd, [] { return true; }, "failed to add resize command"))
@@ -2581,7 +2575,7 @@ int CGraphics_Threaded::GetVideoModes(CVideoMode *pModes, int MaxModes, int Scre
 	mem_zero(&Image, sizeof(Image));
 
 	int NumModes = 0;
-	m_pBackend->GetVideoModes(pModes, MaxModes, &NumModes, m_ScreenHiDPIScale, g_Config.m_GfxDesktopWidth, g_Config.m_GfxDesktopHeight, Screen);
+	m_pBackend->GetVideoModes(pModes, MaxModes, &NumModes, m_CanvasHiDPIScale, g_Config.m_GfxDesktopWidth, g_Config.m_GfxDesktopHeight, Screen);
 
 	return NumModes;
 }

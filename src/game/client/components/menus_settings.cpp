@@ -1102,8 +1102,8 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 	static const float sc_FontSizeResListHeader = 12.0f;
 	static const float sc_FontSizeResList = 10.0f;
 	int OldSelected = -1;
-	int G = gcd(g_Config.m_GfxScreenWidth, g_Config.m_GfxScreenHeight);
-	str_format(aBuf, sizeof(aBuf), "%s: %dx%d @%dhz %d bit (%d:%d)", Localize("Current"), int(g_Config.m_GfxScreenWidth * Graphics()->ScreenHiDPIScale()), int(g_Config.m_GfxScreenHeight * Graphics()->ScreenHiDPIScale()), g_Config.m_GfxScreenRefreshRate, g_Config.m_GfxColorDepth, g_Config.m_GfxScreenWidth / G, g_Config.m_GfxScreenHeight / G);
+	int G = gcd(Graphics()->CanvasWidth(), Graphics()->CanvasHeight());
+	str_format(aBuf, sizeof(aBuf), "%s: %dx%d @%dhz %d bit (%d:%d)", Localize("Current"), Graphics()->CanvasWidth(), Graphics()->CanvasHeight(), Graphics()->WindowRefreshRate(), g_Config.m_GfxColorDepth, Graphics()->CanvasWidth() / G, Graphics()->CanvasHeight() / G);
 
 	UI()->DoLabelScaled(&ModeLabel, aBuf, sc_FontSizeResListHeader, 0);
 	UiDoListboxStart(&s_NumNodes, &ModeList, sc_RowHeightResList, Localize("Display Modes"), aBuf, s_NumNodes - 1, 1, OldSelected, s_ScrollValue);
@@ -1687,9 +1687,9 @@ ColorHSLA CMenus::RenderHSLColorPicker(const CUIRect *pRect, unsigned int *pColo
 				return HSLColor;
 		}
 
-		CUIRect *pScreen = UI()->Screen();
-		ms_ColorPicker.m_X = minimum(UI()->MouseX(), pScreen->w - ms_ColorPicker.ms_Width);
-		ms_ColorPicker.m_Y = minimum(UI()->MouseY(), pScreen->h - ms_ColorPicker.ms_Height);
+		CUIRect *pCanvas = UI()->Canvas();
+		ms_ColorPicker.m_X = minimum(UI()->MouseX(), pCanvas->w - ms_ColorPicker.ms_Width);
+		ms_ColorPicker.m_Y = minimum(UI()->MouseY(), pCanvas->h - ms_ColorPicker.ms_Height);
 		ms_ColorPicker.m_pColor = pColor;
 		ms_ColorPicker.m_Active = true;
 		ms_ColorPicker.m_AttachedRect = *pRect;

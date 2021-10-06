@@ -10,6 +10,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include <engine/shared/config.h>
+
 #include <functional>
 
 #include <vector>
@@ -169,10 +171,9 @@ class IGraphics : public IInterface
 {
 	MACRO_INTERFACE("graphics", 0)
 protected:
-	int m_ScreenWidth;
-	int m_ScreenHeight;
-	int m_ScreenRefreshRate;
-	float m_ScreenHiDPIScale;
+	int m_CanvasWidth;
+	int m_CanvasHeight;
+	float m_CanvasHiDPIScale;
 
 public:
 	enum
@@ -202,18 +203,19 @@ public:
 		void Invalidate() { m_Id = -1; }
 	};
 
-	int ScreenWidth() const { return m_ScreenWidth; }
-	int ScreenHeight() const { return m_ScreenHeight; }
-	float ScreenAspect() const { return (float)ScreenWidth() / (float)ScreenHeight(); }
-	float ScreenHiDPIScale() const { return m_ScreenHiDPIScale; }
-	int WindowWidth() const { return m_ScreenWidth / m_ScreenHiDPIScale; }
-	int WindowHeight() const { return m_ScreenHeight / m_ScreenHiDPIScale; }
+	int CanvasWidth() const { return m_CanvasWidth; }
+	int CanvasHeight() const { return m_CanvasHeight; }
+	float CanvasAspect() const { return (float)CanvasWidth() / (float)CanvasHeight(); }
+	float CanvasHiDPIScale() const { return m_CanvasHiDPIScale; }
+	int WindowWidth() const { return g_Config.m_GfxScreenWidth; }
+	int WindowHeight() const { return g_Config.m_GfxScreenHeight; }
+	int WindowRefreshRate() const { return g_Config.m_GfxScreenRefreshRate; }
 
 	virtual void SetWindowParams(int FullscreenMode, bool IsBorderless) = 0;
 	virtual bool SetWindowScreen(int Index) = 0;
 	virtual bool SetVSync(bool State) = 0;
 	virtual int GetWindowScreen() = 0;
-	virtual void Resize(int w, int h, int RefreshRate, bool SetWindowSize = false, bool ForceResizeEvent = false) = 0;
+	virtual void Resize(int w, int h, int RefreshRate, bool SetWindowSize = false) = 0;
 	virtual void AddWindowResizeListener(WINDOW_RESIZE_FUNC pFunc, void *pUser) = 0;
 
 	virtual void WindowDestroyNtf(uint32_t WindowID) = 0;
@@ -224,8 +226,8 @@ public:
 	virtual void ClipEnable(int x, int y, int w, int h) = 0;
 	virtual void ClipDisable() = 0;
 
-	virtual void MapScreen(float TopLeftX, float TopLeftY, float BottomRightX, float BottomRightY) = 0;
-	virtual void GetScreen(float *pTopLeftX, float *pTopLeftY, float *pBottomRightX, float *pBottomRightY) = 0;
+	virtual void MapCanvas(float TopLeftX, float TopLeftY, float BottomRightX, float BottomRightY) = 0;
+	virtual void GetCanvas(float *pTopLeftX, float *pTopLeftY, float *pBottomRightX, float *pBottomRightY) = 0;
 
 	// TODO: These should perhaps not be virtuals
 	virtual void BlendNone() = 0;

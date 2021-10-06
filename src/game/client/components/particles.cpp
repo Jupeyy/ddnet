@@ -175,10 +175,10 @@ void CParticles::OnInit()
 	Graphics()->QuadContainerUpload(m_ParticleQuadContainerIndex);
 }
 
-bool CParticles::ParticleIsVisibleOnScreen(const vec2 &CurPos, float CurSize)
+bool CParticles::ParticleIsVisibleOnCanvas(const vec2 &CurPos, float CurSize)
 {
-	float ScreenX0, ScreenY0, ScreenX1, ScreenY1;
-	Graphics()->GetScreen(&ScreenX0, &ScreenY0, &ScreenX1, &ScreenY1);
+	float CanvasX0, CanvasY0, CanvasX1, CanvasY1;
+	Graphics()->GetCanvas(&CanvasX0, &CanvasY0, &CanvasX1, &CanvasY1);
 
 	// for simplicity assume the worst case rotation, that increases the bounding box around the particle by its diagonal
 	const float SqrtOf2 = sqrtf(2);
@@ -187,7 +187,7 @@ bool CParticles::ParticleIsVisibleOnScreen(const vec2 &CurPos, float CurSize)
 	// always uses the mid of the particle
 	float SizeHalf = CurSize / 2;
 
-	return CurPos.x + SizeHalf >= ScreenX0 && CurPos.x - SizeHalf <= ScreenX1 && CurPos.y + SizeHalf >= ScreenY0 && CurPos.y - SizeHalf <= ScreenY1;
+	return CurPos.x + SizeHalf >= CanvasX0 && CurPos.x - SizeHalf <= CanvasX1 && CurPos.y + SizeHalf >= CanvasY0 && CurPos.y - SizeHalf <= CanvasY1;
 }
 
 void CParticles::RenderGroup(int Group)
@@ -229,7 +229,7 @@ void CParticles::RenderGroup(int Group)
 			float Size = mix(m_aParticles[i].m_StartSize, m_aParticles[i].m_EndSize, a);
 
 			// the current position, respecting the size, is inside the viewport, render it, else ignore
-			if(ParticleIsVisibleOnScreen(p, Size))
+			if(ParticleIsVisibleOnCanvas(p, Size))
 			{
 				if(LastColor[0] != m_aParticles[i].m_Color.r || LastColor[1] != m_aParticles[i].m_Color.g || LastColor[2] != m_aParticles[i].m_Color.b || LastColor[3] != m_aParticles[i].m_Color.a || LastQuadOffset != QuadOffset)
 				{
@@ -279,7 +279,7 @@ void CParticles::RenderGroup(int Group)
 			float Size = mix(m_aParticles[i].m_StartSize, m_aParticles[i].m_EndSize, a);
 
 			// the current position, respecting the size, is inside the viewport, render it, else ignore
-			if(ParticleIsVisibleOnScreen(p, Size))
+			if(ParticleIsVisibleOnCanvas(p, Size))
 			{
 				Graphics()->TextureSet(GameClient()->m_ParticlesSkin.m_SpriteParticles[m_aParticles[i].m_Spr - SPRITE_PART_SLICE]);
 				Graphics()->QuadsBegin();

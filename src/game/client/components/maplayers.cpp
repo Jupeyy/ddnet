@@ -51,12 +51,12 @@ void CMapLayers::EnvelopeUpdate()
 	}
 }
 
-void CMapLayers::MapScreenToGroup(float CenterX, float CenterY, CMapItemGroup *pGroup, float Zoom)
+void CMapLayers::MapCanvasToGroup(float CenterX, float CenterY, CMapItemGroup *pGroup, float Zoom)
 {
 	float Points[4];
 	RenderTools()->MapscreenToWorld(CenterX, CenterY, pGroup->m_ParallaxX, pGroup->m_ParallaxY,
-		pGroup->m_OffsetX, pGroup->m_OffsetY, Graphics()->ScreenAspect(), Zoom, Points);
-	Graphics()->MapScreen(Points[0], Points[1], Points[2], Points[3]);
+		pGroup->m_OffsetX, pGroup->m_OffsetY, Graphics()->CanvasAspect(), Zoom, Points);
+	Graphics()->MapCanvas(Points[0], Points[1], Points[2], Points[3]);
 }
 
 void CMapLayers::EnvelopeEval(int TimeOffsetMillis, int Env, float *pChannels, void *pUser)
@@ -999,8 +999,8 @@ void CMapLayers::RenderTileLayer(int LayerIndex, ColorRGBA *pColor, CMapItemLaye
 	if(Visuals.m_BufferContainerIndex == -1)
 		return; //no visuals were created
 
-	float ScreenX0, ScreenY0, ScreenX1, ScreenY1;
-	Graphics()->GetScreen(&ScreenX0, &ScreenY0, &ScreenX1, &ScreenY1);
+	float CanvasX0, CanvasY0, CanvasX1, CanvasY1;
+	Graphics()->GetCanvas(&CanvasX0, &CanvasY0, &CanvasX1, &CanvasY1);
 
 	float r = 1, g = 1, b = 1, a = 1;
 	if(pTileLayer->m_ColorEnv >= 0)
@@ -1016,10 +1016,10 @@ void CMapLayers::RenderTileLayer(int LayerIndex, ColorRGBA *pColor, CMapItemLaye
 	int BorderX0, BorderY0, BorderX1, BorderY1;
 	bool DrawBorder = false;
 
-	int Y0 = BorderY0 = (int)floorf((ScreenY0) / 32);
-	int X0 = BorderX0 = (int)floorf((ScreenX0) / 32);
-	int Y1 = BorderY1 = (int)floorf((ScreenY1) / 32);
-	int X1 = BorderX1 = (int)floorf((ScreenX1) / 32);
+	int Y0 = BorderY0 = (int)floorf((CanvasY0) / 32);
+	int X0 = BorderX0 = (int)floorf((CanvasX0) / 32);
+	int Y1 = BorderY1 = (int)floorf((CanvasY1) / 32);
+	int X1 = BorderX1 = (int)floorf((CanvasX1) / 32);
 
 	if(X0 <= 0)
 	{
@@ -1094,7 +1094,7 @@ void CMapLayers::RenderTileLayer(int LayerIndex, ColorRGBA *pColor, CMapItemLaye
 	}
 
 	if(DrawBorder)
-		RenderTileBorder(LayerIndex, pColor, pTileLayer, pGroup, BorderX0, BorderY0, BorderX1, BorderY1, (int)(-floorf((-ScreenX1) / 32.f)) - BorderX0, (int)(-floorf((-ScreenY1) / 32.f)) - BorderY0);
+		RenderTileBorder(LayerIndex, pColor, pTileLayer, pGroup, BorderX0, BorderY0, BorderX1, BorderY1, (int)(-floorf((-CanvasX1) / 32.f)) - BorderX0, (int)(-floorf((-CanvasY1) / 32.f)) - BorderY0);
 }
 
 void CMapLayers::RenderTileBorderCornerTiles(int WidthOffsetToOrigin, int HeightOffsetToOrigin, int TileCountWidth, int TileCountHeight, int BufferContainerIndex, float *pColor, offset_ptr_size IndexBufferOffset, float *pOffset, float *pDir)
@@ -1110,7 +1110,7 @@ void CMapLayers::RenderTileBorderCornerTiles(int WidthOffsetToOrigin, int Height
 	Graphics()->RenderBorderTiles(BufferContainerIndex, pColor, IndexBufferOffset, pOffset, pDir, CountX, Count);
 }
 
-void CMapLayers::RenderTileBorder(int LayerIndex, ColorRGBA *pColor, CMapItemLayerTilemap *pTileLayer, CMapItemGroup *pGroup, int BorderX0, int BorderY0, int BorderX1, int BorderY1, int ScreenWidthTileCount, int ScreenHeightTileCount)
+void CMapLayers::RenderTileBorder(int LayerIndex, ColorRGBA *pColor, CMapItemLayerTilemap *pTileLayer, CMapItemGroup *pGroup, int BorderX0, int BorderY0, int BorderX1, int BorderY1, int CanvasWidthTileCount, int CanvasHeightTileCount)
 {
 	STileLayerVisuals &Visuals = *m_TileLayerVisuals[LayerIndex];
 
@@ -1119,8 +1119,8 @@ void CMapLayers::RenderTileBorder(int LayerIndex, ColorRGBA *pColor, CMapItemLay
 	int Y1 = BorderY1;
 	int X1 = BorderX1;
 
-	int CountWidth = ScreenWidthTileCount;
-	int CountHeight = ScreenHeightTileCount;
+	int CountWidth = CanvasWidthTileCount;
+	int CountHeight = CanvasHeightTileCount;
 
 	if(X0 < 1)
 		X0 = 1;
@@ -1268,15 +1268,15 @@ void CMapLayers::RenderKillTileBorder(int LayerIndex, ColorRGBA *pColor, CMapIte
 	if(Visuals.m_BufferContainerIndex == -1)
 		return; //no visuals were created
 
-	float ScreenX0, ScreenY0, ScreenX1, ScreenY1;
-	Graphics()->GetScreen(&ScreenX0, &ScreenY0, &ScreenX1, &ScreenY1);
+	float CanvasX0, CanvasY0, CanvasX1, CanvasY1;
+	Graphics()->GetCanvas(&CanvasX0, &CanvasY0, &CanvasX1, &CanvasY1);
 
 	bool DrawBorder = false;
 
-	int BorderY0 = (int)(ScreenY0 / 32) - 1;
-	int BorderX0 = (int)(ScreenX0 / 32) - 1;
-	int BorderY1 = (int)(ScreenY1 / 32) + 1;
-	int BorderX1 = (int)(ScreenX1 / 32) + 1;
+	int BorderY0 = (int)(CanvasY0 / 32) - 1;
+	int BorderX0 = (int)(CanvasX0 / 32) - 1;
+	int BorderY1 = (int)(CanvasY1 / 32) + 1;
+	int BorderX1 = (int)(CanvasX1 / 32) + 1;
 
 	if(BorderX0 < -201)
 		DrawBorder = true;
@@ -1542,8 +1542,8 @@ void CMapLayers::OnRender()
 	if(m_OnlineOnly && Client()->State() != IClient::STATE_ONLINE && Client()->State() != IClient::STATE_DEMOPLAYBACK)
 		return;
 
-	CUIRect Screen;
-	Graphics()->GetScreen(&Screen.x, &Screen.y, &Screen.w, &Screen.h);
+	CUIRect Canvas;
+	Graphics()->GetCanvas(&Canvas.x, &Canvas.y, &Canvas.w, &Canvas.h);
 
 	vec2 Center = GetCurCamera()->m_Center;
 
@@ -1567,8 +1567,8 @@ void CMapLayers::OnRender()
 		{
 			// set clipping
 			float Points[4];
-			MapScreenToGroup(Center.x, Center.y, m_pLayers->GameGroup(), GetCurCamera()->m_Zoom);
-			Graphics()->GetScreen(&Points[0], &Points[1], &Points[2], &Points[3]);
+			MapCanvasToGroup(Center.x, Center.y, m_pLayers->GameGroup(), GetCurCamera()->m_Zoom);
+			Graphics()->GetCanvas(&Points[0], &Points[1], &Points[2], &Points[3]);
 			float x0 = (pGroup->m_ClipX - Points[0]) / (Points[2] - Points[0]);
 			float y0 = (pGroup->m_ClipY - Points[1]) / (Points[3] - Points[1]);
 			float x1 = ((pGroup->m_ClipX + pGroup->m_ClipW) - Points[0]) / (Points[2] - Points[0]);
@@ -1581,16 +1581,16 @@ void CMapLayers::OnRender()
 				continue;
 			}
 
-			Graphics()->ClipEnable((int)(x0 * Graphics()->ScreenWidth()), (int)(y0 * Graphics()->ScreenHeight()),
-				(int)((x1 - x0) * Graphics()->ScreenWidth()), (int)((y1 - y0) * Graphics()->ScreenHeight()));
+			Graphics()->ClipEnable((int)(x0 * Graphics()->CanvasWidth()), (int)(y0 * Graphics()->CanvasHeight()),
+				(int)((x1 - x0) * Graphics()->CanvasWidth()), (int)((y1 - y0) * Graphics()->CanvasHeight()));
 		}
 
 		if((!g_Config.m_ClZoomBackgroundLayers || m_Type == TYPE_FULL_DESIGN) && !pGroup->m_ParallaxX && !pGroup->m_ParallaxY)
 		{
-			MapScreenToGroup(Center.x, Center.y, pGroup, 1.0f);
+			MapCanvasToGroup(Center.x, Center.y, pGroup, 1.0f);
 		}
 		else
-			MapScreenToGroup(Center.x, Center.y, pGroup, GetCurCamera()->m_Zoom);
+			MapCanvasToGroup(Center.x, Center.y, pGroup, GetCurCamera()->m_Zoom);
 
 		for(int l = 0; l < pGroup->m_NumLayers; l++)
 		{
@@ -2005,5 +2005,5 @@ void CMapLayers::OnRender()
 		Graphics()->ClipDisable();
 
 	// reset the screen like it was before
-	Graphics()->MapScreen(Screen.x, Screen.y, Screen.w, Screen.h);
+	Graphics()->MapCanvas(Canvas.x, Canvas.y, Canvas.w, Canvas.h);
 }

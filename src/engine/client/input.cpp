@@ -304,16 +304,16 @@ int CInput::GetEditingCursor()
 
 void CInput::SetEditingPosition(float X, float Y)
 {
-	float ScreenX0, ScreenY0, ScreenX1, ScreenY1;
-	int ScreenWidth = Graphics()->ScreenWidth();
-	int ScreenHeight = Graphics()->ScreenHeight();
-	Graphics()->GetScreen(&ScreenX0, &ScreenY0, &ScreenX1, &ScreenY1);
+	float CanvasX0, CanvasY0, CanvasX1, CanvasY1;
+	int CanvasWidth = Graphics()->CanvasWidth();
+	int CanvasHeight = Graphics()->CanvasHeight();
+	Graphics()->GetCanvas(&CanvasX0, &CanvasY0, &CanvasX1, &CanvasY1);
 
-	vec2 ScreenScale = vec2(ScreenWidth / (ScreenX1 - ScreenX0), ScreenHeight / (ScreenY1 - ScreenY0));
+	vec2 CanvasScale = vec2(CanvasWidth / (CanvasX1 - CanvasX0), CanvasHeight / (CanvasY1 - CanvasY0));
 
 	SDL_Rect ImeWindowRect;
-	ImeWindowRect.x = X * ScreenScale.x;
-	ImeWindowRect.y = Y * ScreenScale.y;
+	ImeWindowRect.x = X * CanvasScale.x;
+	ImeWindowRect.y = Y * CanvasScale.y;
 	ImeWindowRect.h = 60;
 	ImeWindowRect.w = 1000;
 

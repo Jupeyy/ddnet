@@ -127,7 +127,7 @@ void CStatboard::OnRender()
 
 void CStatboard::RenderGlobalStats()
 {
-	const float StatboardWidth = 400 * 3.0f * Graphics()->ScreenAspect();
+	const float StatboardWidth = 400 * 3.0f * Graphics()->CanvasAspect();
 	const float StatboardHeight = 400 * 3.0f;
 	float StatboardContentWidth = 260.0f;
 	float StatboardContentHeight = 750.0f;
@@ -187,7 +187,7 @@ void CStatboard::RenderGlobalStats()
 	float x = StatboardWidth / 2 - StatboardContentWidth / 2;
 	float y = 200.0f;
 
-	Graphics()->MapScreen(0, 0, StatboardWidth, StatboardHeight);
+	Graphics()->MapCanvas(0, 0, StatboardWidth, StatboardHeight);
 
 	Graphics()->BlendNormal();
 	Graphics()->TextureClear();

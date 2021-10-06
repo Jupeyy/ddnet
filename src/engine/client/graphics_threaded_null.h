@@ -12,10 +12,9 @@ class CGraphics_ThreadedNull : public IEngineGraphics
 public:
 	CGraphics_ThreadedNull()
 	{
-		m_ScreenWidth = 800;
-		m_ScreenHeight = 600;
-		m_ScreenRefreshRate = 24;
-		m_ScreenHiDPIScale = 1.0f;
+		m_CanvasWidth = 800;
+		m_CanvasHeight = 600;
+		m_CanvasHiDPIScale = 1.0f;
 	};
 
 	void ClipEnable(int x, int y, int w, int h) override{};
@@ -30,8 +29,8 @@ public:
 
 	int MemoryUsage() const override { return 0; };
 
-	void MapScreen(float TopLeftX, float TopLeftY, float BottomRightX, float BottomRightY) override{};
-	void GetScreen(float *pTopLeftX, float *pTopLeftY, float *pBottomRightX, float *pBottomRightY) override
+	void MapCanvas(float TopLeftX, float TopLeftY, float BottomRightX, float BottomRightY) override{};
+	void GetCanvas(float *pTopLeftX, float *pTopLeftY, float *pBottomRightX, float *pBottomRightY) override
 	{
 		*pTopLeftX = 0;
 		*pTopLeftY = 0;
@@ -149,7 +148,7 @@ public:
 	void Maximize() override{};
 	void SetWindowParams(int FullscreenMode, bool IsBorderless) override{};
 	bool SetWindowScreen(int Index) override { return false; };
-	void Resize(int w, int h, int RefreshRate, bool SetWindowSize = false, bool ForceResizeEvent = false) override{};
+	void Resize(int w, int h, int RefreshRate, bool SetWindowSize = false) override{};
 	void AddWindowResizeListener(WINDOW_RESIZE_FUNC pFunc, void *pUser) override{};
 	int GetWindowScreen() override { return 0; };
 

@@ -200,7 +200,7 @@ void CCommandProcessorFragment_OpenGL::SetState(const CCommandBuffer::SState &St
 	// screen mapping
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	glOrtho(State.m_ScreenTL.x, State.m_ScreenBR.x, State.m_ScreenBR.y, State.m_ScreenTL.y, -10.0f, 10.f);
+	glOrtho(State.m_CanvasTL.x, State.m_CanvasBR.x, State.m_CanvasBR.y, State.m_CanvasTL.y, -10.0f, 10.f);
 #endif
 }
 
@@ -1262,18 +1262,18 @@ void CCommandProcessorFragment_OpenGL2::SetState(const CCommandBuffer::SState &S
 		}
 	}
 
-	if(pProgram->m_LastScreen[0] != State.m_ScreenTL.x || pProgram->m_LastScreen[1] != State.m_ScreenTL.y || pProgram->m_LastScreen[2] != State.m_ScreenBR.x || pProgram->m_LastScreen[3] != State.m_ScreenBR.y)
+	if(pProgram->m_LastCanvas[0] != State.m_CanvasTL.x || pProgram->m_LastCanvas[1] != State.m_CanvasTL.y || pProgram->m_LastCanvas[2] != State.m_CanvasBR.x || pProgram->m_LastCanvas[3] != State.m_CanvasBR.y)
 	{
-		pProgram->m_LastScreen[0] = State.m_ScreenTL.x;
-		pProgram->m_LastScreen[1] = State.m_ScreenTL.y;
-		pProgram->m_LastScreen[2] = State.m_ScreenBR.x;
-		pProgram->m_LastScreen[3] = State.m_ScreenBR.y;
+		pProgram->m_LastCanvas[0] = State.m_CanvasTL.x;
+		pProgram->m_LastCanvas[1] = State.m_CanvasTL.y;
+		pProgram->m_LastCanvas[2] = State.m_CanvasBR.x;
+		pProgram->m_LastCanvas[3] = State.m_CanvasBR.y;
 		// screen mapping
 		// orthographic projection matrix
 		// the z coordinate is the same for every vertex, so just ignore the z coordinate and set it in the shaders
 		float m[2 * 4] = {
-			2.f / (State.m_ScreenBR.x - State.m_ScreenTL.x), 0, 0, -((State.m_ScreenBR.x + State.m_ScreenTL.x) / (State.m_ScreenBR.x - State.m_ScreenTL.x)),
-			0, (2.f / (State.m_ScreenTL.y - State.m_ScreenBR.y)), 0, -((State.m_ScreenTL.y + State.m_ScreenBR.y) / (State.m_ScreenTL.y - State.m_ScreenBR.y)),
+			2.f / (State.m_CanvasBR.x - State.m_CanvasTL.x), 0, 0, -((State.m_CanvasBR.x + State.m_CanvasTL.x) / (State.m_CanvasBR.x - State.m_CanvasTL.x)),
+			0, (2.f / (State.m_CanvasTL.y - State.m_CanvasBR.y)), 0, -((State.m_CanvasTL.y + State.m_CanvasBR.y) / (State.m_CanvasTL.y - State.m_CanvasBR.y)),
 			//0, 0, -(2.f/(9.f)), -((11.f)/(9.f)),
 			//0, 0, 0, 1.0f
 		};

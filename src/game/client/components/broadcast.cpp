@@ -23,13 +23,13 @@ void CBroadcast::OnRender()
 	if(m_pClient->m_Scoreboard.Active() || m_pClient->m_Motd.IsActive() || !g_Config.m_ClShowBroadcasts)
 		return;
 
-	Graphics()->MapScreen(0, 0, 300 * Graphics()->ScreenAspect(), 300);
+	Graphics()->MapCanvas(0, 0, 300 * Graphics()->CanvasAspect(), 300);
 
 	if(Client()->GameTick(g_Config.m_ClDummy) < m_BroadcastTick)
 	{
 		CTextCursor Cursor;
 		TextRender()->SetCursor(&Cursor, m_BroadcastRenderOffset, 40.0f, 12.0f, TEXTFLAG_RENDER | TEXTFLAG_STOP_AT_END);
-		Cursor.m_LineWidth = 300 * Graphics()->ScreenAspect() - m_BroadcastRenderOffset;
+		Cursor.m_LineWidth = 300 * Graphics()->CanvasAspect() - m_BroadcastRenderOffset;
 		TextRender()->TextEx(&Cursor, m_aBroadcastText, -1);
 	}
 }
@@ -42,9 +42,9 @@ void CBroadcast::OnMessage(int MsgType, void *pRawMsg)
 		str_copy(m_aBroadcastText, pMsg->m_pMessage, sizeof(m_aBroadcastText));
 		CTextCursor Cursor;
 		TextRender()->SetCursor(&Cursor, 0, 0, 12.0f, TEXTFLAG_STOP_AT_END);
-		Cursor.m_LineWidth = 300 * Graphics()->ScreenAspect();
+		Cursor.m_LineWidth = 300 * Graphics()->CanvasAspect();
 		TextRender()->TextEx(&Cursor, m_aBroadcastText, -1);
-		m_BroadcastRenderOffset = 150 * Graphics()->ScreenAspect() - Cursor.m_X / 2;
+		m_BroadcastRenderOffset = 150 * Graphics()->CanvasAspect() - Cursor.m_X / 2;
 		m_BroadcastTick = Client()->GameTick(g_Config.m_ClDummy) + Client()->GameTickSpeed() * 10;
 		if(g_Config.m_ClPrintBroadcasts)
 		{

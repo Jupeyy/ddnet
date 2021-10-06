@@ -283,7 +283,7 @@ void CGameClient::OnInit()
 	m_ShowOthers[1] = -1;
 
 	m_LastZoom = .0;
-	m_LastScreenAspect = .0;
+	m_LastCanvasAspect = .0;
 	m_LastDummyConnected = false;
 
 	// Set free binds to DDRace binds if it's active
@@ -546,7 +546,7 @@ void CGameClient::OnReset()
 	m_ShowOthers[1] = -1;
 
 	m_LastZoom = .0;
-	m_LastScreenAspect = .0;
+	m_LastCanvasAspect = .0;
 	m_LastDummyConnected = false;
 
 	m_ReceivedDDNetPlayer = false;
@@ -1663,11 +1663,11 @@ void CGameClient::OnNewSnapshot()
 			ZoomToSend = m_LastZoom;
 	}
 
-	if(ZoomToSend != m_LastZoom || Graphics()->ScreenAspect() != m_LastScreenAspect || (Client()->DummyConnected() && !m_LastDummyConnected))
+	if(ZoomToSend != m_LastZoom || Graphics()->CanvasAspect() != m_LastCanvasAspect || (Client()->DummyConnected() && !m_LastDummyConnected))
 	{
 		CNetMsg_Cl_ShowDistance Msg;
 		float x, y;
-		RenderTools()->CalcScreenParams(Graphics()->ScreenAspect(), ZoomToSend, &x, &y);
+		RenderTools()->CalcCanvasParams(Graphics()->CanvasAspect(), ZoomToSend, &x, &y);
 		Msg.m_X = x;
 		Msg.m_Y = y;
 		CMsgPacker Packer(Msg.MsgID(), false);
@@ -1677,7 +1677,7 @@ void CGameClient::OnNewSnapshot()
 		if(Client()->DummyConnected())
 			Client()->SendMsgY(&Packer, MSGFLAG_VITAL, 1);
 		m_LastZoom = ZoomToSend;
-		m_LastScreenAspect = Graphics()->ScreenAspect();
+		m_LastCanvasAspect = Graphics()->CanvasAspect();
 	}
 	m_LastDummyConnected = Client()->DummyConnected();
 

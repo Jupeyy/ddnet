@@ -29,9 +29,9 @@ void CEditor::UiInvokePopupMenu(void *pID, int Flags, float x, float y, float Wi
 	if(g_UiNumPopups > 7)
 		return;
 	Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "editor", "invoked");
-	if(x + Width > UI()->Screen()->w)
+	if(x + Width > UI()->Canvas()->w)
 		x -= Width;
-	if(y + Height > UI()->Screen()->h)
+	if(y + Height > UI()->Canvas()->h)
 		y -= Height;
 	s_UiPopups[g_UiNumPopups].m_pId = pID;
 	s_UiPopups[g_UiNumPopups].m_IsMenu = Flags;

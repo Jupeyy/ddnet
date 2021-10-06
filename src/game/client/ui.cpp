@@ -56,10 +56,10 @@ CUI::CUI()
 	m_MouseButtons = 0;
 	m_LastMouseButtons = 0;
 
-	m_Screen.x = 0;
-	m_Screen.y = 0;
-	m_Screen.w = 848.0f;
-	m_Screen.h = 480.0f;
+	m_Canvas.x = 0;
+	m_Canvas.y = 0;
+	m_Canvas.w = 848.0f;
+	m_Canvas.h = 480.0f;
 }
 
 CUI::~CUI()
@@ -142,29 +142,29 @@ int CUI::MouseInside(const CUIRect *r) const
 	return 0;
 }
 
-CUIRect *CUI::Screen()
+CUIRect *CUI::Canvas()
 {
-	float Aspect = Graphics()->ScreenAspect();
+	float Aspect = Graphics()->CanvasAspect();
 	float w, h;
 
 	h = 600;
 	w = Aspect * h;
 
-	m_Screen.w = w;
-	m_Screen.h = h;
+	m_Canvas.w = w;
+	m_Canvas.h = h;
 
-	return &m_Screen;
+	return &m_Canvas;
 }
 
-void CUI::MapScreen()
+void CUI::MapCanvas()
 {
-	const CUIRect *pScreen = Screen();
-	Graphics()->MapScreen(pScreen->x, pScreen->y, pScreen->w, pScreen->h);
+	const CUIRect *pCanvas = Canvas();
+	Graphics()->MapCanvas(pCanvas->x, pCanvas->y, pCanvas->w, pCanvas->h);
 }
 
 float CUI::PixelSize()
 {
-	return Screen()->w / Graphics()->ScreenWidth();
+	return Canvas()->w / Graphics()->CanvasWidth();
 }
 
 void CUI::SetScale(float s)
@@ -184,8 +184,8 @@ float CUIRect::Scale() const
 
 void CUI::ClipEnable(const CUIRect *r)
 {
-	float XScale = Graphics()->ScreenWidth() / Screen()->w;
-	float YScale = Graphics()->ScreenHeight() / Screen()->h;
+	float XScale = Graphics()->CanvasWidth() / Canvas()->w;
+	float YScale = Graphics()->CanvasHeight() / Canvas()->h;
 	Graphics()->ClipEnable((int)(r->x * XScale), (int)(r->y * YScale), (int)(r->w * XScale), (int)(r->h * YScale));
 }
 

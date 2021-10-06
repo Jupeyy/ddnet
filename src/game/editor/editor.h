@@ -202,7 +202,7 @@ public:
 
 	void Convert(CUIRect *pRect);
 	void Render();
-	void MapScreen();
+	void MapCanvas();
 	void Mapping(float *pPoints);
 
 	void GetSize(float *w, float *h) const;

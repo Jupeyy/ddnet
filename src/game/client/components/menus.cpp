@@ -1112,8 +1112,8 @@ void CMenus::RenderLoading()
 	// need up date this here to get correct
 	ms_GuiColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_UiColor, true));
 
-	CUIRect Screen = *UI()->Screen();
-	UI()->MapScreen();
+	CUIRect Canvas = *UI()->Canvas();
+	UI()->MapCanvas();
 
 	if(!m_pBackground->Render())
 	{
@@ -1122,8 +1122,8 @@ void CMenus::RenderLoading()
 
 	float w = 700;
 	float h = 200;
-	float x = Screen.w / 2 - w / 2;
-	float y = Screen.h / 2 - h / 2;
+	float x = Canvas.w / 2 - w / 2;
+	float y = Canvas.h / 2 - h / 2;
 
 	Graphics()->BlendNormal();
 
@@ -1452,8 +1452,8 @@ int CMenus::Render()
 	if(Client()->State() == IClient::STATE_DEMOPLAYBACK && m_Popup == POPUP_NONE)
 		return 0;
 
-	CUIRect Screen = *UI()->Screen();
-	UI()->MapScreen();
+	CUIRect Canvas = *UI()->Canvas();
+	UI()->MapCanvas();
 
 	if((!Input()->KeyIsPressed(KEY_LSHIFT) && !Input()->KeyIsPressed(KEY_RSHIFT)) || UI()->ActiveItem() == nullptr)
 		SetMouseSlow(false);
@@ -1503,7 +1503,7 @@ int CMenus::Render()
 	CUIRect MainView;
 
 	// some margin around the screen
-	Screen.Margin(10.0f, &Screen);
+	Canvas.Margin(10.0f, &Canvas);
 
 	static bool s_SoundCheck = false;
 	if(!s_SoundCheck && m_Popup == POPUP_NONE)
@@ -1518,11 +1518,11 @@ int CMenus::Render()
 		if(m_ShowStart && Client()->State() == IClient::STATE_OFFLINE)
 		{
 			m_pBackground->ChangePosition(CMenuBackground::POS_START);
-			RenderStartMenu(Screen);
+			RenderStartMenu(Canvas);
 		}
 		else
 		{
-			Screen.HSplitTop(24.0f, &TabBar, &MainView);
+			Canvas.HSplitTop(24.0f, &TabBar, &MainView);
 
 			if(Client()->State() == IClient::STATE_OFFLINE && m_EscapePressed)
 			{
@@ -1761,7 +1761,7 @@ int CMenus::Render()
 		}
 
 		CUIRect Box, Part;
-		Box = Screen;
+		Box = Canvas;
 		if(m_Popup != POPUP_FIRST_LAUNCH)
 		{
 			Box.VMargin(150.0f / UI()->Scale(), &Box);
@@ -1906,7 +1906,7 @@ int CMenus::Render()
 		}
 		else if(m_Popup == POPUP_CONNECTING)
 		{
-			Box = Screen;
+			Box = Canvas;
 			Box.VMargin(150.0f, &Box);
 			Box.HMargin(150.0f, &Box);
 			Box.HSplitBottom(20.f, &Box, &Part);
@@ -1973,7 +1973,7 @@ int CMenus::Render()
 		}
 		else if(m_Popup == POPUP_LANGUAGE)
 		{
-			Box = Screen;
+			Box = Canvas;
 			Box.VMargin(150.0f, &Box);
 			Box.HMargin(150.0f, &Box);
 			Box.HSplitTop(20.f, &Part, &Box);
@@ -1990,7 +1990,7 @@ int CMenus::Render()
 		}
 		else if(m_Popup == POPUP_COUNTRY)
 		{
-			Box = Screen;
+			Box = Canvas;
 			Box.VMargin(150.0f, &Box);
 			Box.HMargin(150.0f, &Box);
 			Box.HSplitTop(20.f, &Part, &Box);
@@ -2706,8 +2706,8 @@ void CMenus::OnRender()
 
 	if(Client()->State() == IClient::STATE_DEMOPLAYBACK)
 	{
-		UI()->MapScreen();
-		RenderDemoPlayer(*UI()->Screen());
+		UI()->MapCanvas();
+		RenderDemoPlayer(*UI()->Canvas());
 	}
 
 	if(Client()->State() == IClient::STATE_ONLINE && m_pClient->m_ServerMode == m_pClient->SERVERMODE_PUREMOD)
@@ -2751,9 +2751,9 @@ void CMenus::OnRender()
 	ms_ColorTabbarHoverIngame = ColorRGBA(1, 1, 1, 0.75f);
 
 	// update the ui
-	CUIRect *pScreen = UI()->Screen();
-	float mx = (m_MousePos.x / (float)Graphics()->WindowWidth()) * pScreen->w;
-	float my = (m_MousePos.y / (float)Graphics()->WindowHeight()) * pScreen->h;
+	CUIRect *pCanvas = UI()->Canvas();
+	float mx = (m_MousePos.x / (float)Graphics()->WindowWidth()) * pCanvas->w;
+	float my = (m_MousePos.y / (float)Graphics()->WindowHeight()) * pCanvas->h;
 
 	int Buttons = 0;
 	if(m_UseMouseButtons)
@@ -2784,7 +2784,7 @@ void CMenus::OnRender()
 	// render debug information
 	if(g_Config.m_Debug)
 	{
-		UI()->MapScreen();
+		UI()->MapCanvas();
 
 		char aBuf[512];
 		str_format(aBuf, sizeof(aBuf), "%p %p %p", UI()->HotItem(), UI()->ActiveItem(), UI()->LastActiveItem());
@@ -2803,9 +2803,9 @@ void CMenus::RenderBackground()
 {
 	Graphics()->BlendNormal();
 
-	float sw = 300 * Graphics()->ScreenAspect();
+	float sw = 300 * Graphics()->CanvasAspect();
 	float sh = 300;
-	Graphics()->MapScreen(0, 0, sw, sh);
+	Graphics()->MapCanvas(0, 0, sw, sh);
 
 	// render background color
 	Graphics()->TextureClear();
@@ -2845,7 +2845,7 @@ void CMenus::RenderBackground()
 	Graphics()->QuadsEnd();
 
 	// restore screen
-	UI()->MapScreen();
+	UI()->MapCanvas();
 }
 
 bool CMenus::CheckHotKey(int Key) const
@@ -2882,20 +2882,20 @@ void CMenus::RenderUpdating(const char *pCaption, int current, int total)
 	// need up date this here to get correct
 	ms_GuiColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_UiColor, true));
 
-	CUIRect Screen = *UI()->Screen();
-	UI()->MapScreen();
+	CUIRect Canvas = *UI()->Canvas();
+	UI()->MapCanvas();
 
 	RenderBackground();
 
 	float w = 700;
 	float h = 200;
-	float x = Screen.w / 2 - w / 2;
-	float y = Screen.h / 2 - h / 2;
+	float x = Canvas.w / 2 - w / 2;
+	float y = Canvas.h / 2 - h / 2;
 
 	Graphics()->TextureClear();
 	Graphics()->QuadsBegin();
 	Graphics()->SetColor(0, 0, 0, 0.50f);
-	RenderTools()->DrawRoundRect(0, y, Screen.w, h, 0.0f);
+	RenderTools()->DrawRoundRect(0, y, Canvas.w, h, 0.0f);
 	Graphics()->QuadsEnd();
 
 	CUIRect r;

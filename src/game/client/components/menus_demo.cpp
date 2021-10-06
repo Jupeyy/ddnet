@@ -78,9 +78,9 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 	// render popups
 	if(m_DemoPlayerState == DEMOPLAYER_SLICE_SAVE)
 	{
-		CUIRect Screen = *UI()->Screen();
+		CUIRect Canvas = *UI()->Canvas();
 		CUIRect Box, Part, Part2;
-		Box = Screen;
+		Box = Canvas;
 		Box.VMargin(150.0f / UI()->Scale(), &Box);
 		Box.HMargin(150.0f / UI()->Scale(), &Box);
 
@@ -241,11 +241,11 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 	// render speed info
 	if(g_Config.m_ClDemoShowSpeed && time_get() - LastSpeedChange < time_freq() * 1)
 	{
-		CUIRect Screen = *UI()->Screen();
+		CUIRect Canvas = *UI()->Canvas();
 
 		char aSpeedBuf[256];
 		str_format(aSpeedBuf, sizeof(aSpeedBuf), "×%.2f", pInfo->m_Speed);
-		TextRender()->Text(0, 120.0f, Screen.y + Screen.h - 120.0f - TotalHeight, 60.0f, aSpeedBuf, -1.0f);
+		TextRender()->Text(0, 120.0f, Canvas.y + Canvas.h - 120.0f - TotalHeight, 60.0f, aSpeedBuf, -1.0f);
 	}
 
 	if(!m_MenuActive)

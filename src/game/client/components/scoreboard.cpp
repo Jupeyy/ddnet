@@ -616,10 +616,10 @@ void CScoreboard::OnRender()
 	if(m_pClient->m_Motd.IsActive())
 		m_pClient->m_Motd.Clear();
 
-	float Width = 400 * 3.0f * Graphics()->ScreenAspect();
+	float Width = 400 * 3.0f * Graphics()->CanvasAspect();
 	float Height = 400 * 3.0f;
 
-	Graphics()->MapScreen(0, 0, Width, Height);
+	Graphics()->MapCanvas(0, 0, Width, Height);
 
 	float w = 750.0f;
 	float ExtraWidthSingle = 20.0f;

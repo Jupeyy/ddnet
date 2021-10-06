@@ -472,8 +472,8 @@ void CGameConsole::PossibleCommandsRenderCallback(const char *pStr, void *pUser)
 
 void CGameConsole::OnRender()
 {
-	CUIRect Screen = *UI()->Screen();
-	float ConsoleMaxHeight = Screen.h * 3 / 5.0f;
+	CUIRect Canvas = *UI()->Canvas();
+	float ConsoleMaxHeight = Canvas.h * 3 / 5.0f;
 	float ConsoleHeight;
 
 	float Progress = (TimeNow() - (m_StateChangeEnd - m_StateChangeDuration)) / m_StateChangeDuration;
@@ -508,7 +508,7 @@ void CGameConsole::OnRender()
 
 	ConsoleHeight = ConsoleHeightScale * ConsoleMaxHeight;
 
-	UI()->MapScreen();
+	UI()->MapCanvas();
 
 	// do console shadow
 	Graphics()->TextureClear();
@@ -519,7 +519,7 @@ void CGameConsole::OnRender()
 		IGraphics::CColorVertex(2, 0, 0, 0, 0.0f),
 		IGraphics::CColorVertex(3, 0, 0, 0, 0.0f)};
 	Graphics()->SetColorVertex(Array, 4);
-	IGraphics::CQuadItem QuadItem(0, ConsoleHeight, Screen.w, 10.0f);
+	IGraphics::CQuadItem QuadItem(0, ConsoleHeight, Canvas.w, 10.0f);
 	Graphics()->QuadsDrawTL(&QuadItem, 1);
 	Graphics()->QuadsEnd();
 
@@ -529,8 +529,8 @@ void CGameConsole::OnRender()
 	Graphics()->SetColor(0.2f, 0.2f, 0.2f, 0.9f);
 	if(m_ConsoleType == CONSOLETYPE_REMOTE)
 		Graphics()->SetColor(0.4f, 0.2f, 0.2f, 0.9f);
-	Graphics()->QuadsSetSubset(0, -ConsoleHeight * 0.075f, Screen.w * 0.075f * 0.5f, 0);
-	QuadItem = IGraphics::CQuadItem(0, 0, Screen.w, ConsoleHeight);
+	Graphics()->QuadsSetSubset(0, -ConsoleHeight * 0.075f, Canvas.w * 0.075f * 0.5f, 0);
+	QuadItem = IGraphics::CQuadItem(0, 0, Canvas.w, ConsoleHeight);
 	Graphics()->QuadsDrawTL(&QuadItem, 1);
 	Graphics()->QuadsEnd();
 
@@ -542,7 +542,7 @@ void CGameConsole::OnRender()
 	Array[2] = IGraphics::CColorVertex(2, 0, 0, 0, 0.25f);
 	Array[3] = IGraphics::CColorVertex(3, 0, 0, 0, 0.25f);
 	Graphics()->SetColorVertex(Array, 4);
-	QuadItem = IGraphics::CQuadItem(0, ConsoleHeight - 20, Screen.w, 10);
+	QuadItem = IGraphics::CQuadItem(0, ConsoleHeight - 20, Canvas.w, 10);
 	Graphics()->QuadsDrawTL(&QuadItem, 1);
 	Graphics()->QuadsEnd();
 
@@ -550,8 +550,8 @@ void CGameConsole::OnRender()
 	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_CONSOLE_BAR].m_Id);
 	Graphics()->QuadsBegin();
 	Graphics()->SetColor(1.0f, 1.0f, 1.0f, 0.9f);
-	Graphics()->QuadsSetSubset(0, 0.1f, Screen.w * 0.015f, 1 - 0.1f);
-	QuadItem = IGraphics::CQuadItem(0, ConsoleHeight - 10.0f, Screen.w, 10.0f);
+	Graphics()->QuadsSetSubset(0, 0.1f, Canvas.w * 0.015f, 1 - 0.1f);
+	QuadItem = IGraphics::CQuadItem(0, ConsoleHeight - 10.0f, Canvas.w, 10.0f);
 	Graphics()->QuadsDrawTL(&QuadItem, 1);
 	Graphics()->QuadsEnd();
 
@@ -570,7 +570,7 @@ void CGameConsole::OnRender()
 		Info.m_WantedCompletion = pConsole->m_CompletionUsed ? pConsole->m_CompletionChosen : -1;
 		Info.m_EnumCount = 0;
 		Info.m_Offset = pConsole->m_CompletionRenderOffset;
-		Info.m_Width = Screen.w;
+		Info.m_Width = Canvas.w;
 		Info.m_pCurrentCmd = pConsole->m_aCompletionBuffer;
 		TextRender()->SetCursor(&Info.m_Cursor, x + Info.m_Offset, y + RowHeight + 2.0f, FontSize, TEXTFLAG_RENDER | TEXTFLAG_STOP_AT_END);
 		Info.m_Cursor.m_LineWidth = std::numeric_limits<float>::max();
@@ -628,14 +628,14 @@ void CGameConsole::OnRender()
 
 		// render console input (wrap line)
 		TextRender()->SetCursor(&Cursor, x, y, FontSize, 0);
-		Cursor.m_LineWidth = Screen.w - 10.0f - x;
+		Cursor.m_LineWidth = Canvas.w - 10.0f - x;
 		TextRender()->TextEx(&Cursor, aInputString, pConsole->m_Input.GetCursorOffset(Editing));
 		TextRender()->TextEx(&Cursor, aInputString + pConsole->m_Input.GetCursorOffset(Editing), -1);
 		int Lines = Cursor.m_LineCount;
 
 		y -= (Lines - 1) * FontSize;
 		TextRender()->SetCursor(&Cursor, x, y, FontSize, TEXTFLAG_RENDER);
-		Cursor.m_LineWidth = Screen.w - 10.0f - x;
+		Cursor.m_LineWidth = Canvas.w - 10.0f - x;
 
 		TextRender()->TextEx(&Cursor, aInputString, pConsole->m_Input.GetCursorOffset(Editing));
 		CTextCursor Marker = Cursor;
@@ -687,7 +687,7 @@ void CGameConsole::OnRender()
 				if(pEntry->m_YOffset < 0.0f)
 				{
 					TextRender()->SetCursor(&Cursor, 0.0f, 0.0f, FontSize, 0);
-					Cursor.m_LineWidth = Screen.w - 10;
+					Cursor.m_LineWidth = Canvas.w - 10;
 					TextRender()->TextEx(&Cursor, pEntry->m_aText, -1);
 					pEntry->m_YOffset = Cursor.m_Y + Cursor.m_AlignedFontSize + LineOffset;
 				}
@@ -701,14 +701,14 @@ void CGameConsole::OnRender()
 				{
 					m_MouseIsPress = true;
 					Input()->NativeMousePos(&m_MousePressX, &m_MousePressY);
-					m_MousePressX = (m_MousePressX / (float)Graphics()->WindowWidth()) * Screen.w;
-					m_MousePressY = (m_MousePressY / (float)Graphics()->WindowHeight()) * Screen.h;
+					m_MousePressX = (m_MousePressX / (float)Graphics()->WindowWidth()) * Canvas.w;
+					m_MousePressY = (m_MousePressY / (float)Graphics()->WindowHeight()) * Canvas.h;
 				}
 				if(m_MouseIsPress)
 				{
 					Input()->NativeMousePos(&m_MouseCurX, &m_MouseCurY);
-					m_MouseCurX = (m_MouseCurX / (float)Graphics()->WindowWidth()) * Screen.w;
-					m_MouseCurY = (m_MouseCurY / (float)Graphics()->WindowHeight()) * Screen.h;
+					m_MouseCurX = (m_MouseCurX / (float)Graphics()->WindowWidth()) * Canvas.w;
+					m_MouseCurY = (m_MouseCurY / (float)Graphics()->WindowHeight()) * Canvas.h;
 				}
 				if(m_MouseIsPress && !Input()->NativeMousePressed(1))
 				{
@@ -725,7 +725,7 @@ void CGameConsole::OnRender()
 							m_MouseCurY -= OffsetY;
 					}
 					TextRender()->SetCursor(&Cursor, 0.0f, y - OffsetY, FontSize, TEXTFLAG_RENDER);
-					Cursor.m_LineWidth = Screen.w - 10.0f;
+					Cursor.m_LineWidth = Canvas.w - 10.0f;
 					Cursor.m_CalculateSelectionMode = (m_MouseIsPress || (m_CurSelStart != m_CurSelEnd) || m_HasSelection) ? TEXT_CURSOR_SELECTION_MODE_CALCULATE : TEXT_CURSOR_SELECTION_MODE_NONE;
 					Cursor.m_PressMouseX = m_MousePressX;
 					Cursor.m_PressMouseY = m_MousePressY;
@@ -775,7 +775,7 @@ void CGameConsole::OnRender()
 				while(OffsetY > 0.0f && pEntry)
 				{
 					TextRender()->SetCursor(&Cursor, 0.0f, y - OffsetY, FontSize, TEXTFLAG_RENDER);
-					Cursor.m_LineWidth = Screen.w - 10.0f;
+					Cursor.m_LineWidth = Canvas.w - 10.0f;
 					TextRender()->TextEx(&Cursor, pEntry->m_aText, -1);
 					OffsetY -= pEntry->m_YOffset;
 					pEntry = pConsole->m_Backlog.Next(pEntry);
@@ -793,7 +793,7 @@ void CGameConsole::OnRender()
 		// render version
 		str_copy(aBuf, "v" GAME_VERSION " on " CONF_PLATFORM_STRING " " CONF_ARCH_STRING, sizeof(aBuf));
 		float Width = TextRender()->TextWidth(0, FontSize, aBuf, -1, -1.0f);
-		TextRender()->Text(0, Screen.w - Width - 10.0f, FontSize / 2.f, FontSize, aBuf, -1.0f);
+		TextRender()->Text(0, Canvas.w - Width - 10.0f, FontSize / 2.f, FontSize, aBuf, -1.0f);
 	}
 }
 

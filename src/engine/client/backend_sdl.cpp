@@ -737,22 +737,14 @@ void CGraphicsBackend_SDL_OpenGL::GetVideoModes(CVideoMode *pModes, int MaxModes
 void CGraphicsBackend_SDL_OpenGL::GetCurrentVideoMode(CVideoMode &CurMode, int HiDPIScale, int MaxWindowWidth, int MaxWindowHeight, int Screen)
 {
 	SDL_DisplayMode DPMode;
-	if(SDL_GetDesktopDisplayMode(Screen, &DPMode) < 0)
+	if(SDL_GetCurrentDisplayMode(Screen, &DPMode) < 0)
 	{
 		dbg_msg("gfx", "unable to get display mode: %s", SDL_GetError());
-	}
-	else
-	{
-		int Width = 0;
-		int Height = 0;
-		SDL_GL_GetDrawableSize(m_pWindow, &Width, &Height);
-		DPMode.w = Width;
-		DPMode.h = Height;
 	}
 	DisplayToVideoMode(&CurMode, &DPMode, HiDPIScale, DPMode.refresh_rate);
 }
 
-int CGraphicsBackend_SDL_OpenGL::Init(const char *pName, int *pScreen, int *pWidth, int *pHeight, int *pRefreshRate, int FsaaSamples, int Flags, int *pDesktopWidth, int *pDesktopHeight, int *pCurrentWidth, int *pCurrentHeight, IStorage *pStorage)
+int CGraphicsBackend_SDL_OpenGL::Init(const char *pName, int *pScreen, int *pWindowWidth, int *pWindowHeight, int *pWindowRefreshRate, int FsaaSamples, int Flags, int *pDesktopWidth, int *pDesktopHeight, int *pCanvasWidth, int *pCanvasHeight, class IStorage *pStorage)
 {
 	// print sdl version
 	{
@@ -841,7 +833,7 @@ int CGraphicsBackend_SDL_OpenGL::Init(const char *pName, int *pScreen, int *pWid
 
 	for(int i = 0; i < ModesCount; i++)
 	{
-		if(*pWidth == aModes[i].m_WindowWidth && *pHeight == aModes[i].m_WindowHeight && (*pRefreshRate == aModes[i].m_RefreshRate || *pRefreshRate == 0))
+		if(*pWindowWidth == aModes[i].m_WindowWidth && *pWindowHeight == aModes[i].m_WindowHeight && (*pWindowRefreshRate == aModes[i].m_RefreshRate || *pWindowRefreshRate == 0))
 		{
 			SupportedResolution = true;
 			IndexOfResolution = i;
@@ -865,21 +857,21 @@ int CGraphicsBackend_SDL_OpenGL::Init(const char *pName, int *pScreen, int *pWid
 	bool IsFullscreen = (SdlFlags & SDL_WINDOW_FULLSCREEN) != 0;
 	// use desktop resolution as default resolution, clamp resolution if users's display is smaller than we remembered
 	// if the user starts in fullscreen, and the resolution was not found use the desktop one
-	if((IsFullscreen && !SupportedResolution) || *pWidth == 0 || *pHeight == 0 || (IsDesktopChanged && (*pWidth > *pDesktopWidth || *pHeight > *pDesktopHeight)))
+	if((IsFullscreen && !SupportedResolution) || *pWindowWidth == 0 || *pWindowHeight == 0 || (IsDesktopChanged && (*pWindowWidth > *pDesktopWidth || *pWindowHeight > *pDesktopHeight)))
 	{
-		*pWidth = *pDesktopWidth;
-		*pHeight = *pDesktopHeight;
-		*pRefreshRate = DisplayMode.refresh_rate;
+		*pWindowWidth = *pDesktopWidth;
+		*pWindowHeight = *pDesktopHeight;
+		*pWindowRefreshRate = DisplayMode.refresh_rate;
 	}
 
 	// if in fullscreen and refresh rate wasn't set yet, just use the one from the found list
-	if(*pRefreshRate == 0 && SupportedResolution)
+	if(*pWindowRefreshRate == 0 && SupportedResolution)
 	{
-		*pRefreshRate = aModes[IndexOfResolution].m_RefreshRate;
+		*pWindowRefreshRate = aModes[IndexOfResolution].m_RefreshRate;
 	}
-	else if(*pRefreshRate == 0)
+	else if(*pWindowRefreshRate == 0)
 	{
-		*pRefreshRate = DisplayMode.refresh_rate;
+		*pWindowRefreshRate = DisplayMode.refresh_rate;
 	}
 
 	// set gl attributes
@@ -899,8 +891,8 @@ int CGraphicsBackend_SDL_OpenGL::Init(const char *pName, int *pScreen, int *pWid
 		pName,
 		SDL_WINDOWPOS_CENTERED_DISPLAY(*pScreen),
 		SDL_WINDOWPOS_CENTERED_DISPLAY(*pScreen),
-		*pWidth,
-		*pHeight,
+		*pWindowWidth,
+		*pWindowHeight,
 		SdlFlags);
 
 	// set caption
@@ -935,11 +927,7 @@ int CGraphicsBackend_SDL_OpenGL::Init(const char *pName, int *pScreen, int *pWid
 
 	InitError = IsVersionSupportedGlew(m_BackendType, g_Config.m_GfxOpenGLMajor, g_Config.m_GfxOpenGLMinor, g_Config.m_GfxOpenGLPatch, GlewMajor, GlewMinor, GlewPatch);
 
-	// SDL_GL_GetDrawableSize reports HiDPI resolution even with SDL_WINDOW_ALLOW_HIGHDPI not set, which is wrong
-	if(SdlFlags & SDL_WINDOW_ALLOW_HIGHDPI)
-		SDL_GL_GetDrawableSize(m_pWindow, pCurrentWidth, pCurrentHeight);
-	else
-		SDL_GetWindowSize(m_pWindow, pCurrentWidth, pCurrentHeight);
+	SDL_GL_GetDrawableSize(m_pWindow, pCanvasWidth, pCanvasHeight);
 
 	SDL_GL_SetSwapInterval(Flags & IGraphicsBackend::INITFLAG_VSYNC ? 1 : 0);
 	SDL_GL_MakeCurrent(NULL, NULL);
@@ -1046,8 +1034,8 @@ int CGraphicsBackend_SDL_OpenGL::Init(const char *pName, int *pScreen, int *pWid
 		CmdSDL.m_X = 0;
 		CmdSDL.m_Y = 0;
 
-		CmdSDL.m_Width = *pCurrentWidth;
-		CmdSDL.m_Height = *pCurrentHeight;
+		CmdSDL.m_Width = *pCanvasWidth;
+		CmdSDL.m_Height = *pCanvasHeight;
 		CmdBuffer.AddCommandUnsafe(CmdSDL);
 		RunBuffer(&CmdBuffer);
 		WaitForIdle();

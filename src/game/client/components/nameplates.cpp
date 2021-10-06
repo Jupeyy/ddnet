@@ -17,8 +17,8 @@
 void CNamePlates::MapscreenToGroup(float CenterX, float CenterY, CMapItemGroup *pGroup)
 {
 	float Points[4];
-	RenderTools()->MapscreenToWorld(CenterX, CenterY, pGroup->m_ParallaxX, pGroup->m_ParallaxY, pGroup->m_OffsetX, pGroup->m_OffsetY, Graphics()->ScreenAspect(), 1.0f, Points);
-	Graphics()->MapScreen(Points[0], Points[1], Points[2], Points[3]);
+	RenderTools()->MapscreenToWorld(CenterX, CenterY, pGroup->m_ParallaxX, pGroup->m_ParallaxY, pGroup->m_OffsetX, pGroup->m_OffsetY, Graphics()->CanvasAspect(), 1.0f, Points);
+	Graphics()->MapCanvas(Points[0], Points[1], Points[2], Points[3]);
 }
 
 void CNamePlates::RenderNameplate(
@@ -71,14 +71,14 @@ void CNamePlates::RenderNameplatePos(vec2 Position, const CNetObj_PlayerInfo *pP
 			Cursor.m_LineWidth = -1;
 
 			// create nameplates at standard zoom
-			float ScreenX0, ScreenY0, ScreenX1, ScreenY1;
-			Graphics()->GetScreen(&ScreenX0, &ScreenY0, &ScreenX1, &ScreenY1);
+			float CanvasX0, CanvasY0, CanvasX1, CanvasY1;
+			Graphics()->GetCanvas(&CanvasX0, &CanvasY0, &CanvasX1, &CanvasY1);
 			MapscreenToGroup(m_pClient->m_Camera.m_Center.x, m_pClient->m_Camera.m_Center.y, Layers()->GameGroup());
 
 			m_aNamePlates[ClientID].m_NameTextWidth = TextRender()->TextWidth(0, FontSize, pName, -1, -1.0f);
 
 			m_aNamePlates[ClientID].m_NameTextContainerIndex = TextRender()->CreateTextContainer(&Cursor, pName);
-			Graphics()->MapScreen(ScreenX0, ScreenY0, ScreenX1, ScreenY1);
+			Graphics()->MapCanvas(CanvasX0, CanvasY0, CanvasX1, CanvasY1);
 		}
 
 		if(g_Config.m_ClNameplatesClan)
@@ -97,14 +97,14 @@ void CNamePlates::RenderNameplatePos(vec2 Position, const CNetObj_PlayerInfo *pP
 				Cursor.m_LineWidth = -1;
 
 				// create nameplates at standard zoom
-				float ScreenX0, ScreenY0, ScreenX1, ScreenY1;
-				Graphics()->GetScreen(&ScreenX0, &ScreenY0, &ScreenX1, &ScreenY1);
+				float CanvasX0, CanvasY0, CanvasX1, CanvasY1;
+				Graphics()->GetCanvas(&CanvasX0, &CanvasY0, &CanvasX1, &CanvasY1);
 				MapscreenToGroup(m_pClient->m_Camera.m_Center.x, m_pClient->m_Camera.m_Center.y, Layers()->GameGroup());
 
 				m_aNamePlates[ClientID].m_ClanNameTextWidth = TextRender()->TextWidth(0, FontSizeClan, pClan, -1, -1.0f);
 
 				m_aNamePlates[ClientID].m_ClanNameTextContainerIndex = TextRender()->CreateTextContainer(&Cursor, pClan);
-				Graphics()->MapScreen(ScreenX0, ScreenY0, ScreenX1, ScreenY1);
+				Graphics()->MapCanvas(CanvasX0, CanvasY0, CanvasX1, CanvasY1);
 			}
 		}
 

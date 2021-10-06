@@ -735,7 +735,7 @@ void CRenderTools::RenderTee(CAnimState *pAnim, CTeeRenderInfo *pInfo, int Emote
 	Graphics()->QuadsSetRotation(0);
 }
 
-void CRenderTools::CalcScreenParams(float Aspect, float Zoom, float *w, float *h)
+void CRenderTools::CalcCanvasParams(float Aspect, float Zoom, float *w, float *h)
 {
 	const float Amount = 1150 * 1000;
 	const float WMax = 1500;
@@ -766,7 +766,7 @@ void CRenderTools::MapscreenToWorld(float CenterX, float CenterY, float Parallax
 	float OffsetX, float OffsetY, float Aspect, float Zoom, float *pPoints)
 {
 	float Width, Height;
-	CalcScreenParams(Aspect, Zoom, &Width, &Height);
+	CalcCanvasParams(Aspect, Zoom, &Width, &Height);
 	CenterX *= ParallaxX / 100.0f;
 	CenterY *= ParallaxY / 100.0f;
 	pPoints[0] = OffsetX + CenterX - Width / 2;

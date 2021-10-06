@@ -189,7 +189,7 @@ EComponentMouseMovementBlockMode CSpectator::OnMouseInWindowRelativeMove(int X, 
 	if(!m_Active)
 		return COMPONENT_MOUSE_MOVEMENT_BLOCK_MODE_DONT_BLOCK;
 
-	float Width = 400 * 3.0f * Graphics()->ScreenAspect();
+	float Width = 400 * 3.0f * Graphics()->CanvasAspect();
 	float Height = 400 * 3.0f;
 
 	float TmpX = (X / (float)Graphics()->WindowWidth()) * Width;
@@ -232,7 +232,7 @@ void CSpectator::OnRender()
 	m_SelectedSpectatorID = NO_SELECTION;
 
 	// draw background
-	float Width = 400 * 3.0f * Graphics()->ScreenAspect();
+	float Width = 400 * 3.0f * Graphics()->CanvasAspect();
 	float Height = 400 * 3.0f;
 	float ObjWidth = 300.0f;
 	float FontSize = 20.0f;
@@ -270,7 +270,7 @@ void CSpectator::OnRender()
 		ObjWidth = 600.0f;
 	}
 
-	Graphics()->MapScreen(0, 0, Width, Height);
+	Graphics()->MapCanvas(0, 0, Width, Height);
 
 	Graphics()->BlendNormal();
 	Graphics()->TextureClear();

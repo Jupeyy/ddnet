@@ -192,8 +192,8 @@ public:
 		int m_BlendMode;
 		int m_WrapMode;
 		int m_Texture;
-		SPoint m_ScreenTL;
-		SPoint m_ScreenBR;
+		SPoint m_CanvasTL;
+		SPoint m_CanvasBR;
 
 		// clip
 		bool m_ClipEnable;
@@ -657,7 +657,7 @@ public:
 
 	virtual ~IGraphicsBackend() {}
 
-	virtual int Init(const char *pName, int *Screen, int *pWidth, int *pHeight, int *pRefreshRate, int FsaaSamples, int Flags, int *pDesktopWidth, int *pDesktopHeight, int *pCurrentWidth, int *pCurrentHeight, class IStorage *pStorage) = 0;
+	virtual int Init(const char *pName, int *pScreen, int *pWindowWidth, int *pWindowHeight, int *pWindowRefreshRate, int FsaaSamples, int Flags, int *pDesktopWidth, int *pDesktopHeight, int *pCanvasWidth, int *pCanvasHeight, class IStorage *pStorage) = 0;
 	virtual int Shutdown() = 0;
 
 	virtual int MemoryUsage() const = 0;
@@ -872,8 +872,8 @@ public:
 
 	int MemoryUsage() const override;
 
-	void MapScreen(float TopLeftX, float TopLeftY, float BottomRightX, float BottomRightY) override;
-	void GetScreen(float *pTopLeftX, float *pTopLeftY, float *pBottomRightX, float *pBottomRightY) override;
+	void MapCanvas(float TopLeftX, float TopLeftY, float BottomRightX, float BottomRightY) override;
+	void GetCanvas(float *pTopLeftX, float *pTopLeftY, float *pBottomRightX, float *pBottomRightY) override;
 
 	void LinesBegin() override;
 	void LinesEnd() override;
@@ -1167,7 +1167,7 @@ public:
 	void Maximize() override;
 	void SetWindowParams(int FullscreenMode, bool IsBorderless) override;
 	bool SetWindowScreen(int Index) override;
-	void Resize(int w, int h, int RefreshRate, bool SetWindowSize = false, bool ForceResizeEvent = false) override;
+	void Resize(int w, int h, int RefreshRate, bool SetWindowSize = false) override;
 	void AddWindowResizeListener(WINDOW_RESIZE_FUNC pFunc, void *pUser) override;
 	int GetWindowScreen() override;
 

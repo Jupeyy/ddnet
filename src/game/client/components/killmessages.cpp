@@ -141,12 +141,12 @@ void CKillMessages::OnMessage(int MsgType, void *pRawMsg)
 
 		Kill.m_VitctimTextWidth = Kill.m_KillerTextWidth = 0.f;
 
-		float Width = 400 * 3.0f * Graphics()->ScreenAspect();
+		float Width = 400 * 3.0f * Graphics()->CanvasAspect();
 		float Height = 400 * 3.0f;
 
-		float ScreenX0, ScreenY0, ScreenX1, ScreenY1;
-		Graphics()->GetScreen(&ScreenX0, &ScreenY0, &ScreenX1, &ScreenY1);
-		Graphics()->MapScreen(0, 0, Width * 1.5f, Height * 1.5f);
+		float CanvasX0, CanvasY0, CanvasX1, CanvasY1;
+		Graphics()->GetCanvas(&CanvasX0, &CanvasY0, &CanvasX1, &CanvasY1);
+		Graphics()->MapCanvas(0, 0, Width * 1.5f, Height * 1.5f);
 
 		CreateKillmessageNamesIfNotCreated(Kill);
 
@@ -173,7 +173,7 @@ void CKillMessages::OnMessage(int MsgType, void *pRawMsg)
 			m_aKillmsgs[m_KillmsgCurrent] = Kill;
 		}
 
-		Graphics()->MapScreen(ScreenX0, ScreenY0, ScreenX1, ScreenY1);
+		Graphics()->MapCanvas(CanvasX0, CanvasY0, CanvasX1, CanvasY1);
 	}
 }
 
@@ -182,10 +182,10 @@ void CKillMessages::OnRender()
 	if(!g_Config.m_ClShowKillMessages)
 		return;
 
-	float Width = 400 * 3.0f * Graphics()->ScreenAspect();
+	float Width = 400 * 3.0f * Graphics()->CanvasAspect();
 	float Height = 400 * 3.0f;
 
-	Graphics()->MapScreen(0, 0, Width * 1.5f, Height * 1.5f);
+	Graphics()->MapCanvas(0, 0, Width * 1.5f, Height * 1.5f);
 	Graphics()->SetColor(1.f, 1.f, 1.f, 1.f);
 
 	float StartX = Width * 1.5f - 10.0f;

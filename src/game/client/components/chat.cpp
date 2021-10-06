@@ -937,9 +937,9 @@ void CChat::OnPrepareLines()
 	float y = 300.0f - 28.0f;
 	float FontSize = FONT_SIZE;
 
-	float ScreenRatio = Graphics()->ScreenAspect();
+	float CanvasRatio = Graphics()->CanvasAspect();
 
-	bool IsScoreBoardOpen = m_pClient->m_Scoreboard.Active() && (ScreenRatio > 1.7f); // only assume scoreboard when screen ratio is widescreen(something around 16:9)
+	bool IsScoreBoardOpen = m_pClient->m_Scoreboard.Active() && (CanvasRatio > 1.7f); // only assume scoreboard when screen ratio is widescreen(something around 16:9)
 
 	bool ForceRecreate = IsScoreBoardOpen != m_PrevScoreBoardShowed;
 	bool ShowLargeArea = m_Show || g_Config.m_ClShowChat == 2;
@@ -1194,8 +1194,8 @@ void CChat::OnRender()
 		--m_PendingChatCounter;
 	}
 
-	float Width = 300.0f * Graphics()->ScreenAspect();
-	Graphics()->MapScreen(0.0f, 0.0f, Width, 300.0f);
+	float Width = 300.0f * Graphics()->CanvasAspect();
+	Graphics()->MapCanvas(0.0f, 0.0f, Width, 300.0f);
 	float x = 5.0f;
 	float y = 300.0f - 20.0f;
 	if(m_Mode != MODE_NONE)
@@ -1274,8 +1274,8 @@ void CChat::OnRender()
 
 	OnPrepareLines();
 
-	float ScreenRatio = Graphics()->ScreenAspect();
-	bool IsScoreBoardOpen = m_pClient->m_Scoreboard.Active() && (ScreenRatio > 1.7f); // only assume scoreboard when screen ratio is widescreen(something around 16:9)
+	float CanvasRatio = Graphics()->CanvasAspect();
+	bool IsScoreBoardOpen = m_pClient->m_Scoreboard.Active() && (CanvasRatio > 1.7f); // only assume scoreboard when screen ratio is widescreen(something around 16:9)
 
 	int64_t Now = time();
 	float HeightLimit = IsScoreBoardOpen ? 180.0f : m_PrevShowChat ? 50.0f : 200.0f;

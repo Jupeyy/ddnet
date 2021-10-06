@@ -939,24 +939,24 @@ public:
 
 		CFontSizeData *pSizeData = NULL;
 
-		float ScreenX0, ScreenY0, ScreenX1, ScreenY1;
-		float FakeToScreenX, FakeToScreenY;
+		float CanvasX0, CanvasY0, CanvasX1, CanvasY1;
+		float FakeToCanvasX, FakeToCanvasY;
 
 		int ActualSize;
 
 		float Size = pCursor->m_FontSize;
 
 		// calculate the font size of the displayed glyphs
-		Graphics()->GetScreen(&ScreenX0, &ScreenY0, &ScreenX1, &ScreenY1);
+		Graphics()->GetCanvas(&CanvasX0, &CanvasY0, &CanvasX1, &CanvasY1);
 
-		FakeToScreenX = (Graphics()->ScreenWidth() / (ScreenX1 - ScreenX0));
-		FakeToScreenY = (Graphics()->ScreenHeight() / (ScreenY1 - ScreenY0));
+		FakeToCanvasX = (Graphics()->CanvasWidth() / (CanvasX1 - CanvasX0));
+		FakeToCanvasY = (Graphics()->CanvasHeight() / (CanvasY1 - CanvasY0));
 
-		int ActualX = (int)((pCursor->m_X * FakeToScreenX) + 0.5f);
-		int ActualY = (int)((pCursor->m_Y * FakeToScreenY) + 0.5f);
+		int ActualX = (int)((pCursor->m_X * FakeToCanvasX) + 0.5f);
+		int ActualY = (int)((pCursor->m_Y * FakeToCanvasY) + 0.5f);
 
-		TextContainer.m_AlignedStartX = ActualX / FakeToScreenX;
-		TextContainer.m_AlignedStartY = ActualY / FakeToScreenY;
+		TextContainer.m_AlignedStartX = ActualX / FakeToCanvasX;
+		TextContainer.m_AlignedStartY = ActualY / FakeToCanvasY;
 		TextContainer.m_X = pCursor->m_X;
 		TextContainer.m_Y = pCursor->m_Y;
 
@@ -970,7 +970,7 @@ public:
 		SetRenderFlags(OldRenderFlags);
 
 		// same with size
-		ActualSize = (int)(Size * FakeToScreenY);
+		ActualSize = (int)(Size * FakeToCanvasY);
 
 		pSizeData = pFont->GetFontSize(ActualSize);
 
@@ -1013,8 +1013,8 @@ public:
 
 		CFontSizeData *pSizeData = NULL;
 
-		float ScreenX0, ScreenY0, ScreenX1, ScreenY1;
-		float FakeToScreenX, FakeToScreenY;
+		float CanvasX0, CanvasY0, CanvasX1, CanvasY1;
+		float FakeToCanvasX, FakeToCanvasY;
 
 		int ActualSize;
 		int GotNewLine = 0;
@@ -1026,19 +1026,19 @@ public:
 		float Size = pCursor->m_FontSize;
 
 		// calculate the font size of the displayed glyphs
-		Graphics()->GetScreen(&ScreenX0, &ScreenY0, &ScreenX1, &ScreenY1);
+		Graphics()->GetCanvas(&CanvasX0, &CanvasY0, &CanvasX1, &CanvasY1);
 
-		FakeToScreenX = (Graphics()->ScreenWidth() / (ScreenX1 - ScreenX0));
-		FakeToScreenY = (Graphics()->ScreenHeight() / (ScreenY1 - ScreenY0));
+		FakeToCanvasX = (Graphics()->CanvasWidth() / (CanvasX1 - CanvasX0));
+		FakeToCanvasY = (Graphics()->CanvasHeight() / (CanvasY1 - CanvasY0));
 
-		int ActualX = (int)((pCursor->m_X * FakeToScreenX) + 0.5f);
-		int ActualY = (int)((pCursor->m_Y * FakeToScreenY) + 0.5f);
-		CursorX = ActualX / FakeToScreenX;
-		CursorY = ActualY / FakeToScreenY;
+		int ActualX = (int)((pCursor->m_X * FakeToCanvasX) + 0.5f);
+		int ActualY = (int)((pCursor->m_Y * FakeToCanvasY) + 0.5f);
+		CursorX = ActualX / FakeToCanvasX;
+		CursorY = ActualY / FakeToCanvasY;
 
 		// same with size
-		ActualSize = (int)(Size * FakeToScreenY);
-		Size = ActualSize / FakeToScreenY;
+		ActualSize = (int)(Size * FakeToCanvasY);
+		Size = ActualSize / FakeToCanvasY;
 
 		pCursor->m_AlignedFontSize = Size;
 
@@ -1076,7 +1076,7 @@ public:
 		IGraphics::CQuadItem CursorQuads[2];
 		bool HasCursor = false;
 
-		float CursorInnerWidth = (((ScreenX1 - ScreenX0) / Graphics()->ScreenWidth())) * 2;
+		float CursorInnerWidth = (((CanvasX1 - CanvasX0) / Graphics()->CanvasWidth())) * 2;
 		float CursorOuterWidth = CursorInnerWidth * 2;
 		float CursorOuterInnerDiff = (CursorOuterWidth - CursorInnerWidth) / 2;
 
@@ -1143,8 +1143,8 @@ public:
 			DrawY += Size;
 			if((RenderFlags & TEXT_RENDER_FLAG_NO_PIXEL_ALIGMENT) == 0)
 			{
-				DrawX = (int)((DrawX * FakeToScreenX) + 0.5f) / FakeToScreenX; // realign
-				DrawY = (int)((DrawY * FakeToScreenY) + 0.5f) / FakeToScreenY;
+				DrawX = (int)((DrawX * FakeToCanvasX) + 0.5f) / FakeToCanvasX; // realign
+				DrawY = (int)((DrawY * FakeToCanvasY) + 0.5f) / FakeToCanvasY;
 			}
 			LastSelX = DrawX;
 			LastSelWidth = 0;
@@ -1634,24 +1634,24 @@ public:
 		STextContainer &TextContainer = GetTextContainer(TextContainerIndex);
 
 		// remap the current screen, after render revert the change again
-		float ScreenX0, ScreenY0, ScreenX1, ScreenY1;
-		Graphics()->GetScreen(&ScreenX0, &ScreenY0, &ScreenX1, &ScreenY1);
+		float CanvasX0, CanvasY0, CanvasX1, CanvasY1;
+		Graphics()->GetCanvas(&CanvasX0, &CanvasY0, &CanvasX1, &CanvasY1);
 
 		if((TextContainer.m_RenderFlags & TEXT_RENDER_FLAG_NO_PIXEL_ALIGMENT) == 0)
 		{
-			float FakeToScreenX = (Graphics()->ScreenWidth() / (ScreenX1 - ScreenX0));
-			float FakeToScreenY = (Graphics()->ScreenHeight() / (ScreenY1 - ScreenY0));
-			int ActualX = (int)(((TextContainer.m_X + X) * FakeToScreenX) + 0.5f);
-			int ActualY = (int)(((TextContainer.m_Y + Y) * FakeToScreenY) + 0.5f);
-			float AlignedX = ActualX / FakeToScreenX;
-			float AlignedY = ActualY / FakeToScreenY;
+			float FakeToCanvasX = (Graphics()->CanvasWidth() / (CanvasX1 - CanvasX0));
+			float FakeToCanvasY = (Graphics()->CanvasHeight() / (CanvasY1 - CanvasY0));
+			int ActualX = (int)(((TextContainer.m_X + X) * FakeToCanvasX) + 0.5f);
+			int ActualY = (int)(((TextContainer.m_Y + Y) * FakeToCanvasY) + 0.5f);
+			float AlignedX = ActualX / FakeToCanvasX;
+			float AlignedY = ActualY / FakeToCanvasY;
 			X = AlignedX - TextContainer.m_AlignedStartX;
 			Y = AlignedY - TextContainer.m_AlignedStartY;
 		}
 
-		Graphics()->MapScreen(ScreenX0 - X, ScreenY0 - Y, ScreenX1 - X, ScreenY1 - Y);
+		Graphics()->MapCanvas(CanvasX0 - X, CanvasY0 - Y, CanvasX1 - X, CanvasY1 - Y);
 		RenderTextContainer(TextContainerIndex, pTextColor, pTextOutlineColor);
-		Graphics()->MapScreen(ScreenX0, ScreenY0, ScreenX1, ScreenY1);
+		Graphics()->MapCanvas(CanvasX0, CanvasY0, CanvasX1, CanvasY1);
 	}
 
 	virtual void UploadEntityLayerText(void *pTexBuff, int ImageColorChannelCount, int TexWidth, int TexHeight, int TexSubWidth, int TexSubHeight, const char *pText, int Length, float x, float y, int FontSize)

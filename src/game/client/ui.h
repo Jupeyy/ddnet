@@ -187,7 +187,7 @@ class CUI
 	unsigned m_MouseButtons;
 	unsigned m_LastMouseButtons;
 
-	CUIRect m_Screen;
+	CUIRect m_Canvas;
 	class IGraphics *m_pGraphics;
 	class ITextRender *m_pTextRender;
 
@@ -258,8 +258,8 @@ public:
 
 	int MouseInside(const CUIRect *pRect) const;
 
-	CUIRect *Screen();
-	void MapScreen();
+	CUIRect *Canvas();
+	void MapCanvas();
 	float PixelSize();
 	void ClipEnable(const CUIRect *pRect);
 	void ClipDisable();

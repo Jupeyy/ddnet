@@ -652,7 +652,7 @@ private:
 	CTuningParams *TuningList() { return m_aTuningList; }
 
 	float m_LastZoom;
-	float m_LastScreenAspect;
+	float m_LastCanvasAspect;
 	float m_LastDummyConnected;
 };
 

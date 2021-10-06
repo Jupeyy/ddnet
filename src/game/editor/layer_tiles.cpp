@@ -675,15 +675,15 @@ void CLayerTiles::Shift(int Direction)
 
 void CLayerTiles::ShowInfo()
 {
-	float ScreenX0, ScreenY0, ScreenX1, ScreenY1;
-	Graphics()->GetScreen(&ScreenX0, &ScreenY0, &ScreenX1, &ScreenY1);
+	float CanvasX0, CanvasY0, CanvasX1, CanvasY1;
+	Graphics()->GetCanvas(&CanvasX0, &CanvasY0, &CanvasX1, &CanvasY1);
 	Graphics()->TextureSet(m_pEditor->Client()->GetDebugFont());
 	Graphics()->QuadsBegin();
 
-	int StartY = maximum(0, (int)(ScreenY0 / 32.0f) - 1);
-	int StartX = maximum(0, (int)(ScreenX0 / 32.0f) - 1);
-	int EndY = minimum((int)(ScreenY1 / 32.0f) + 1, m_Height);
-	int EndX = minimum((int)(ScreenX1 / 32.0f) + 1, m_Width);
+	int StartY = maximum(0, (int)(CanvasY0 / 32.0f) - 1);
+	int StartX = maximum(0, (int)(CanvasX0 / 32.0f) - 1);
+	int EndY = minimum((int)(CanvasY1 / 32.0f) + 1, m_Height);
+	int EndX = minimum((int)(CanvasX1 / 32.0f) + 1, m_Width);
 
 	for(int y = StartY; y < EndY; y++)
 		for(int x = StartX; x < EndX; x++)
@@ -705,7 +705,7 @@ void CLayerTiles::ShowInfo()
 		}
 
 	Graphics()->QuadsEnd();
-	Graphics()->MapScreen(ScreenX0, ScreenY0, ScreenX1, ScreenY1);
+	Graphics()->MapCanvas(CanvasX0, CanvasY0, CanvasX1, CanvasY1);
 }
 
 int CLayerTiles::RenderProperties(CUIRect *pToolBox)

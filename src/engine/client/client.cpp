@@ -1021,7 +1021,7 @@ void CClient::DebugRender()
 
 	//m_pGraphics->BlendNormal();
 	Graphics()->TextureSet(m_DebugFont);
-	Graphics()->MapScreen(0, 0, Graphics()->ScreenWidth(), Graphics()->ScreenHeight());
+	Graphics()->MapCanvas(0, 0, Graphics()->CanvasWidth(), Graphics()->CanvasHeight());
 	Graphics()->QuadsBegin();
 
 	if(time_get() - LastSnap > time_freq())
@@ -1085,11 +1085,11 @@ void CClient::DebugRender()
 	// render graphs
 	if(g_Config.m_DbgGraphs)
 	{
-		//Graphics()->MapScreen(0,0,400.0f,300.0f);
-		float w = Graphics()->ScreenWidth() / 4.0f;
-		float h = Graphics()->ScreenHeight() / 6.0f;
-		float sp = Graphics()->ScreenWidth() / 100.0f;
-		float x = Graphics()->ScreenWidth() - w - sp;
+		//Graphics()->MapCanvas(0,0,400.0f,300.0f);
+		float w = Graphics()->CanvasWidth() / 4.0f;
+		float h = Graphics()->CanvasHeight() / 6.0f;
+		float sp = Graphics()->CanvasWidth() / 100.0f;
+		float x = Graphics()->CanvasWidth() - w - sp;
 
 		m_FpsGraph.ScaleMax();
 		m_FpsGraph.ScaleMin();
@@ -3599,7 +3599,7 @@ void CClient::Con_StartVideo(IConsole::IResult *pResult, void *pUserData)
 
 	if(!IVideo::Current())
 	{
-		new CVideo((CGraphics_Threaded *)pSelf->m_pGraphics, pSelf->Storage(), pSelf->m_pConsole, pSelf->Graphics()->ScreenWidth(), pSelf->Graphics()->ScreenHeight(), "");
+		new CVideo((CGraphics_Threaded *)pSelf->m_pGraphics, pSelf->Storage(), pSelf->m_pConsole, pSelf->Graphics()->CanvasWidth(), pSelf->Graphics()->CanvasHeight(), "");
 		IVideo::Current()->Start();
 		bool paused = pSelf->m_DemoPlayer.Info()->m_Info.m_Paused;
 		if(paused)
@@ -3619,7 +3619,7 @@ void CClient::StartVideo(IConsole::IResult *pResult, void *pUserData, const char
 	pSelf->m_pConsole->Print(IConsole::OUTPUT_LEVEL_DEBUG, "demo_render", pVideoName);
 	if(!IVideo::Current())
 	{
-		new CVideo((CGraphics_Threaded *)pSelf->m_pGraphics, pSelf->Storage(), pSelf->m_pConsole, pSelf->Graphics()->ScreenWidth(), pSelf->Graphics()->ScreenHeight(), pVideoName);
+		new CVideo((CGraphics_Threaded *)pSelf->m_pGraphics, pSelf->Storage(), pSelf->m_pConsole, pSelf->Graphics()->CanvasWidth(), pSelf->Graphics()->CanvasHeight(), pVideoName);
 		IVideo::Current()->Start();
 	}
 	else
