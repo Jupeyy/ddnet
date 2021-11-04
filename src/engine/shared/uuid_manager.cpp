@@ -112,7 +112,10 @@ void CUuidManager::RegisterName(int ID, const char *pName)
 	CNameIndexed NameIndexed;
 	NameIndexed.m_Uuid = Name.m_Uuid;
 	NameIndexed.m_ID = GetIndex(ID);
-	m_aNamesSorted.add(NameIndexed);
+	uint8_t CrcUUID = 0;
+	for(uint8_t Data : Name.m_Uuid.m_aData)
+		CrcUUID += Data;
+	m_aNamesSorted[CrcUUID].add(NameIndexed);
 }
 
 CUuid CUuidManager::GetUuid(int ID) const
@@ -127,7 +130,10 @@ const char *CUuidManager::GetName(int ID) const
 
 int CUuidManager::LookupUuid(CUuid Uuid) const
 {
-	sorted_array<CNameIndexed>::range Pos = ::find_binary(m_aNamesSorted.all(), Uuid);
+	uint8_t CrcUUID = 0;
+	for(uint8_t Data : Uuid.m_aData)
+		CrcUUID += Data;
+	sorted_array<CNameIndexed>::range Pos = ::find_binary(m_aNamesSorted[CrcUUID].all(), Uuid);
 	if(!Pos.empty())
 	{
 		return GetID(Pos.front().m_ID);

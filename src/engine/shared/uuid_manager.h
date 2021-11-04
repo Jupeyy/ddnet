@@ -52,7 +52,7 @@ class CUnpacker;
 class CUuidManager
 {
 	array<CName> m_aNames;
-	sorted_array<CNameIndexed> m_aNamesSorted;
+	sorted_array<CNameIndexed> m_aNamesSorted[256];
 
 public:
 	void RegisterName(int ID, const char *pName);
