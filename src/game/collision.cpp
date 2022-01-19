@@ -308,7 +308,7 @@ int CCollision::GetTile(int x, int y) const
 }
 
 // TODO: rewrite this smarter!
-int CCollision::IntersectLine(vec2 Pos0, vec2 Pos1, vec2 *pOutCollision, vec2 *pOutBeforeCollision) const
+int CCollision::IntersectLine(vector2_base<EngineFloat> Pos0, vector2_base<EngineFloat> Pos1, vector2_base<EngineFloat> *pOutCollision, vector2_base<EngineFloat> *pOutBeforeCollision) const
 {
 	float Distance = distance(Pos0, Pos1);
 	int End(Distance + 1);
@@ -339,7 +339,7 @@ int CCollision::IntersectLine(vec2 Pos0, vec2 Pos1, vec2 *pOutCollision, vec2 *p
 	return 0;
 }
 
-int CCollision::IntersectLineTeleHook(vec2 Pos0, vec2 Pos1, vec2 *pOutCollision, vec2 *pOutBeforeCollision, int *pTeleNr) const
+int CCollision::IntersectLineTeleHook(vector2_base<EngineFloat> Pos0, vector2_base<EngineFloat> Pos1, vector2_base<EngineFloat> *pOutCollision, vector2_base<EngineFloat> *pOutBeforeCollision, int *pTeleNr) const
 {
 	float Distance = distance(Pos0, Pos1);
 	int End(Distance + 1);
@@ -396,7 +396,7 @@ int CCollision::IntersectLineTeleHook(vec2 Pos0, vec2 Pos1, vec2 *pOutCollision,
 	return 0;
 }
 
-int CCollision::IntersectLineTeleWeapon(vec2 Pos0, vec2 Pos1, vec2 *pOutCollision, vec2 *pOutBeforeCollision, int *pTeleNr) const
+int CCollision::IntersectLineTeleWeapon(vector2_base<EngineFloat> Pos0, vector2_base<EngineFloat> Pos1, vector2_base<EngineFloat> *pOutCollision, vector2_base<EngineFloat> *pOutBeforeCollision, int *pTeleNr) const
 {
 	float Distance = distance(Pos0, Pos1);
 	int End(Distance + 1);
@@ -442,7 +442,7 @@ int CCollision::IntersectLineTeleWeapon(vec2 Pos0, vec2 Pos1, vec2 *pOutCollisio
 }
 
 // TODO: OPT: rewrite this smarter!
-void CCollision::MovePoint(vec2 *pInoutPos, vec2 *pInoutVel, float Elasticity, int *pBounces) const
+void CCollision::MovePoint(vector2_base<EngineFloat> *pInoutPos, vector2_base<EngineFloat> *pInoutVel, EngineFloat Elasticity, int *pBounces) const
 {
 	if(pBounces)
 		*pBounces = 0;
@@ -480,9 +480,9 @@ void CCollision::MovePoint(vec2 *pInoutPos, vec2 *pInoutVel, float Elasticity, i
 	}
 }
 
-bool CCollision::TestBox(vec2 Pos, vec2 Size) const
+bool CCollision::TestBox(vector2_base<EngineFloat> Pos, vector2_base<EngineFloat> Size) const
 {
-	Size *= 0.5f;
+	Size *= 0.5;
 	if(CheckPoint(Pos.x - Size.x, Pos.y - Size.y))
 		return true;
 	if(CheckPoint(Pos.x + Size.x, Pos.y - Size.y))
@@ -494,18 +494,18 @@ bool CCollision::TestBox(vec2 Pos, vec2 Size) const
 	return false;
 }
 
-void CCollision::MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, vec2 Size, float Elasticity) const
+void CCollision::MoveBox(vector2_base<EngineFloat> *pInoutPos, vector2_base<EngineFloat> *pInoutVel, vector2_base<EngineFloat> Size, EngineFloat Elasticity) const
 {
 	// do the move
-	vec2 Pos = *pInoutPos;
-	vec2 Vel = *pInoutVel;
+	vector2_base<EngineFloat> Pos = *pInoutPos;
+	vector2_base<EngineFloat> Vel = *pInoutVel;
 
-	float Distance = length(Vel);
+	EngineFloat Distance = length(Vel);
 	int Max = (int)Distance;
 
 	if(Distance > 0.00001f)
 	{
-		float Fraction = 1.0f / (float)(Max + 1);
+		EngineFloat Fraction = (EngineFloat)1.0 / (EngineFloat)(Max + 1);
 		for(int i = 0; i <= Max; i++)
 		{
 			// Early break as optimization to stop checking for collisions for
@@ -516,7 +516,7 @@ void CCollision::MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, vec2 Size, float Elas
 				break;
 			}
 
-			vec2 NewPos = Pos + Vel * Fraction; // TODO: this row is not nice
+			vector2_base<EngineFloat> NewPos = Pos + Vel * Fraction; // TODO: this row is not nice
 
 			// Fraction can be very small and thus the calculation has no effect, no
 			// reason to continue calculating.
@@ -525,18 +525,18 @@ void CCollision::MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, vec2 Size, float Elas
 				break;
 			}
 
-			if(TestBox(vec2(NewPos.x, NewPos.y), Size))
+			if(TestBox(vector2_base<EngineFloat>(NewPos.x, NewPos.y), Size))
 			{
 				int Hits = 0;
 
-				if(TestBox(vec2(Pos.x, NewPos.y), Size))
+				if(TestBox(vector2_base<EngineFloat>(Pos.x, NewPos.y), Size))
 				{
 					NewPos.y = Pos.y;
 					Vel.y *= -Elasticity;
 					Hits++;
 				}
 
-				if(TestBox(vec2(NewPos.x, Pos.y), Size))
+				if(TestBox(vector2_base<EngineFloat>(NewPos.x, Pos.y), Size))
 				{
 					NewPos.x = Pos.x;
 					Vel.x *= -Elasticity;

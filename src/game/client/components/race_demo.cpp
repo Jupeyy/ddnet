@@ -72,8 +72,8 @@ void CRaceDemo::OnNewSnapshot()
 	bool AllowRestart = (m_AllowRestart || ForceStart) && m_RaceStartTick + 10 * Client()->GameTickSpeed() < Client()->GameTick(g_Config.m_ClDummy);
 	if(m_RaceState == RACE_IDLE || m_RaceState == RACE_PREPARE || (m_RaceState == RACE_STARTED && AllowRestart))
 	{
-		vec2 PrevPos = vec2(m_pClient->m_Snap.m_pLocalPrevCharacter->m_X, m_pClient->m_Snap.m_pLocalPrevCharacter->m_Y);
-		vec2 Pos = vec2(m_pClient->m_Snap.m_pLocalCharacter->m_X, m_pClient->m_Snap.m_pLocalCharacter->m_Y);
+		vec2 PrevPos = vec2(m_pClient->m_Snap.m_pLocalPrevCharacter->m_X / FRAGMENT_DEVIDER, m_pClient->m_Snap.m_pLocalPrevCharacter->m_Y / FRAGMENT_DEVIDER);
+		vec2 Pos = vec2(m_pClient->m_Snap.m_pLocalCharacter->m_X / FRAGMENT_DEVIDER, m_pClient->m_Snap.m_pLocalCharacter->m_Y / FRAGMENT_DEVIDER);
 
 		if(ForceStart || (!ServerControl && CRaceHelper::IsStart(m_pClient, PrevPos, Pos)))
 		{

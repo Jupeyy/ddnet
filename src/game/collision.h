@@ -33,17 +33,17 @@ public:
 	~CCollision();
 	void Init(class CLayers *pLayers);
 	void FillAntibot(CAntibotMapData *pMapData);
-	bool CheckPoint(float x, float y) const { return IsSolid(round_to_int(x), round_to_int(y)); }
-	bool CheckPoint(vec2 Pos) const { return CheckPoint(Pos.x, Pos.y); }
-	int GetCollisionAt(float x, float y) const { return GetTile(round_to_int(x), round_to_int(y)); }
+	bool CheckPoint(EngineFloat x, EngineFloat y) const { return IsSolid(round_to_int(x), round_to_int(y)); }
+	bool CheckPoint(vector2_base<EngineFloat> Pos) const { return CheckPoint(Pos.x, Pos.y); }
+	int GetCollisionAt(EngineFloat x, EngineFloat y) const { return GetTile(round_to_int(x), round_to_int(y)); }
 	int GetWidth() const { return m_Width; }
 	int GetHeight() const { return m_Height; }
-	int IntersectLine(vec2 Pos0, vec2 Pos1, vec2 *pOutCollision, vec2 *pOutBeforeCollision) const;
-	int IntersectLineTeleWeapon(vec2 Pos0, vec2 Pos1, vec2 *pOutCollision, vec2 *pOutBeforeCollision, int *pTeleNr) const;
-	int IntersectLineTeleHook(vec2 Pos0, vec2 Pos1, vec2 *pOutCollision, vec2 *pOutBeforeCollision, int *pTeleNr) const;
-	void MovePoint(vec2 *pInoutPos, vec2 *pInoutVel, float Elasticity, int *pBounces) const;
-	void MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, vec2 Size, float Elasticity) const;
-	bool TestBox(vec2 Pos, vec2 Size) const;
+	int IntersectLine(vector2_base<EngineFloat> Pos0, vector2_base<EngineFloat> Pos1, vector2_base<EngineFloat> *pOutCollision, vector2_base<EngineFloat> *pOutBeforeCollision) const;
+	int IntersectLineTeleWeapon(vector2_base<EngineFloat> Pos0, vector2_base<EngineFloat> Pos1, vector2_base<EngineFloat> *pOutCollision, vector2_base<EngineFloat> *pOutBeforeCollision, int *pTeleNr) const;
+	int IntersectLineTeleHook(vector2_base<EngineFloat> Pos0, vector2_base<EngineFloat> Pos1, vector2_base<EngineFloat> *pOutCollision, vector2_base<EngineFloat> *pOutBeforeCollision, int *pTeleNr) const;
+	void MovePoint(vector2_base<EngineFloat> *pInoutPos, vector2_base<EngineFloat> *pInoutVel, EngineFloat Elasticity, int *pBounces) const;
+	void MoveBox(vector2_base<EngineFloat> *pInoutPos, vector2_base<EngineFloat> *pInoutVel, vector2_base<EngineFloat> Size, EngineFloat Elasticity) const;
+	bool TestBox(vector2_base<EngineFloat> Pos, vector2_base<EngineFloat> Size) const;
 
 	// DDRace
 

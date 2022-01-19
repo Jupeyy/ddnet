@@ -91,7 +91,7 @@ void CEffects::SmokeTrail(vec2 Pos, vec2 Vel, float Alpha, float TimePassed)
 	p.SetDefault();
 	p.m_Spr = SPRITE_PART_SMOKE;
 	p.m_Pos = Pos;
-	p.m_Vel = Vel + RandomDir() * 50.0f;
+	p.m_Vel = Vel + RandomDir() * 50.f / (float)SERVER_TICK_SPEED;
 	p.m_LifeSpan = 0.5f + random_float() * 0.5f;
 	p.m_StartSize = 12.0f + random_float() * 8;
 	p.m_EndSize = 0;
@@ -110,7 +110,7 @@ void CEffects::SkidTrail(vec2 Pos, vec2 Vel)
 	p.SetDefault();
 	p.m_Spr = SPRITE_PART_SMOKE;
 	p.m_Pos = Pos;
-	p.m_Vel = Vel + RandomDir() * 50.0f;
+	p.m_Vel = Vel + RandomDir() * 50.f / (float)SERVER_TICK_SPEED;
 	p.m_LifeSpan = 0.5f + random_float() * 0.5f;
 	p.m_StartSize = 24.0f + random_float() * 12;
 	p.m_EndSize = 0;

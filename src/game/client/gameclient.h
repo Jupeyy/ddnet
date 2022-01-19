@@ -500,7 +500,7 @@ public:
 
 	class CTeamsCore m_Teams;
 
-	int IntersectCharacter(vec2 Pos0, vec2 Pos1, vec2 &NewPos, int ownID);
+	int IntersectCharacter(vector2_base<EngineFloat> Pos0, vector2_base<EngineFloat> Pos1, vector2_base<EngineFloat> &NewPos, int ownID);
 
 	virtual int GetLastRaceTick();
 

@@ -528,7 +528,7 @@ void CPlayer::OnDirectInput(CNetObj_PlayerInput *NewInput)
 	AfkVoteTimer(NewInput);
 
 	if(((!m_pCharacter && m_Team == TEAM_SPECTATORS) || m_Paused) && m_SpectatorID == SPEC_FREEVIEW)
-		m_ViewPos = vec2(NewInput->m_TargetX, NewInput->m_TargetY);
+		m_ViewPos = vec2(NewInput->m_TargetX / (EngineFloat)4096.0, NewInput->m_TargetY / (EngineFloat)4096.0);
 
 	if(NewInput->m_PlayerFlags & PLAYERFLAG_CHATTING)
 	{

@@ -3,9 +3,9 @@
 #ifndef BASE_VMATH_H
 #define BASE_VMATH_H
 
-#include <math.h>
-
 #include "math.h"
+
+#include <math.h>
 
 // ------------------------------------
 
@@ -28,14 +28,6 @@ public:
 		x = nx;
 		y = ny;
 	}
-
-	vector2_base operator-() const { return vector2_base(-x, -y); }
-	vector2_base operator-(const vector2_base &v) const { return vector2_base(x - v.x, y - v.y); }
-	vector2_base operator+(const vector2_base &v) const { return vector2_base(x + v.x, y + v.y); }
-	vector2_base operator*(const T v) const { return vector2_base(x * v, y * v); }
-	vector2_base operator*(const vector2_base &v) const { return vector2_base(x * v.x, y * v.y); }
-	vector2_base operator/(const T v) const { return vector2_base(x / v, y / v); }
-	vector2_base operator/(const vector2_base &v) const { return vector2_base(x / v.x, y / v.y); }
 
 	const vector2_base &operator+=(const vector2_base &v)
 	{
@@ -73,11 +65,59 @@ public:
 		y /= v.y;
 		return *this;
 	}
+	vector2_base(const vector2_base<double> &_v)
+	{
+		*this = _v;
+	}
 
-	bool operator==(const vector2_base &v) const { return x == v.x && y == v.y; } //TODO: do this with an eps instead
+	vector2_base(const vector2_base<long double> &_v)
+	{
+		*this = _v;
+	}
+
+	vector2_base(const vector2_base<float> &_v)
+	{
+		*this = _v;
+	}
+
+	vector2_base operator-() const { return vector2_base(-x, -y); }
+	vector2_base operator-(const vector2_base &v) const { return vector2_base(x - v.x, y - v.y); }
+	vector2_base operator+(const vector2_base &v) const { return vector2_base(x + v.x, y + v.y); }
+	vector2_base operator*(const T v) const { return vector2_base(x * v, y * v); }
+	vector2_base operator*(const vector2_base &v) const { return vector2_base(x * v.x, y * v.y); }
+	vector2_base operator/(const T v) const { return vector2_base(x / v, y / v); }
+	vector2_base operator/(const vector2_base &v) const { return vector2_base(x / v.x, y / v.y); }
+
+	// const vector2_base &operator =(const vector2_base &v) { x = v.x; y = v.y; return *this; }
+
+	bool operator==(const vector2_base &v) const { return x == v.x && y == v.y; } // TODO: do this with an eps instead
 	bool operator!=(const vector2_base &v) const { return x != v.x || y != v.y; }
 
 	T &operator[](const int index) { return index ? y : x; }
+
+	vector2_base<T> &operator=(const vector2_base<double> &_v)
+	{
+		x = (T)_v.x;
+		y = (T)_v.y;
+
+		return *this;
+	}
+
+	vector2_base<T> &operator=(const vector2_base<long double> &_v)
+	{
+		x = (T)_v.x;
+		y = (T)_v.y;
+
+		return *this;
+	}
+
+	vector2_base<T> &operator=(const vector2_base<float> &_v)
+	{
+		x = (T)_v.x;
+		y = (T)_v.y;
+
+		return *this;
+	}
 };
 
 template<typename T>
@@ -90,7 +130,25 @@ inline vector2_base<T> rotate(const vector2_base<T> &a, float angle)
 }
 
 template<typename T>
+inline T length(const vector2_base<double> &a)
+{
+	return sqrt(a.x * a.x + a.y * a.y);
+}
+
+template<typename T>
+inline T length(const vector2_base<long double> &a)
+{
+	return sqrtl(a.x * a.x + a.y * a.y);
+}
+
+template<typename T>
 inline T distance(const vector2_base<T> a, const vector2_base<T> &b)
+{
+	return length(a - b);
+}
+
+template<typename T, typename D>
+inline T distance(const vector2_base<T> a, const vector2_base<D> &b)
 {
 	return length(a - b);
 }
@@ -118,6 +176,12 @@ inline float angle(const vector2_base<float> &a)
 	return result;
 }
 
+template<typename T, typename D>
+inline T dot(const vector2_base<T> a, const vector2_base<D> &b)
+{
+	return a.x * b.x + a.y * b.y;
+}
+
 template<typename T>
 inline vector2_base<T> normalize_pre_length(const vector2_base<T> &v, T len)
 {
@@ -137,6 +201,21 @@ inline vector2_base<float> direction(float angle)
 	return vector2_base<float>(cosf(angle), sinf(angle));
 }
 
+template<typename T>
+inline vector2_base<T> normalize(const vector2_base<double> &v)
+{
+	T l = (T)(1.0 / sqrt(v.x * v.x + v.y * v.y));
+	return vector2_base<T>(v.x * l, v.y * l);
+}
+
+template<typename T>
+inline vector2_base<T> normalize(const vector2_base<long double> &v)
+{
+	T l = (T)(1.0L / sqrtl(v.x * v.x + v.y * v.y));
+	return vector2_base<T>(v.x * l, v.y * l);
+}
+
+typedef vector2_base<long double> dvec2;
 typedef vector2_base<float> vec2;
 typedef vector2_base<bool> bvec2;
 typedef vector2_base<int> ivec2;
@@ -235,12 +314,30 @@ public:
 		return *this;
 	}
 
-	bool operator==(const vector3_base &v) const { return x == v.x && y == v.y && z == v.z; } //TODO: do this with an eps instead
+	bool operator==(const vector3_base &v) const { return x == v.x && y == v.y && z == v.z; } // TODO: do this with an eps instead
 	bool operator!=(const vector3_base &v) const { return x != v.x || y != v.y || z != v.z; }
 };
 
 template<typename T>
+inline T length(const vector3_base<T> &a)
+{
+	return sqrtf(a.x * a.x + a.y * a.y + a.z * a.z);
+}
+
+template<typename T>
+inline T length(const vector3_base<double> &a)
+{
+	return sqrt(a.x * a.x + a.y * a.y + a.z * a.z);
+}
+
+template<typename T>
 inline T distance(const vector3_base<T> &a, const vector3_base<T> &b)
+{
+	return length(a - b);
+}
+
+template<typename T, typename D>
+inline T distance(const vector3_base<T> &a, const vector3_base<D> &b)
 {
 	return length(a - b);
 }
@@ -365,7 +462,7 @@ public:
 		return *this;
 	}
 
-	bool operator==(const vector4_base &v) const { return x == v.x && y == v.y && z == v.z && w == v.w; } //TODO: do this with an eps instead
+	bool operator==(const vector4_base &v) const { return x == v.x && y == v.y && z == v.z && w == v.w; } // TODO: do this with an eps instead
 };
 
 typedef vector4_base<float> vec4;

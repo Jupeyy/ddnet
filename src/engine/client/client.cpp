@@ -128,7 +128,7 @@ void CGraph::Add(float v, float r, float g, float b)
 
 void CGraph::Render(IGraphics *pGraphics, IGraphics::CTextureHandle FontTexture, float x, float y, float w, float h, const char *pDescription)
 {
-	//m_pGraphics->BlendNormal();
+	// m_pGraphics->BlendNormal();
 
 	pGraphics->TextureClear();
 
@@ -903,7 +903,7 @@ void CClient::DummyConnect()
 	g_Config.m_ClDummyCopyMoves = 0;
 	g_Config.m_ClDummyHammer = 0;
 
-	//connecting to the server
+	// connecting to the server
 	m_NetClient[CLIENT_DUMMY].Connect(&m_ServerAddress);
 }
 
@@ -931,7 +931,7 @@ int CClient::GetCurrentRaceTime()
 {
 	if(GameClient()->GetLastRaceTick() < 0)
 		return 0;
-	return (GameTick(g_Config.m_ClDummy) - GameClient()->GetLastRaceTick()) / 50;
+	return (GameTick(g_Config.m_ClDummy) - GameClient()->GetLastRaceTick()) / SERVER_TICK_SPEED;
 }
 
 int CClient::SendMsgY(CMsgPacker *pMsg, int Flags, int NetClient)
@@ -1042,7 +1042,7 @@ void CClient::DebugRender()
 	if(!g_Config.m_Debug)
 		return;
 
-	//m_pGraphics->BlendNormal();
+	// m_pGraphics->BlendNormal();
 	Graphics()->TextureSet(m_DebugFont);
 	Graphics()->MapScreen(0, 0, Graphics()->ScreenWidth(), Graphics()->ScreenHeight());
 	Graphics()->QuadsBegin();
@@ -1108,7 +1108,7 @@ void CClient::DebugRender()
 	// render graphs
 	if(g_Config.m_DbgGraphs)
 	{
-		//Graphics()->MapScreen(0,0,400.0f,300.0f);
+		// Graphics()->MapScreen(0,0,400.0f,300.0f);
 		float w = Graphics()->ScreenWidth() / 4.0f;
 		float h = Graphics()->ScreenHeight() / 6.0f;
 		float sp = Graphics()->ScreenWidth() / 100.0f;
@@ -2055,10 +2055,10 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 					if(m_ReceivedSnapshots[g_Config.m_ClDummy] == 2)
 					{
 						// start at 200ms and work from there
-						m_PredictedTime.Init(GameTick * time_freq() / 50);
+						m_PredictedTime.Init(GameTick * time_freq() / SERVER_TICK_SPEED);
 						m_PredictedTime.SetAdjustSpeed(1, 1000.0f);
 						m_PredictedTime.UpdateMargin(PredictionMargin() * time_freq() / 1000);
-						m_GameTime[g_Config.m_ClDummy].Init((GameTick - 1) * time_freq() / 50);
+						m_GameTime[g_Config.m_ClDummy].Init((GameTick - 1) * time_freq() / SERVER_TICK_SPEED);
 						m_aSnapshots[g_Config.m_ClDummy][SNAP_PREV] = m_SnapshotStorage[g_Config.m_ClDummy].m_pFirst;
 						m_aSnapshots[g_Config.m_ClDummy][SNAP_CURRENT] = m_SnapshotStorage[g_Config.m_ClDummy].m_pLast;
 						m_LocalStartTime = time_get();
@@ -2074,12 +2074,12 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 					if(m_ReceivedSnapshots[g_Config.m_ClDummy] > 2)
 					{
 						int64_t Now = m_GameTime[g_Config.m_ClDummy].Get(time_get());
-						int64_t TickStart = GameTick * time_freq() / 50;
+						int64_t TickStart = GameTick * time_freq() / SERVER_TICK_SPEED;
 						int64_t TimeLeft = (TickStart - Now) * 1000 / time_freq();
-						m_GameTime[g_Config.m_ClDummy].Update(&m_GametimeMarginGraph, (GameTick - 1) * time_freq() / 50, TimeLeft, 0);
+						m_GameTime[g_Config.m_ClDummy].Update(&m_GametimeMarginGraph, (GameTick - 1) * time_freq() / SERVER_TICK_SPEED, TimeLeft, 0);
 					}
 
-					if(m_ReceivedSnapshots[g_Config.m_ClDummy] > 50 && !m_CodeRunAfterJoin[g_Config.m_ClDummy])
+					if(m_ReceivedSnapshots[g_Config.m_ClDummy] > SERVER_TICK_SPEED && !m_CodeRunAfterJoin[g_Config.m_ClDummy])
 					{
 						if(m_ServerCapabilities.m_ChatTimeoutCode || ShouldSendChatTimeoutCodeHeuristic())
 						{
@@ -2331,9 +2331,9 @@ void CClient::ProcessServerPacketDummy(CNetChunk *pPacket)
 					if(m_ReceivedSnapshots[!g_Config.m_ClDummy] == 2)
 					{
 						// start at 200ms and work from there
-						//m_PredictedTime[!g_Config.m_ClDummy].Init(GameTick*time_freq()/50);
-						//m_PredictedTime[!g_Config.m_ClDummy].SetAdjustSpeed(1, 1000.0f);
-						m_GameTime[!g_Config.m_ClDummy].Init((GameTick - 1) * time_freq() / 50);
+						// m_PredictedTime[!g_Config.m_ClDummy].Init(GameTick*time_freq()/50);
+						// m_PredictedTime[!g_Config.m_ClDummy].SetAdjustSpeed(1, 1000.0f);
+						m_GameTime[!g_Config.m_ClDummy].Init((GameTick - 1) * time_freq() / SERVER_TICK_SPEED);
 						m_aSnapshots[!g_Config.m_ClDummy][SNAP_PREV] = m_SnapshotStorage[!g_Config.m_ClDummy].m_pFirst;
 						m_aSnapshots[!g_Config.m_ClDummy][SNAP_CURRENT] = m_SnapshotStorage[!g_Config.m_ClDummy].m_pLast;
 						m_LocalStartTime = time_get();
@@ -2347,9 +2347,9 @@ void CClient::ProcessServerPacketDummy(CNetChunk *pPacket)
 					if(m_ReceivedSnapshots[!g_Config.m_ClDummy] > 2)
 					{
 						int64_t Now = m_GameTime[!g_Config.m_ClDummy].Get(time_get());
-						int64_t TickStart = GameTick * time_freq() / 50;
+						int64_t TickStart = GameTick * time_freq() / SERVER_TICK_SPEED;
 						int64_t TimeLeft = (TickStart - Now) * 1000 / time_freq();
-						m_GameTime[!g_Config.m_ClDummy].Update(&m_GametimeMarginGraph, (GameTick - 1) * time_freq() / 50, TimeLeft, 0);
+						m_GameTime[!g_Config.m_ClDummy].Update(&m_GametimeMarginGraph, (GameTick - 1) * time_freq() / SERVER_TICK_SPEED, TimeLeft, 0);
 					}
 
 					// ack snapshot
@@ -2601,16 +2601,16 @@ void CClient::PumpNetwork()
 			else if(i > 0 && i < 2)
 			{
 				if(g_Config.m_ClDummy)
-					ProcessServerPacket(&Packet); //self
+					ProcessServerPacket(&Packet); // self
 				else
-					ProcessServerPacketDummy(&Packet); //multiclient
+					ProcessServerPacketDummy(&Packet); // multiclient
 			}
 			else
 			{
 				if(g_Config.m_ClDummy)
-					ProcessServerPacketDummy(&Packet); //multiclient
+					ProcessServerPacketDummy(&Packet); // multiclient
 				else
-					ProcessServerPacket(&Packet); //self
+					ProcessServerPacket(&Packet); // self
 			}
 		}
 	}
@@ -2747,7 +2747,7 @@ void CClient::Update()
 			while(1)
 			{
 				CSnapshotStorage::CHolder *pCur = m_aSnapshots[!g_Config.m_ClDummy][SNAP_CURRENT];
-				int64_t TickStart = (pCur->m_Tick) * time_freq() / 50;
+				int64_t TickStart = (pCur->m_Tick) * time_freq() / SERVER_TICK_SPEED;
 
 				if(TickStart < Now)
 				{
@@ -2786,7 +2786,7 @@ void CClient::Update()
 			while(1)
 			{
 				CSnapshotStorage::CHolder *pCur = m_aSnapshots[g_Config.m_ClDummy][SNAP_CURRENT];
-				int64_t TickStart = (pCur->m_Tick) * time_freq() / 50;
+				int64_t TickStart = (pCur->m_Tick) * time_freq() / SERVER_TICK_SPEED;
 
 				if(TickStart < Now)
 				{
@@ -3016,7 +3016,7 @@ void CClient::InitInterfaces()
 	// fetch interfaces
 	m_pEngine = Kernel()->RequestInterface<IEngine>();
 	m_pEditor = Kernel()->RequestInterface<IEditor>();
-	//m_pGraphics = Kernel()->RequestInterface<IEngineGraphics>();
+	// m_pGraphics = Kernel()->RequestInterface<IEngineGraphics>();
 	m_pSound = Kernel()->RequestInterface<IEngineSound>();
 	m_pGameClient = Kernel()->RequestInterface<IGameClient>();
 	m_pInput = Kernel()->RequestInterface<IEngineInput>();
@@ -3125,7 +3125,8 @@ void CClient::Run()
 		}
 		for(unsigned int i = 0; i < sizeof(m_NetClient) / sizeof(m_NetClient[0]); i++)
 		{
-			BindAddr.port = i == CLIENT_MAIN ? g_Config.m_ClPort : i == CLIENT_DUMMY ? g_Config.m_ClDummyPort : g_Config.m_ClContactPort;
+			BindAddr.port = i == CLIENT_MAIN ? g_Config.m_ClPort : i == CLIENT_DUMMY ? g_Config.m_ClDummyPort :
+												   g_Config.m_ClContactPort;
 			while(BindAddr.port == 0 || !m_NetClient[i].Open(BindAddr, 0))
 			{
 				BindAddr.port = (secure_rand() % 64511) + 1024;
@@ -3890,7 +3891,7 @@ const char *CClient::DemoPlayer_Render(const char *pFilename, int StorageType, c
 	this->CClient::StartVideo(NULL, this, pVideoName);
 	m_DemoPlayer.Play();
 	m_DemoPlayer.SetSpeed(g_aSpeeds[SpeedIndex]);
-	//m_pConsole->Print(IConsole::OUTPUT_LEVEL_DEBUG, "demo_recorder", "demo eof");
+	// m_pConsole->Print(IConsole::OUTPUT_LEVEL_DEBUG, "demo_recorder", "demo eof");
 	return 0;
 }
 #endif
@@ -4203,7 +4204,7 @@ void CClient::ConchainPassword(IConsole::IResult *pResult, void *pUserData, ICon
 {
 	CClient *pSelf = (CClient *)pUserData;
 	pfnCallback(pResult, pCallbackUserData);
-	if(pResult->NumArguments() && pSelf->m_LocalStartTime) //won't set m_SendPassword before game has started
+	if(pResult->NumArguments() && pSelf->m_LocalStartTime) // won't set m_SendPassword before game has started
 		pSelf->m_SendPassword = true;
 }
 
@@ -4607,8 +4608,8 @@ void CClient::GetSmoothTick(int *pSmoothTick, float *pSmoothIntraTick, float Mix
 	int64_t PredTime = m_PredictedTime.Get(time_get());
 	int64_t SmoothTime = clamp(GameTime + (int64_t)(MixAmount * (PredTime - GameTime)), GameTime, PredTime);
 
-	*pSmoothTick = (int)(SmoothTime * 50 / time_freq()) + 1;
-	*pSmoothIntraTick = (SmoothTime - (*pSmoothTick - 1) * time_freq() / 50) / (float)(time_freq() / 50);
+	*pSmoothTick = (int)(SmoothTime * SERVER_TICK_SPEED / time_freq()) + 1;
+	*pSmoothIntraTick = (SmoothTime - (*pSmoothTick - 1) * time_freq() / SERVER_TICK_SPEED) / (float)(time_freq() / SERVER_TICK_SPEED);
 }
 
 SWarning *CClient::GetCurWarning()

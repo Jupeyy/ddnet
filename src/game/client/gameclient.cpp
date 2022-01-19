@@ -114,7 +114,7 @@ void CGameClient::OnConsoleInit()
 	m_All.Add(&m_RaceDemo);
 	m_All.Add(&m_MapSounds);
 
-	m_All.Add(&m_BackGround); //render instead of m_MapLayersBackGround when g_Config.m_ClOverlayEntities == 100
+	m_All.Add(&m_BackGround); // render instead of m_MapLayersBackGround when g_Config.m_ClOverlayEntities == 100
 	m_All.Add(&m_MapLayersBackGround); // first to render
 	m_All.Add(&m_Particles.m_RenderTrail);
 	m_All.Add(&m_Items);
@@ -537,8 +537,8 @@ void CGameClient::UpdatePositions()
 	else if(m_Snap.m_pLocalCharacter && m_Snap.m_pLocalPrevCharacter)
 	{
 		m_LocalCharacterPos = mix(
-			vec2(m_Snap.m_pLocalPrevCharacter->m_X, m_Snap.m_pLocalPrevCharacter->m_Y),
-			vec2(m_Snap.m_pLocalCharacter->m_X, m_Snap.m_pLocalCharacter->m_Y), Client()->IntraGameTick(g_Config.m_ClDummy));
+			vec2(m_Snap.m_pLocalPrevCharacter->m_X / FRAGMENT_DEVIDER, m_Snap.m_pLocalPrevCharacter->m_Y / FRAGMENT_DEVIDER),
+			vec2(m_Snap.m_pLocalCharacter->m_X / FRAGMENT_DEVIDER, m_Snap.m_pLocalCharacter->m_Y / FRAGMENT_DEVIDER), Client()->IntraGameTick(g_Config.m_ClDummy));
 	}
 
 	// spectator position
@@ -547,8 +547,8 @@ void CGameClient::UpdatePositions()
 		if(Client()->State() == IClient::STATE_DEMOPLAYBACK && m_DemoSpecID != SPEC_FOLLOW && m_Snap.m_SpecInfo.m_SpectatorID != SPEC_FREEVIEW)
 		{
 			m_Snap.m_SpecInfo.m_Position = mix(
-				vec2(m_Snap.m_aCharacters[m_Snap.m_SpecInfo.m_SpectatorID].m_Prev.m_X, m_Snap.m_aCharacters[m_Snap.m_SpecInfo.m_SpectatorID].m_Prev.m_Y),
-				vec2(m_Snap.m_aCharacters[m_Snap.m_SpecInfo.m_SpectatorID].m_Cur.m_X, m_Snap.m_aCharacters[m_Snap.m_SpecInfo.m_SpectatorID].m_Cur.m_Y),
+				vec2(m_Snap.m_aCharacters[m_Snap.m_SpecInfo.m_SpectatorID].m_Prev.m_X / FRAGMENT_DEVIDER, m_Snap.m_aCharacters[m_Snap.m_SpecInfo.m_SpectatorID].m_Prev.m_Y / FRAGMENT_DEVIDER),
+				vec2(m_Snap.m_aCharacters[m_Snap.m_SpecInfo.m_SpectatorID].m_Cur.m_X / FRAGMENT_DEVIDER, m_Snap.m_aCharacters[m_Snap.m_SpecInfo.m_SpectatorID].m_Cur.m_Y / FRAGMENT_DEVIDER),
 				Client()->IntraGameTick(g_Config.m_ClDummy));
 			m_Snap.m_SpecInfo.m_UsePosition = true;
 		}
@@ -1456,7 +1456,7 @@ void CGameClient::OnNewSnapshot()
 			{
 				m_Snap.m_pLocalCharacter = &c->m_Cur;
 				m_Snap.m_pLocalPrevCharacter = &c->m_Prev;
-				m_LocalCharacterPos = vec2(m_Snap.m_pLocalCharacter->m_X, m_Snap.m_pLocalCharacter->m_Y);
+				m_LocalCharacterPos = vec2(m_Snap.m_pLocalCharacter->m_X / FRAGMENT_DEVIDER, m_Snap.m_pLocalCharacter->m_Y / FRAGMENT_DEVIDER);
 			}
 		}
 		else if(Client()->SnapFindItem(IClient::SNAP_PREV, NETOBJTYPE_CHARACTER, m_Snap.m_LocalClientID))
@@ -1637,8 +1637,8 @@ void CGameClient::OnNewSnapshot()
 		if(m_Snap.m_aCharacters[i].m_Active && (m_Snap.m_aCharacters[i].m_Cur.m_Jumped & 2) && !(m_Snap.m_aCharacters[i].m_Prev.m_Jumped & 2))
 			if(!Predict() || (i != m_Snap.m_LocalClientID && (!AntiPingPlayers() || i != m_PredictedDummyID)))
 			{
-				vec2 Pos = mix(vec2(m_Snap.m_aCharacters[i].m_Prev.m_X, m_Snap.m_aCharacters[i].m_Prev.m_Y),
-					vec2(m_Snap.m_aCharacters[i].m_Cur.m_X, m_Snap.m_aCharacters[i].m_Cur.m_Y),
+				vec2 Pos = mix(vec2(m_Snap.m_aCharacters[i].m_Prev.m_X / FRAGMENT_DEVIDER, m_Snap.m_aCharacters[i].m_Prev.m_Y / FRAGMENT_DEVIDER),
+					vec2(m_Snap.m_aCharacters[i].m_Cur.m_X / FRAGMENT_DEVIDER, m_Snap.m_aCharacters[i].m_Cur.m_Y / FRAGMENT_DEVIDER),
 					Client()->IntraGameTick(g_Config.m_ClDummy));
 				m_Effects.AirJump(Pos);
 			}
@@ -1815,8 +1815,8 @@ void CGameClient::OnPredict()
 			{
 				vec2 PredPos = mix(m_aClients[i].m_PrevPredicted.m_Pos, m_aClients[i].m_Predicted.m_Pos, Client()->PredIntraGameTick(g_Config.m_ClDummy));
 				vec2 CurPos = mix(
-					vec2(m_Snap.m_aCharacters[i].m_Prev.m_X, m_Snap.m_aCharacters[i].m_Prev.m_Y),
-					vec2(m_Snap.m_aCharacters[i].m_Cur.m_X, m_Snap.m_aCharacters[i].m_Cur.m_Y),
+					vec2(m_Snap.m_aCharacters[i].m_Prev.m_X / FRAGMENT_DEVIDER, m_Snap.m_aCharacters[i].m_Prev.m_Y / FRAGMENT_DEVIDER),
+					vec2(m_Snap.m_aCharacters[i].m_Cur.m_X / FRAGMENT_DEVIDER, m_Snap.m_aCharacters[i].m_Cur.m_Y / FRAGMENT_DEVIDER),
 					Client()->IntraGameTick(g_Config.m_ClDummy));
 				vec2 RenderDiff = PredPos - aBeforeRender[i];
 				vec2 PredDiff = PredPos - CurPos;
@@ -2137,7 +2137,7 @@ IGameClient *CreateGameClient()
 	return new CGameClient();
 }
 
-int CGameClient::IntersectCharacter(vec2 HookPos, vec2 NewPos, vec2 &NewPos2, int ownID)
+int CGameClient::IntersectCharacter(vector2_base<EngineFloat> HookPos, vector2_base<EngineFloat> NewPos, vector2_base<EngineFloat> &NewPos2, int ownID)
 {
 	float PhysSize = 28.0f;
 	float Distance = 0.0f;
@@ -2158,7 +2158,7 @@ int CGameClient::IntersectCharacter(vec2 HookPos, vec2 NewPos, vec2 &NewPos2, in
 		CNetObj_Character Prev = m_Snap.m_aCharacters[i].m_Prev;
 		CNetObj_Character Player = m_Snap.m_aCharacters[i].m_Cur;
 
-		vec2 Position = mix(vec2(Prev.m_X, Prev.m_Y), vec2(Player.m_X, Player.m_Y), Client()->IntraGameTick(g_Config.m_ClDummy));
+		vec2 Position = mix(vec2(Prev.m_X / FRAGMENT_DEVIDER, Prev.m_Y / FRAGMENT_DEVIDER), vec2(Player.m_X / FRAGMENT_DEVIDER, Player.m_Y / FRAGMENT_DEVIDER), Client()->IntraGameTick(g_Config.m_ClDummy));
 
 		bool IsOneSuper = cData.m_Super || OwnClientData.m_Super;
 		bool IsOneSolo = cData.m_Solo || OwnClientData.m_Solo;
@@ -2166,8 +2166,8 @@ int CGameClient::IntersectCharacter(vec2 HookPos, vec2 NewPos, vec2 &NewPos2, in
 		if(!IsOneSuper && (!m_Teams.SameTeam(i, ownID) || IsOneSolo || OwnClientData.m_NoHookHit))
 			continue;
 
-		vec2 ClosestPoint;
-		if(closest_point_on_line(HookPos, NewPos, Position, ClosestPoint))
+		vector2_base<EngineFloat> ClosestPoint;
+		if(closest_point_on_line(HookPos, NewPos, vector2_base<EngineFloat>(Position), ClosestPoint))
 		{
 			if(distance(Position, ClosestPoint) < PhysSize + 2.0f)
 			{
@@ -2412,8 +2412,8 @@ void CGameClient::UpdateRenderedCharacters()
 		m_aClients[i].m_IsPredicted = false;
 		m_aClients[i].m_IsPredictedLocal = false;
 		vec2 UnpredPos = mix(
-			vec2(m_Snap.m_aCharacters[i].m_Prev.m_X, m_Snap.m_aCharacters[i].m_Prev.m_Y),
-			vec2(m_Snap.m_aCharacters[i].m_Cur.m_X, m_Snap.m_aCharacters[i].m_Cur.m_Y),
+			vec2(m_Snap.m_aCharacters[i].m_Prev.m_X / FRAGMENT_DEVIDER, m_Snap.m_aCharacters[i].m_Prev.m_Y / FRAGMENT_DEVIDER),
+			vec2(m_Snap.m_aCharacters[i].m_Cur.m_X / FRAGMENT_DEVIDER, m_Snap.m_aCharacters[i].m_Cur.m_Y / FRAGMENT_DEVIDER),
 			Client()->IntraGameTick(g_Config.m_ClDummy));
 		vec2 Pos = UnpredPos;
 
@@ -2425,8 +2425,8 @@ void CGameClient::UpdateRenderedCharacters()
 			m_aClients[i].m_IsPredicted = true;
 
 			Pos = mix(
-				vec2(m_aClients[i].m_RenderPrev.m_X, m_aClients[i].m_RenderPrev.m_Y),
-				vec2(m_aClients[i].m_RenderCur.m_X, m_aClients[i].m_RenderCur.m_Y),
+				vec2(m_aClients[i].m_RenderPrev.m_X / FRAGMENT_DEVIDER, m_aClients[i].m_RenderPrev.m_Y / FRAGMENT_DEVIDER),
+				vec2(m_aClients[i].m_RenderCur.m_X / FRAGMENT_DEVIDER, m_aClients[i].m_RenderCur.m_Y / FRAGMENT_DEVIDER),
 				m_aClients[i].m_IsPredicted ? Client()->PredIntraGameTick(g_Config.m_ClDummy) : Client()->IntraGameTick(g_Config.m_ClDummy));
 
 			if(i == m_Snap.m_LocalClientID)

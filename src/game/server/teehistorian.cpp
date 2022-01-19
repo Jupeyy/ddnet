@@ -165,9 +165,9 @@ void CTeeHistorian::WriteHeader(const CGameInfo *pGameInfo)
 
 	First = true;
 
-	static const float TicksPerSecond = 50.0f;
+	static const float TicksPerSecond = SERVER_TICK_SPEED;
 #define MACRO_TUNING_PARAM(Name, ScriptName, Value, Description) \
-	if(pGameInfo->m_pTuning->m_##Name.Get() != (int)((Value)*100)) \
+	if(pGameInfo->m_pTuning->m_##Name.Get() != (int)((Value)*100000)) \
 	{ \
 		str_format(aJson, sizeof(aJson), "%s\"%s\":\"%d\"", \
 			First ? "" : ",", \
@@ -265,8 +265,8 @@ void CTeeHistorian::RecordPlayer(int ClientID, const CNetObj_CharacterCore *pCha
 		Buffer.Reset();
 		if(pPrev->m_Alive)
 		{
-			int dx = pChar->m_X - pPrev->m_X;
-			int dy = pChar->m_Y - pPrev->m_Y;
+			int dx = pChar->m_X / FRAGMENT_DEVIDER - pPrev->m_X / FRAGMENT_DEVIDER;
+			int dy = pChar->m_Y / FRAGMENT_DEVIDER - pPrev->m_Y / FRAGMENT_DEVIDER;
 			Buffer.AddInt(ClientID);
 			Buffer.AddInt(dx);
 			Buffer.AddInt(dy);
@@ -277,8 +277,8 @@ void CTeeHistorian::RecordPlayer(int ClientID, const CNetObj_CharacterCore *pCha
 		}
 		else
 		{
-			int x = pChar->m_X;
-			int y = pChar->m_Y;
+			int x = pChar->m_X / FRAGMENT_DEVIDER;
+			int y = pChar->m_Y / FRAGMENT_DEVIDER;
 			Buffer.AddInt(-TEEHISTORIAN_PLAYER_NEW);
 			Buffer.AddInt(ClientID);
 			Buffer.AddInt(x);

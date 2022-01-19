@@ -97,14 +97,14 @@ void CParticles::Update(float TimePassed)
 		while(i != -1)
 		{
 			int Next = m_aParticles[i].m_NextPart;
-			//m_aParticles[i].vel += flow_get(m_aParticles[i].pos)*time_passed * m_aParticles[i].flow_affected;
+			// m_aParticles[i].vel += flow_get(m_aParticles[i].pos)*time_passed * m_aParticles[i].flow_affected;
 			m_aParticles[i].m_Vel.y += m_aParticles[i].m_Gravity * TimePassed;
 
 			for(int f = 0; f < FrictionCount; f++) // apply friction
 				m_aParticles[i].m_Vel *= m_aParticles[i].m_Friction;
 
 			// move the point
-			vec2 Vel = m_aParticles[i].m_Vel * TimePassed;
+			vector2_base<EngineFloat> Vel = m_aParticles[i].m_Vel * TimePassed;
 			Collision()->MovePoint(&m_aParticles[i].m_Pos, &Vel, 0.1f + 0.9f * random_float(), NULL);
 			m_aParticles[i].m_Vel = Vel * (1.0f / TimePassed);
 

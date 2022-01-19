@@ -319,8 +319,8 @@ void CGameWorld::SwapClients(int Client1, int Client2)
 }
 
 // TODO: should be more general
-//CCharacter *CGameWorld::IntersectCharacter(vec2 Pos0, vec2 Pos1, float Radius, vec2& NewPos, CEntity *pNotThis)
-CCharacter *CGameWorld::IntersectCharacter(vec2 Pos0, vec2 Pos1, float Radius, vec2 &NewPos, CCharacter *pNotThis, int CollideWith, class CCharacter *pThisOnly)
+// CCharacter *CGameWorld::IntersectCharacter(vec2 Pos0, vec2 Pos1, float Radius, vec2& NewPos, CEntity *pNotThis)
+CCharacter *CGameWorld::IntersectCharacter(vector2_base<EngineFloat> Pos0, vector2_base<EngineFloat> Pos1, float Radius, vector2_base<EngineFloat> &NewPos, CCharacter *pNotThis, int CollideWith, class CCharacter *pThisOnly)
 {
 	// Find other players
 	float ClosestLen = distance(Pos0, Pos1) * 100.0f;
@@ -338,8 +338,8 @@ CCharacter *CGameWorld::IntersectCharacter(vec2 Pos0, vec2 Pos1, float Radius, v
 		if(CollideWith != -1 && !p->CanCollide(CollideWith))
 			continue;
 
-		vec2 IntersectPos;
-		if(closest_point_on_line(Pos0, Pos1, p->m_Pos, IntersectPos))
+		vector2_base<EngineFloat> IntersectPos;
+		if(closest_point_on_line(Pos0, Pos1, vector2_base<EngineFloat>(p->m_Pos), IntersectPos))
 		{
 			float Len = distance(p->m_Pos, IntersectPos);
 			if(Len < p->m_ProximityRadius + Radius)

@@ -107,7 +107,7 @@ void CPlayers::RenderHook(
 	if(in_range(ClientID, MAX_CLIENTS - 1))
 		Position = m_pClient->m_aClients[ClientID].m_RenderPos;
 	else
-		Position = mix(vec2(Prev.m_X, Prev.m_Y), vec2(Player.m_X, Player.m_Y), IntraTick);
+		Position = mix(vec2(Prev.m_X / FRAGMENT_DEVIDER, Prev.m_Y / FRAGMENT_DEVIDER), vec2(Player.m_X / FRAGMENT_DEVIDER, Player.m_Y / FRAGMENT_DEVIDER), IntraTick);
 
 	// draw hook
 	if(Prev.m_HookState > 0 && Player.m_HookState > 0)
@@ -122,7 +122,7 @@ void CPlayers::RenderHook(
 		if(in_range(pPlayerChar->m_HookedPlayer, MAX_CLIENTS - 1))
 			HookPos = m_pClient->m_aClients[pPlayerChar->m_HookedPlayer].m_RenderPos;
 		else
-			HookPos = mix(vec2(Prev.m_HookX, Prev.m_HookY), vec2(Player.m_HookX, Player.m_HookY), IntraTick);
+			HookPos = mix(vec2(Prev.m_HookX / (EngineFloat)4096.0, Prev.m_HookY / (EngineFloat)4096.0), vec2(Player.m_HookX / (EngineFloat)4096.0, Player.m_HookY / (EngineFloat)4096.0), IntraTick);
 
 		float d = distance(Pos, HookPos);
 		vec2 Dir = normalize(Pos - HookPos);
@@ -217,29 +217,28 @@ void CPlayers::RenderPlayer(
 		// If the player moves their weapon through top, then change
 		// the end angle by 2*Pi, so that the mix function will use the
 		// short path and not the long one.
-		if(Player.m_Angle > (256.0f * pi) && Prev.m_Angle < 0)
-			Player.m_Angle -= 256.0f * 2 * pi;
-		else if(Player.m_Angle < 0 && Prev.m_Angle > (256.0f * pi))
-			Player.m_Angle += 256.0f * 2 * pi;
+		if(Player.m_Angle > ((EngineFloat)4096.0 * pi) && Prev.m_Angle < 0)
+			Player.m_Angle -= (EngineFloat)4096.0 * 2 * pi;
+		else if(Player.m_Angle < 0 && Prev.m_Angle > ((EngineFloat)4096.0 * pi))
+			Player.m_Angle += (EngineFloat)4096.0 * 2 * pi;
 
-		Angle = mix((float)Prev.m_Angle, (float)Player.m_Angle, AngleIntraTick) / 256.0f;
+		Angle = mix((float)Prev.m_Angle, (float)Player.m_Angle, AngleIntraTick) / (EngineFloat)4096.0;
 	}
 
-	vec2 Direction = direction(Angle);
+	vec2 Direction = GetDirection((int)(Angle * (EngineFloat)4096.0));
 	vec2 Position;
 	if(in_range(ClientID, MAX_CLIENTS - 1))
 		Position = m_pClient->m_aClients[ClientID].m_RenderPos;
 	else
-		Position = mix(vec2(Prev.m_X, Prev.m_Y), vec2(Player.m_X, Player.m_Y), IntraTick);
-
-	vec2 Vel = mix(vec2(Prev.m_VelX / 256.0f, Prev.m_VelY / 256.0f), vec2(Player.m_VelX / 256.0f, Player.m_VelY / 256.0f), IntraTick);
+		Position = mix(vec2(Prev.m_X / FRAGMENT_DEVIDER, Prev.m_Y / FRAGMENT_DEVIDER), vec2(Player.m_X / FRAGMENT_DEVIDER, Player.m_Y / FRAGMENT_DEVIDER), IntraTick);
+	vec2 Vel = mix(vec2(Prev.m_VelX / (EngineFloat)4096.0, Prev.m_VelY / (EngineFloat)4096.0), vec2(Player.m_VelX / (EngineFloat)4096.0, Player.m_VelY / (EngineFloat)4096.0), IntraTick);
 
 	m_pClient->m_Flow.Add(Position, Vel * 100.0f, 10.0f);
 
 	RenderInfo.m_GotAirJump = Player.m_Jumped & 2 ? 0 : 1;
 
 	bool Stationary = Player.m_VelX <= 1 && Player.m_VelX >= -1;
-	bool InAir = !Collision()->CheckPoint(Player.m_X, Player.m_Y + 16);
+	bool InAir = !Collision()->CheckPoint(Player.m_X / FRAGMENT_DEVIDER, Player.m_Y / FRAGMENT_DEVIDER + 16);
 	bool WantOtherDir = (Player.m_Direction == -1 && Vel.x > 0) || (Player.m_Direction == 1 && Vel.x < 0);
 
 	// evaluate animation
@@ -260,7 +259,7 @@ void CPlayers::RenderPlayer(
 		State.Add(&g_pData->m_aAnimations[ANIM_NINJA_SWING], clamp(LastAttackTime * 2.0f, 0.0f, 1.0f), 1.0f);
 
 	// do skidding
-	if(!InAir && WantOtherDir && length(Vel * 50) > 500.0f)
+	if(!InAir && WantOtherDir && length(Vel * 50.f / (float)SERVER_TICK_SPEED) > 500.0f)
 	{
 		static int64_t SkidSoundTime = 0;
 		if(time() - SkidSoundTime > time_freq() / 10)
@@ -272,7 +271,7 @@ void CPlayers::RenderPlayer(
 
 		m_pClient->m_Effects.SkidTrail(
 			Position + vec2(-Player.m_Direction * 6, 12),
-			vec2(-Player.m_Direction * 100 * length(Vel), -50));
+			vec2(-Player.m_Direction * 100 * length(Vel), -50.f / (float)SERVER_TICK_SPEED));
 	}
 
 	// draw gun
@@ -285,22 +284,22 @@ void CPlayers::RenderPlayer(
 #endif
 		if((AlwaysRenderHookColl || RenderHookCollPlayer) && RenderHookCollVideo)
 		{
-			vec2 ExDirection = Direction;
+			vector2_base<EngineFloat> ExDirection = Direction;
 
 			if(Local && Client()->State() != IClient::STATE_DEMOPLAYBACK)
-				ExDirection = normalize(vec2(m_pClient->m_Controls.m_InputData[g_Config.m_ClDummy].m_TargetX, m_pClient->m_Controls.m_InputData[g_Config.m_ClDummy].m_TargetY));
+				ExDirection = normalize(vector2_base<EngineFloat>(m_pClient->m_Controls.m_InputData[g_Config.m_ClDummy].m_TargetX / (EngineFloat)4096.0, m_pClient->m_Controls.m_InputData[g_Config.m_ClDummy].m_TargetY / (EngineFloat)4096.0));
 
 			Graphics()->TextureClear();
-			vec2 InitPos = Position;
-			vec2 FinishPos = InitPos + ExDirection * (m_pClient->m_Tuning[g_Config.m_ClDummy].m_HookLength - 42.0f);
+			vector2_base<EngineFloat> InitPos = Position;
+			vector2_base<EngineFloat> FinishPos = InitPos + ExDirection * (m_pClient->m_Tuning[g_Config.m_ClDummy].m_HookLength - 42.0f);
 
 			Graphics()->LinesBegin();
 			ColorRGBA HookCollColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClHookCollColorNoColl));
 
-			float PhysSize = 28.0f;
+			EngineFloat PhysSize = 28.0f;
 
-			vec2 OldPos = InitPos + ExDirection * PhysSize * 1.5f;
-			vec2 NewPos = OldPos;
+			vector2_base<EngineFloat> OldPos = InitPos + ExDirection * PhysSize * 1.5f;
+			vector2_base<EngineFloat> NewPos = OldPos;
 
 			bool DoBreak = false;
 			int Hit = 0;
@@ -336,14 +335,14 @@ void CPlayers::RenderPlayer(
 				if(Hit)
 					break;
 
-				NewPos.x = round_to_int(NewPos.x);
-				NewPos.y = round_to_int(NewPos.y);
+				NewPos.x = round_to_int(NewPos.x * (EngineFloat)4096.0) / (EngineFloat)4096.0;
+				NewPos.y = round_to_int(NewPos.y * (EngineFloat)4096.0) / (EngineFloat)4096.0;
 
 				if(OldPos == NewPos)
 					break;
 
-				ExDirection.x = round_to_int(ExDirection.x * 256.0f) / 256.0f;
-				ExDirection.y = round_to_int(ExDirection.y * 256.0f) / 256.0f;
+				ExDirection.x = round_to_int(ExDirection.x * (EngineFloat)4096.0) / (EngineFloat)4096.0;
+				ExDirection.y = round_to_int(ExDirection.y * (EngineFloat)4096.0) / (EngineFloat)4096.0;
 			} while(!DoBreak);
 
 			if(AlwaysRenderHookColl && RenderHookCollPlayer)
@@ -432,14 +431,14 @@ void CPlayers::RenderPlayer(
 				{
 					vec2 Dir;
 					if(PredictLocalWeapons)
-						Dir = vec2(pPlayerChar->m_X, pPlayerChar->m_Y) - vec2(pPrevChar->m_X, pPrevChar->m_Y);
+						Dir = vec2(pPlayerChar->m_X / FRAGMENT_DEVIDER, pPlayerChar->m_Y / FRAGMENT_DEVIDER) - vec2(pPrevChar->m_X / FRAGMENT_DEVIDER, pPrevChar->m_Y / FRAGMENT_DEVIDER);
 					else
-						Dir = vec2(m_pClient->m_Snap.m_aCharacters[ClientID].m_Cur.m_X, m_pClient->m_Snap.m_aCharacters[ClientID].m_Cur.m_Y) - vec2(m_pClient->m_Snap.m_aCharacters[ClientID].m_Prev.m_X, m_pClient->m_Snap.m_aCharacters[ClientID].m_Prev.m_Y);
+						Dir = vec2(m_pClient->m_Snap.m_aCharacters[ClientID].m_Cur.m_X / FRAGMENT_DEVIDER, m_pClient->m_Snap.m_aCharacters[ClientID].m_Cur.m_Y / FRAGMENT_DEVIDER) - vec2(m_pClient->m_Snap.m_aCharacters[ClientID].m_Prev.m_X / FRAGMENT_DEVIDER, m_pClient->m_Snap.m_aCharacters[ClientID].m_Prev.m_Y / FRAGMENT_DEVIDER);
 					float HadOkenAngle = 0;
 					if(absolute(Dir.x) > 0.0001f || absolute(Dir.y) > 0.0001f)
 					{
 						Dir = normalize(Dir);
-						HadOkenAngle = angle(Dir);
+						HadOkenAngle = GetAngle(Dir);
 					}
 					else
 					{
@@ -485,7 +484,7 @@ void CPlayers::RenderPlayer(
 		if(Player.m_Weapon == WEAPON_GUN || Player.m_Weapon == WEAPON_SHOTGUN)
 		{
 			// check if we're firing stuff
-			if(g_pData->m_Weapons.m_aId[iw].m_NumSpriteMuzzles) //prev.attackticks)
+			if(g_pData->m_Weapons.m_aId[iw].m_NumSpriteMuzzles) // prev.attackticks)
 			{
 				float Alpha = 0.0f;
 				if(AttackTicksPassed < g_pData->m_Weapons.m_aId[iw].m_Muzzleduration + 3)
@@ -542,8 +541,8 @@ void CPlayers::RenderPlayer(
 		vec2 GhostPosition = Position;
 		if(ClientID >= 0)
 			GhostPosition = mix(
-				vec2(m_pClient->m_Snap.m_aCharacters[ClientID].m_Prev.m_X, m_pClient->m_Snap.m_aCharacters[ClientID].m_Prev.m_Y),
-				vec2(m_pClient->m_Snap.m_aCharacters[ClientID].m_Cur.m_X, m_pClient->m_Snap.m_aCharacters[ClientID].m_Cur.m_Y),
+				vec2(m_pClient->m_Snap.m_aCharacters[ClientID].m_Prev.m_X / FRAGMENT_DEVIDER, m_pClient->m_Snap.m_aCharacters[ClientID].m_Prev.m_Y / FRAGMENT_DEVIDER),
+				vec2(m_pClient->m_Snap.m_aCharacters[ClientID].m_Cur.m_X / FRAGMENT_DEVIDER, m_pClient->m_Snap.m_aCharacters[ClientID].m_Cur.m_Y / FRAGMENT_DEVIDER),
 				Client()->IntraGameTick(g_Config.m_ClDummy));
 
 		CTeeRenderInfo Ghost = RenderInfo;

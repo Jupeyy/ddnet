@@ -27,7 +27,7 @@ CLaser::CLaser(CGameWorld *pGameWorld, vec2 Pos, vec2 Direction, float StartEner
 
 bool CLaser::HitCharacter(vec2 From, vec2 To)
 {
-	vec2 At;
+	vector2_base<EngineFloat> At;
 	CCharacter *pOwnerChar = GameWorld()->GetCharacterByID(m_Owner);
 	CCharacter *pHit;
 	bool DontHitSelf = (g_Config.m_SvOldLaser || !GameWorld()->m_WorldConfig.m_IsDDRace) || (m_Bounces == 0 && !m_WasTele);
@@ -71,7 +71,7 @@ void CLaser::DoBounce()
 		return;
 	}
 	m_PrevPos = m_Pos;
-	vec2 Coltile;
+	vector2_base<EngineFloat> Coltile;
 
 	int Res;
 	int z;
@@ -83,7 +83,7 @@ void CLaser::DoBounce()
 		m_TelePos = vec2(0, 0);
 	}
 
-	vec2 To = m_Pos + m_Dir * m_Energy;
+	vector2_base<EngineFloat> To = m_Pos + m_Dir * m_Energy;
 
 	Res = Collision()->IntersectLineTeleWeapon(m_Pos, To, &Coltile, &To, &z);
 
@@ -95,8 +95,8 @@ void CLaser::DoBounce()
 			m_From = m_Pos;
 			m_Pos = To;
 
-			vec2 TempPos = m_Pos;
-			vec2 TempDir = m_Dir * 4.0f;
+			vector2_base<EngineFloat> TempPos = m_Pos;
+			vector2_base<EngineFloat> TempDir = m_Dir * 4.0f;
 
 			int f = 0;
 			if(Res == -1)

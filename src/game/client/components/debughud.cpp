@@ -28,7 +28,7 @@ void CDebugHud::RenderNetCorrections()
 	/*float speed = distance(vec2(netobjects.local_prev_character->x, netobjects.local_prev_character->y),
 		vec2(netobjects.local_character->x, netobjects.local_character->y));*/
 
-	float Velspeed = length(vec2(m_pClient->m_Snap.m_pLocalCharacter->m_VelX / 256.0f, m_pClient->m_Snap.m_pLocalCharacter->m_VelY / 256.0f)) * 50;
+	float Velspeed = length(vec2(m_pClient->m_Snap.m_pLocalCharacter->m_VelX / (EngineFloat)4096.0, m_pClient->m_Snap.m_pLocalCharacter->m_VelY / (EngineFloat)4096.0)) * 50;
 	float Ramp = VelocityRamp(Velspeed, m_pClient->m_Tuning[g_Config.m_ClDummy].m_VelrampStart, m_pClient->m_Tuning[g_Config.m_ClDummy].m_VelrampRange, m_pClient->m_Tuning[g_Config.m_ClDummy].m_VelrampCurvature);
 
 	const char *paStrings[] = {"velspeed:", "velspeed*ramp:", "ramp:", "checkpoint:", "Pos", " x:", " y:", "angle:", "netobj corrections", " num:", " on:"};
@@ -62,11 +62,11 @@ void CDebugHud::RenderNetCorrections()
 	w = TextRender()->TextWidth(0, Fontsize, aBuf, -1, -1.0f);
 	TextRender()->Text(0, x - w, y, Fontsize, aBuf, -1.0f);
 	y += 2 * LineHeight;
-	str_format(aBuf, sizeof(aBuf), "%.2f", static_cast<float>(m_pClient->m_Snap.m_pLocalCharacter->m_X) / 32.0f);
+	str_format(aBuf, sizeof(aBuf), "%.2f", static_cast<float>(m_pClient->m_Snap.m_pLocalCharacter->m_X / FRAGMENT_DEVIDER) / 32.0f);
 	w = TextRender()->TextWidth(0, Fontsize, aBuf, -1, -1.0f);
 	TextRender()->Text(0, x - w, y, Fontsize, aBuf, -1.0f);
 	y += LineHeight;
-	str_format(aBuf, sizeof(aBuf), "%.2f", static_cast<float>(m_pClient->m_Snap.m_pLocalCharacter->m_Y) / 32.0f);
+	str_format(aBuf, sizeof(aBuf), "%.2f", static_cast<float>(m_pClient->m_Snap.m_pLocalCharacter->m_Y / FRAGMENT_DEVIDER) / 32.0f);
 	w = TextRender()->TextWidth(0, Fontsize, aBuf, -1, -1.0f);
 	TextRender()->Text(0, x - w, y, Fontsize, aBuf, -1.0f);
 	y += LineHeight;
@@ -139,7 +139,7 @@ void CDebugHud::RenderTuning()
 		float Ramp = VelocityRamp(Speed, m_pClient->m_Tuning[g_Config.m_ClDummy].m_VelrampStart, m_pClient->m_Tuning[g_Config.m_ClDummy].m_VelrampRange, m_pClient->m_Tuning[g_Config.m_ClDummy].m_VelrampCurvature);
 		float RampedSpeed = (Speed * Ramp) / 1000.0f;
 		Array[i] = IGraphics::CLineItem((i - 1) * 2, y + Height - pv * Height, i * 2, y + Height - RampedSpeed * Height);
-		//Graphics()->LinesDraw((i-1)*2, 200, i*2, 200);
+		// Graphics()->LinesDraw((i-1)*2, 200, i*2, 200);
 		pv = RampedSpeed;
 	}
 	Graphics()->LinesDraw(Array, 100);

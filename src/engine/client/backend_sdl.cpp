@@ -283,7 +283,7 @@ static bool BackendInitGlew(EBackendType BackendType, int &GlewMajor, int &GlewM
 	if(BackendType == BACKEND_TYPE_OPENGL)
 	{
 #ifndef CONF_BACKEND_OPENGL_ES
-		//support graphic cards that are pretty old(and linux)
+		// support graphic cards that are pretty old(and linux)
 		glewExperimental = GL_TRUE;
 #ifdef CONF_GLEW_HAS_CONTEXT_INIT
 		if(GLEW_OK != glewContextInit())
@@ -547,7 +547,7 @@ void CGraphicsBackend_SDL_OpenGL::ClampDriverVersion(EBackendType BackendType)
 {
 	if(BackendType == BACKEND_TYPE_OPENGL)
 	{
-		//clamp the versions to existing versions(only for OpenGL major <= 3)
+		// clamp the versions to existing versions(only for OpenGL major <= 3)
 		if(g_Config.m_GfxOpenGLMajor == 1)
 		{
 			g_Config.m_GfxOpenGLMinor = clamp(g_Config.m_GfxOpenGLMinor, 1, 5);
@@ -968,7 +968,7 @@ int CGraphicsBackend_SDL_OpenGL::Init(const char *pName, int *pScreen, int *pWid
 
 	// issue init commands for OpenGL and SDL
 	CCommandBuffer CmdBuffer(1024, 512);
-	//run sdl first to have the context in the thread
+	// run sdl first to have the context in the thread
 	CCommandProcessorFragment_SDL::SCommand_Init CmdSDL;
 	CmdSDL.m_pWindow = m_pWindow;
 	CmdSDL.m_GLContext = m_GLContext;

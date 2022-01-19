@@ -76,7 +76,7 @@ enum
 // this should be revised
 enum
 {
-	SERVER_TICK_SPEED = 50,
+	SERVER_TICK_SPEED = 200,
 	SERVER_FLAG_PASSWORD = 1 << 0,
 	SERVER_FLAG_TIMESCORE = 1 << 1,
 	SERVERINFO_LEVEL_MIN = 0,

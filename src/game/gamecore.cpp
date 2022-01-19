@@ -1,6 +1,7 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include "gamecore.h"
+#include "base/math.h"
 
 #include <engine/shared/config.h>
 
@@ -11,7 +12,7 @@ const char *CTuningParams::ms_apNames[] =
 #undef MACRO_TUNING_PARAM
 };
 
-bool CTuningParams::Set(int Index, float Value)
+bool CTuningParams::Set(int Index, EngineFloat Value)
 {
 	if(Index < 0 || Index >= Num())
 		return false;
@@ -27,7 +28,7 @@ bool CTuningParams::Get(int Index, float *pValue) const
 	return true;
 }
 
-bool CTuningParams::Set(const char *pName, float Value)
+bool CTuningParams::Set(const char *pName, EngineFloat Value)
 {
 	for(int i = 0; i < Num(); i++)
 		if(str_comp_nocase(pName, ms_apNames[i]) == 0)
@@ -49,11 +50,11 @@ float HermiteBasis1(float v)
 	return 2 * v * v * v - 3 * v * v + 1;
 }
 
-float VelocityRamp(float Value, float Start, float Range, float Curvature)
+EngineFloat VelocityRamp(EngineFloat Value, EngineFloat Start, EngineFloat Range, EngineFloat Curvature)
 {
 	if(Value < Start)
-		return 1.0f;
-	return 1.0f / powf(Curvature, (Value - Start) / Range);
+		return 1.0;
+	return 1.0 / pow(Curvature, (Value - Start) / Range);
 }
 
 void CCharacterCore::Init(CWorldCore *pWorld, CCollision *pCollision, CTeamsCore *pTeams, std::map<int, std::vector<vec2>> *pTeleOuts)
@@ -72,11 +73,12 @@ void CCharacterCore::Init(CWorldCore *pWorld, CCollision *pCollision, CTeamsCore
 
 void CCharacterCore::Reset()
 {
-	m_Pos = vec2(0, 0);
-	m_Vel = vec2(0, 0);
+	m_Pos = vector2_base<EngineFloat>(0, 0);
+	m_Vel = vector2_base<EngineFloat>(0, 0);
+	m_OldVel = vector2_base<EngineFloat>(0, 0);
 	m_NewHook = false;
-	m_HookPos = vec2(0, 0);
-	m_HookDir = vec2(0, 0);
+	m_HookPos = vector2_base<EngineFloat>(0, 0);
+	m_HookDir = vector2_base<EngineFloat>(0, 0);
 	m_HookTick = 0;
 	m_HookState = HOOK_IDLE;
 	m_HookedPlayer = -1;
@@ -86,6 +88,8 @@ void CCharacterCore::Reset()
 	m_TriggeredEvents = 0;
 	m_Hook = true;
 	m_Collision = true;
+
+	m_Tick = 0;
 
 	// DDNet Character
 	m_Solo = false;
@@ -124,13 +128,14 @@ void CCharacterCore::Tick(bool UseInput)
 	if(m_pCollision->CheckPoint(m_Pos.x - PhysSize / 2, m_Pos.y + PhysSize / 2 + 5))
 		Grounded = true;
 
-	vec2 TargetDirection = normalize(vec2(m_Input.m_TargetX, m_Input.m_TargetY));
+	vector2_base<EngineFloat> TargetDirection = normalize(vector2_base<EngineFloat>(m_Input.m_TargetX / (EngineFloat)4096.0, m_Input.m_TargetY / (EngineFloat)4096.0));
 
+	m_OldVel = m_Vel;
 	m_Vel.y += m_Tuning.m_Gravity;
 
-	float MaxSpeed = Grounded ? m_Tuning.m_GroundControlSpeed : m_Tuning.m_AirControlSpeed;
-	float Accel = Grounded ? m_Tuning.m_GroundControlAccel : m_Tuning.m_AirControlAccel;
-	float Friction = Grounded ? m_Tuning.m_GroundFriction : m_Tuning.m_AirFriction;
+	EngineFloat MaxSpeed = Grounded ? m_Tuning.m_GroundControlSpeed : m_Tuning.m_AirControlSpeed;
+	EngineFloat Accel = Grounded ? m_Tuning.m_GroundControlAccel : m_Tuning.m_AirControlAccel;
+	EngineFloat Friction = Grounded ? m_Tuning.m_GroundFriction : m_Tuning.m_AirFriction;
 
 	// handle input
 	if(UseInput)
@@ -138,16 +143,16 @@ void CCharacterCore::Tick(bool UseInput)
 		m_Direction = m_Input.m_Direction;
 
 		// setup angle
-		float a = 0;
+		EngineFloat a = 0;
 		if(m_Input.m_TargetX == 0)
-			a = atanf((float)m_Input.m_TargetY);
+			a = atan((EngineFloat)m_Input.m_TargetY / (EngineFloat)4096.0);
 		else
-			a = atanf((float)m_Input.m_TargetY / (float)m_Input.m_TargetX);
+			a = atan(((EngineFloat)m_Input.m_TargetY / (EngineFloat)4096.0) / ((EngineFloat)m_Input.m_TargetX / (EngineFloat)4096.0));
 
 		if(m_Input.m_TargetX < 0)
 			a = a + pi;
 
-		m_Angle = (int)(a * 256.0f);
+		m_Angle = (int)(a * (EngineFloat)4096.0);
 
 		// handle jump
 		if(m_Input.m_Jump)
@@ -200,7 +205,9 @@ void CCharacterCore::Tick(bool UseInput)
 	if(m_Direction > 0)
 		m_Vel.x = SaturatedAdd(-MaxSpeed, MaxSpeed, m_Vel.x, Accel);
 	if(m_Direction == 0)
+	{
 		m_Vel.x *= Friction;
+	}
 
 	// handle jumping
 	// 1 bit = to keep track if a jump has been made on this input (player is holding space bar)
@@ -230,7 +237,7 @@ void CCharacterCore::Tick(bool UseInput)
 	}
 	else if(m_HookState == HOOK_FLYING)
 	{
-		vec2 NewPos = m_HookPos + m_HookDir * m_Tuning.m_HookFireSpeed;
+		vector2_base<EngineFloat> NewPos = m_HookPos + m_HookDir * m_Tuning.m_HookFireSpeed;
 		if((!m_NewHook && distance(m_Pos, NewPos) > m_Tuning.m_HookLength) || (m_NewHook && distance(m_HookTeleBase, NewPos) > m_Tuning.m_HookLength))
 		{
 			m_HookState = HOOK_RETRACT_START;
@@ -243,9 +250,11 @@ void CCharacterCore::Tick(bool UseInput)
 		bool GoingToRetract = false;
 		bool GoingThroughTele = false;
 		int teleNr = 0;
-		int Hit = m_pCollision->IntersectLineTeleHook(m_HookPos, NewPos, &NewPos, 0, &teleNr);
+		vector2_base<EngineFloat> OutCol;
+		int Hit = m_pCollision->IntersectLineTeleHook(m_HookPos, NewPos, &OutCol, 0, &teleNr);
+		NewPos = OutCol;
 
-		//m_NewHook = false;
+		// m_NewHook = false;
 
 		if(Hit)
 		{
@@ -261,14 +270,14 @@ void CCharacterCore::Tick(bool UseInput)
 		// Check against other players first
 		if(this->m_Hook && m_pWorld && m_Tuning.m_PlayerHooking)
 		{
-			float Distance = 0.0f;
+			EngineFloat Distance = 0.0f;
 			for(int i = 0; i < MAX_CLIENTS; i++)
 			{
 				CCharacterCore *pCharCore = m_pWorld->m_apCharacters[i];
 				if(!pCharCore || pCharCore == this || (!(m_Super || pCharCore->m_Super) && ((m_Id != -1 && !m_pTeams->CanCollide(i, m_Id)) || pCharCore->m_Solo || m_Solo)))
 					continue;
 
-				vec2 ClosestPoint;
+				vector2_base<EngineFloat> ClosestPoint;
 				if(closest_point_on_line(m_HookPos, NewPos, pCharCore->m_Pos, ClosestPoint))
 				{
 					if(distance(pCharCore->m_Pos, ClosestPoint) < PhysSize + 2.0f)
@@ -333,27 +342,27 @@ void CCharacterCore::Tick(bool UseInput)
 			}
 
 			// keep players hooked for a max of 1.5sec
-			//if(Server()->Tick() > hook_tick+(Server()->TickSpeed()*3)/2)
-			//release_hooked();
+			// if(Server()->Tick() > hook_tick+(Server()->TickSpeed()*3)/2)
+			// release_hooked();
 		}
 
 		// don't do this hook rutine when we are hook to a player
 		if(m_HookedPlayer == -1 && distance(m_HookPos, m_Pos) > 46.0f)
 		{
-			vec2 HookVel = normalize(m_HookPos - m_Pos) * m_Tuning.m_HookDragAccel;
+			vector2_base<EngineFloat> HookVel = normalize(m_HookPos - m_Pos) * m_Tuning.m_HookDragAccel;
 			// the hook as more power to drag you up then down.
 			// this makes it easier to get on top of an platform
 			if(HookVel.y > 0)
-				HookVel.y *= 0.3f;
+				HookVel.y *= 0.3;
 
 			// the hook will boost it's power if the player wants to move
 			// in that direction. otherwise it will dampen everything abit
 			if((HookVel.x < 0 && m_Direction < 0) || (HookVel.x > 0 && m_Direction > 0))
-				HookVel.x *= 0.95f;
+				HookVel.x *= 0.95;
 			else
-				HookVel.x *= 0.75f;
+				HookVel.x *= 0.75;
 
-			vec2 NewVel = m_Vel + HookVel;
+			vector2_base<EngineFloat> NewVel = m_Vel + HookVel;
 
 			// check if we are under the legal limit for the hook
 			if(length(NewVel) < m_Tuning.m_HookDragSpeed || length(NewVel) < length(m_Vel))
@@ -378,8 +387,8 @@ void CCharacterCore::Tick(bool UseInput)
 			if(!pCharCore)
 				continue;
 
-			//player *p = (player*)ent;
-			//if(pCharCore == this) // || !(p->flags&FLAG_ALIVE)
+			// player *p = (player*)ent;
+			// if(pCharCore == this) // || !(p->flags&FLAG_ALIVE)
 
 			if(pCharCore == this || (m_Id != -1 && !m_pTeams->CanCollide(m_Id, i)))
 				continue; // make sure that we don't nudge our self
@@ -388,17 +397,17 @@ void CCharacterCore::Tick(bool UseInput)
 				continue;
 
 			// handle player <-> player collision
-			float Distance = distance(m_Pos, pCharCore->m_Pos);
+			EngineFloat Distance = distance(m_Pos, pCharCore->m_Pos);
 			if(Distance > 0)
 			{
-				vec2 Dir = normalize(m_Pos - pCharCore->m_Pos);
+				vector2_base<EngineFloat> Dir = normalize(m_Pos - pCharCore->m_Pos);
 
 				bool CanCollide = (m_Super || pCharCore->m_Super) || (pCharCore->m_Collision && m_Collision && !m_NoCollision && !pCharCore->m_NoCollision && m_Tuning.m_PlayerCollision);
 
 				if(CanCollide && Distance < PhysSize * 1.25f && Distance > 0.0f)
 				{
-					float a = (PhysSize * 1.45f - Distance);
-					float Velocity = 0.5f;
+					EngineFloat a = (PhysSize * 1.45f - Distance);
+					EngineFloat Velocity = 0.5 / ((EngineFloat)SERVER_TICK_SPEED / 50.0);
 
 					// make sure that we don't add excess force by checking the
 					// direction against the current velocity. if not zero.
@@ -406,7 +415,7 @@ void CCharacterCore::Tick(bool UseInput)
 						Velocity = 1 - (dot(normalize(m_Vel), Dir) + 1) / 2;
 
 					m_Vel += Dir * a * (Velocity * 0.75f);
-					m_Vel *= 0.85f;
+					m_Vel *= pow(0.85, 1.0 / ((EngineFloat)SERVER_TICK_SPEED / 50.0));
 				}
 
 				// handle hook influence
@@ -414,10 +423,10 @@ void CCharacterCore::Tick(bool UseInput)
 				{
 					if(Distance > PhysSize * 1.50f) // TODO: fix tweakable variable
 					{
-						float Accel = m_Tuning.m_HookDragAccel * (Distance / m_Tuning.m_HookLength);
-						float DragSpeed = m_Tuning.m_HookDragSpeed;
+						EngineFloat Accel = m_Tuning.m_HookDragAccel * (Distance / m_Tuning.m_HookLength);
+						EngineFloat DragSpeed = m_Tuning.m_HookDragSpeed;
 
-						vec2 Temp;
+						vector2_base<EngineFloat> Temp;
 						// add force to the hooked player
 						Temp.x = SaturatedAdd(-DragSpeed, DragSpeed, pCharCore->m_Vel.x, Accel * Dir.x * 1.5f);
 						Temp.y = SaturatedAdd(-DragSpeed, DragSpeed, pCharCore->m_Vel.y, Accel * Dir.y * 1.5f);
@@ -438,23 +447,38 @@ void CCharacterCore::Tick(bool UseInput)
 	}
 
 	// clamp the velocity to something sane
-	if(length(m_Vel) > 6000)
-		m_Vel = normalize(m_Vel) * 6000;
+	if(length(m_Vel) > 6000 / ((EngineFloat)SERVER_TICK_SPEED / 50.0))
+		m_Vel = normalize(m_Vel) * 6000 / ((EngineFloat)SERVER_TICK_SPEED / 50.0);
 }
 
 void CCharacterCore::Move()
 {
-	float RampValue = VelocityRamp(length(m_Vel) * 50, m_Tuning.m_VelrampStart, m_Tuning.m_VelrampRange, m_Tuning.m_VelrampCurvature);
+	if(m_Direction == 0 && absolute(m_Vel.x) < 0.0032 / (SERVER_TICK_SPEED / 50.0))
+		m_Vel.x = 0;
+	EngineFloat RampValue = VelocityRamp(length(m_Vel) * 50.0, m_Tuning.m_VelrampStart, m_Tuning.m_VelrampRange, m_Tuning.m_VelrampCurvature);
 
-	m_Vel.x = m_Vel.x * RampValue;
+	// RampValue = pow(RampValue, 1.0/((EngineFloat)SERVER_TICK_SPEED / 50.0));
 
-	vec2 NewPos = m_Pos;
+	EngineFloat TimeDiffFactor = (50.0 / SERVER_TICK_SPEED);
 
-	vec2 OldVel = m_Vel;
-	m_pCollision->MoveBox(&NewPos, &m_Vel, vec2(28.0f, 28.0f), 0);
+	vector2_base<EngineFloat> AccelDiffFactor = (m_Vel - m_OldVel) / TimeDiffFactor;
+
+	vector2_base<EngineFloat> RealVel = m_OldVel * TimeDiffFactor + (AccelDiffFactor * (TimeDiffFactor * TimeDiffFactor) * 0.5);
+
+	RealVel.x = RealVel.x * RampValue;
+
+	vector2_base<EngineFloat> NewPos = m_Pos;
+
+	vector2_base<EngineFloat> OldVel = RealVel;
+	m_pCollision->MoveBox(&NewPos, &RealVel, vector2_base<EngineFloat>(28.0f, 28.0f), 0);
+
+	if(RealVel.x == 0.0)
+		m_Vel.x = 0;
+	if(RealVel.y == 0.0)
+		m_Vel.y = 0;
 
 	m_Colliding = 0;
-	if(m_Vel.x < 0.001f && m_Vel.x > -0.001f)
+	if(RealVel.x < 0.001 && RealVel.x > -0.001)
 	{
 		if(OldVel.x > 0)
 			m_Colliding = 1;
@@ -464,20 +488,18 @@ void CCharacterCore::Move()
 	else
 		m_LeftWall = true;
 
-	m_Vel.x = m_Vel.x * (1.0f / RampValue);
-
 	if(m_pWorld && (m_Super || (m_Tuning.m_PlayerCollision && m_Collision && !m_NoCollision && !m_Solo)))
 	{
 		// check player collision
-		float Distance = distance(m_Pos, NewPos);
+		EngineFloat Distance = distance(m_Pos, NewPos);
 		if(Distance > 0)
 		{
 			int End = Distance + 1;
-			vec2 LastPos = m_Pos;
+			vector2_base<EngineFloat> LastPos = m_Pos;
 			for(int i = 0; i < End; i++)
 			{
-				float a = i / Distance;
-				vec2 Pos = mix(m_Pos, NewPos, a);
+				EngineFloat a = i / Distance;
+				vector2_base<EngineFloat> Pos = mix(m_Pos, NewPos, a);
 				for(int p = 0; p < MAX_CLIENTS; p++)
 				{
 					CCharacterCore *pCharCore = m_pWorld->m_apCharacters[p];
@@ -505,17 +527,17 @@ void CCharacterCore::Move()
 
 void CCharacterCore::Write(CNetObj_CharacterCore *pObjCore)
 {
-	pObjCore->m_X = round_to_int(m_Pos.x);
-	pObjCore->m_Y = round_to_int(m_Pos.y);
+	pObjCore->m_X = round_to_float_frag(m_Pos.x, 1.0 / FRAGMENT_DEVIDER_BASE) * FRAGMENT_DEVIDER;
+	pObjCore->m_Y = round_to_float_frag(m_Pos.y, 1.0 / FRAGMENT_DEVIDER_BASE) * FRAGMENT_DEVIDER;
 
-	pObjCore->m_VelX = round_to_int(m_Vel.x * 256.0f);
-	pObjCore->m_VelY = round_to_int(m_Vel.y * 256.0f);
+	pObjCore->m_VelX = round_to_int(m_Vel.x * (EngineFloat)4096.0);
+	pObjCore->m_VelY = round_to_int(m_Vel.y * (EngineFloat)4096.0);
 	pObjCore->m_HookState = m_HookState;
 	pObjCore->m_HookTick = m_HookTick;
-	pObjCore->m_HookX = round_to_int(m_HookPos.x);
-	pObjCore->m_HookY = round_to_int(m_HookPos.y);
-	pObjCore->m_HookDx = round_to_int(m_HookDir.x * 256.0f);
-	pObjCore->m_HookDy = round_to_int(m_HookDir.y * 256.0f);
+	pObjCore->m_HookX = round_to_int(m_HookPos.x * (EngineFloat)4096.0);
+	pObjCore->m_HookY = round_to_int(m_HookPos.y * (EngineFloat)4096.0);
+	pObjCore->m_HookDx = round_to_int(m_HookDir.x * (EngineFloat)4096.0);
+	pObjCore->m_HookDy = round_to_int(m_HookDir.y * (EngineFloat)4096.0);
 	pObjCore->m_HookedPlayer = m_HookedPlayer;
 	pObjCore->m_Jumped = m_Jumped;
 	pObjCore->m_Direction = m_Direction;
@@ -524,16 +546,16 @@ void CCharacterCore::Write(CNetObj_CharacterCore *pObjCore)
 
 void CCharacterCore::Read(const CNetObj_CharacterCore *pObjCore)
 {
-	m_Pos.x = pObjCore->m_X;
-	m_Pos.y = pObjCore->m_Y;
-	m_Vel.x = pObjCore->m_VelX / 256.0f;
-	m_Vel.y = pObjCore->m_VelY / 256.0f;
+	m_Pos.x = pObjCore->m_X / FRAGMENT_DEVIDER;
+	m_Pos.y = pObjCore->m_Y / FRAGMENT_DEVIDER;
+	m_Vel.x = pObjCore->m_VelX / (EngineFloat)4096.0;
+	m_Vel.y = pObjCore->m_VelY / (EngineFloat)4096.0;
 	m_HookState = pObjCore->m_HookState;
 	m_HookTick = pObjCore->m_HookTick;
-	m_HookPos.x = pObjCore->m_HookX;
-	m_HookPos.y = pObjCore->m_HookY;
-	m_HookDir.x = pObjCore->m_HookDx / 256.0f;
-	m_HookDir.y = pObjCore->m_HookDy / 256.0f;
+	m_HookPos.x = pObjCore->m_HookX / (EngineFloat)4096.0;
+	m_HookPos.y = pObjCore->m_HookY / (EngineFloat)4096.0;
+	m_HookDir.x = pObjCore->m_HookDx / (EngineFloat)4096.0;
+	m_HookDir.y = pObjCore->m_HookDy / (EngineFloat)4096.0;
 	m_HookedPlayer = pObjCore->m_HookedPlayer;
 	m_Jumped = pObjCore->m_Jumped;
 	m_Direction = pObjCore->m_Direction;

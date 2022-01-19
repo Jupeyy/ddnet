@@ -50,7 +50,7 @@ void CCharacter::HandleJetpack()
 	if(m_NumInputs < 2)
 		return;
 
-	vec2 Direction = normalize(vec2(m_LatestInput.m_TargetX, m_LatestInput.m_TargetY));
+	vec2 Direction = normalize(vec2(m_LatestInput.m_TargetX / (EngineFloat)4096.0, m_LatestInput.m_TargetY / (EngineFloat)4096.0));
 
 	bool FullAuto = false;
 	if(m_Core.m_ActiveWeapon == WEAPON_GRENADE || m_Core.m_ActiveWeapon == WEAPON_SHOTGUN || m_Core.m_ActiveWeapon == WEAPON_LASER)
@@ -260,7 +260,7 @@ void CCharacter::FireWeapon()
 		return;
 
 	DoWeaponSwitch();
-	vec2 Direction = normalize(vec2(m_LatestInput.m_TargetX, m_LatestInput.m_TargetY));
+	vec2 Direction = normalize(vec2(m_LatestInput.m_TargetX / (EngineFloat)4096.0, m_LatestInput.m_TargetY / (EngineFloat)4096.0));
 
 	bool FullAuto = false;
 	if(m_Core.m_ActiveWeapon == WEAPON_GRENADE || m_Core.m_ActiveWeapon == WEAPON_SHOTGUN || m_Core.m_ActiveWeapon == WEAPON_LASER)
@@ -335,13 +335,13 @@ void CCharacter::FireWeapon()
 			{
 				if(m_GameTeam == pTarget->m_GameTeam && pTarget->m_LastSnapWeapon == WEAPON_NINJA) // melt hammer
 				{
-					Force.x *= 50 * 0.01f;
-					Force.y *= 50 * 0.01f;
+					Force.x *= (50.f / (float)SERVER_TICK_SPEED) * 50 * 0.01f;
+					Force.y *= (50.f / (float)SERVER_TICK_SPEED) * 50 * 0.01f;
 				}
 				else
 				{
-					Force.x *= 320 * 0.01f;
-					Force.y *= 120 * 0.01f;
+					Force.x *= (50.f / (float)SERVER_TICK_SPEED) * 320 * 0.01f;
+					Force.y *= (50.f / (float)SERVER_TICK_SPEED) * 120 * 0.01f;
 				}
 			}
 			else
@@ -371,15 +371,15 @@ void CCharacter::FireWeapon()
 
 			new CProjectile(
 				GameWorld(),
-				WEAPON_GUN, //Type
-				GetCID(), //Owner
-				ProjStartPos, //Pos
-				Direction, //Dir
-				Lifetime, //Span
-				0, //Freeze
-				0, //Explosive
-				0, //Force
-				-1 //SoundImpact
+				WEAPON_GUN, // Type
+				GetCID(), // Owner
+				ProjStartPos, // Pos
+				Direction, // Dir
+				Lifetime, // Span
+				0, // Freeze
+				0, // Explosive
+				0, // Force
+				-1 // SoundImpact
 			);
 		}
 	}
@@ -399,15 +399,15 @@ void CCharacter::FireWeapon()
 				float Speed = mix((float)Tuning()->m_ShotgunSpeeddiff, 1.0f, v);
 				new CProjectile(
 					GameWorld(),
-					WEAPON_SHOTGUN, //Type
-					GetCID(), //Owner
-					ProjStartPos, //Pos
-					vec2(cosf(a), sinf(a)) * Speed, //Dir
-					(int)(GameWorld()->GameTickSpeed() * Tuning()->m_ShotgunLifetime), //Span
-					0, //Freeze
-					0, //Explosive
-					0, //Force
-					-1 //SoundImpact
+					WEAPON_SHOTGUN, // Type
+					GetCID(), // Owner
+					ProjStartPos, // Pos
+					vec2(cosf(a), sinf(a)) * Speed, // Dir
+					(int)(GameWorld()->GameTickSpeed() * Tuning()->m_ShotgunLifetime), // Span
+					0, // Freeze
+					0, // Explosive
+					0, // Force
+					-1 // SoundImpact
 				);
 			}
 		}
@@ -426,16 +426,16 @@ void CCharacter::FireWeapon()
 
 		new CProjectile(
 			GameWorld(),
-			WEAPON_GRENADE, //Type
-			GetCID(), //Owner
-			ProjStartPos, //Pos
-			Direction, //Dir
-			Lifetime, //Span
-			0, //Freeze
-			true, //Explosive
-			0, //Force
-			SOUND_GRENADE_EXPLODE //SoundImpact
-		); //SoundImpact
+			WEAPON_GRENADE, // Type
+			GetCID(), // Owner
+			ProjStartPos, // Pos
+			Direction, // Dir
+			Lifetime, // Span
+			0, // Freeze
+			true, // Explosive
+			0, // Force
+			SOUND_GRENADE_EXPLODE // SoundImpact
+		); // SoundImpact
 	}
 	break;
 
@@ -472,7 +472,7 @@ void CCharacter::FireWeapon()
 
 void CCharacter::HandleWeapons()
 {
-	//ninja
+	// ninja
 	HandleNinja();
 	HandleJetpack();
 
@@ -508,7 +508,7 @@ void CCharacter::OnPredictedInput(CNetObj_PlayerInput *pNewInput)
 
 	// copy new input
 	mem_copy(&m_Input, pNewInput, sizeof(m_Input));
-	//m_NumInputs++;
+	// m_NumInputs++;
 
 	// it is not allowed to aim in the center
 	if(m_Input.m_TargetX == 0 && m_Input.m_TargetY == 0)
@@ -548,8 +548,8 @@ void CCharacter::OnDirectInput(CNetObj_PlayerInput *pNewInput)
 void CCharacter::ResetInput()
 {
 	m_Input.m_Direction = 0;
-	//m_Input.m_Hook = 0;
-	// simulate releasing the fire button
+	// m_Input.m_Hook = 0;
+	//  simulate releasing the fire button
 	if((m_Input.m_Fire & 1) != 0)
 		m_Input.m_Fire++;
 	m_Input.m_Fire &= INPUT_STATE_MASK;
@@ -921,7 +921,7 @@ void CCharacter::DDRaceTick()
 	{
 		m_Input.m_Direction = 0;
 		m_Input.m_Jump = 0;
-		//Hook and weapons are possible in live freeze
+		// Hook and weapons are possible in live freeze
 	}
 	if(m_FreezeTime > 0 || m_FreezeTime == -1)
 	{
@@ -1059,7 +1059,7 @@ CCharacter::CCharacter(CGameWorld *pGameWorld, int ID, CNetObj_Character *pChar,
 	m_LastWeapon = WEAPON_HAMMER;
 	m_QueuedWeapon = -1;
 	m_LastRefillJumps = false;
-	m_PrevPrevPos = m_PrevPos = m_Pos = vec2(pChar->m_X, pChar->m_Y);
+	m_PrevPrevPos = m_PrevPos = m_Pos = vec2(pChar->m_X / FRAGMENT_DEVIDER, pChar->m_Y / FRAGMENT_DEVIDER);
 	m_Core.Reset();
 	m_Core.Init(&GameWorld()->m_Core, GameWorld()->Collision(), GameWorld()->Teams());
 	m_Core.m_Id = ID;
@@ -1250,7 +1250,7 @@ void CCharacter::Read(CNetObj_Character *pChar, CNetObj_DDNetCharacter *pExtende
 		// detect unfreeze (in case the player was frozen in the tile prediction and not correctly unfrozen)
 		if(pChar->m_Emote != EMOTE_PAIN && pChar->m_Emote != EMOTE_NORMAL)
 			m_DeepFreeze = false;
-		if(pChar->m_Weapon != WEAPON_NINJA || pChar->m_AttackTick > m_FreezeTick || absolute(pChar->m_VelX) == 256 * 10 || !GameWorld()->m_WorldConfig.m_PredictFreeze)
+		if(pChar->m_Weapon != WEAPON_NINJA || pChar->m_AttackTick > m_FreezeTick || absolute(pChar->m_VelX) == (EngineFloat)4096.0 * 10 || !GameWorld()->m_WorldConfig.m_PredictFreeze)
 		{
 			m_DeepFreeze = false;
 			UnFreeze();
@@ -1289,8 +1289,8 @@ void CCharacter::Read(CNetObj_Character *pChar, CNetObj_DDNetCharacter *pExtende
 		mem_zero(&m_SavedInput, sizeof(m_SavedInput));
 		m_Input.m_Direction = m_SavedInput.m_Direction = m_Core.m_Direction;
 		m_Input.m_Hook = m_SavedInput.m_Hook = (m_Core.m_HookState != HOOK_IDLE);
-		m_Input.m_TargetX = m_SavedInput.m_TargetX = cosf(pChar->m_Angle / 256.0f) * 256.0f;
-		m_Input.m_TargetY = m_SavedInput.m_TargetY = sinf(pChar->m_Angle / 256.0f) * 256.0f;
+		m_Input.m_TargetX = m_SavedInput.m_TargetX = (cosf(pChar->m_Angle / (EngineFloat)4096.0) * (EngineFloat)4096.0);
+		m_Input.m_TargetY = m_SavedInput.m_TargetY = (sinf(pChar->m_Angle / (EngineFloat)4096.0) * (EngineFloat)4096.0);
 	}
 
 	// in most cases the reload timer can be determined from the last attack tick

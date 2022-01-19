@@ -288,8 +288,8 @@ int CControls::SnapInput(int *pData)
 
 		// set the target anyway though so that we can keep seeing our surroundings,
 		// even if chat or menu are activated
-		m_InputData[g_Config.m_ClDummy].m_TargetX = (int)m_MousePos[g_Config.m_ClDummy].x;
-		m_InputData[g_Config.m_ClDummy].m_TargetY = (int)m_MousePos[g_Config.m_ClDummy].y;
+		m_InputData[g_Config.m_ClDummy].m_TargetX = (int)(m_MousePos[g_Config.m_ClDummy].x * (EngineFloat)4096.0);
+		m_InputData[g_Config.m_ClDummy].m_TargetY = (int)(m_MousePos[g_Config.m_ClDummy].y * (EngineFloat)4096.0);
 
 		// send once a second just to be sure
 		if(time_get() > LastSendTime + time_freq())
@@ -297,8 +297,8 @@ int CControls::SnapInput(int *pData)
 	}
 	else
 	{
-		m_InputData[g_Config.m_ClDummy].m_TargetX = (int)m_MousePos[g_Config.m_ClDummy].x;
-		m_InputData[g_Config.m_ClDummy].m_TargetY = (int)m_MousePos[g_Config.m_ClDummy].y;
+		m_InputData[g_Config.m_ClDummy].m_TargetX = (int)(m_MousePos[g_Config.m_ClDummy].x * (EngineFloat)4096.0);
+		m_InputData[g_Config.m_ClDummy].m_TargetY = (int)(m_MousePos[g_Config.m_ClDummy].y * (EngineFloat)4096.0);
 		if(!m_InputData[g_Config.m_ClDummy].m_TargetX && !m_InputData[g_Config.m_ClDummy].m_TargetY)
 		{
 			m_InputData[g_Config.m_ClDummy].m_TargetX = 1;

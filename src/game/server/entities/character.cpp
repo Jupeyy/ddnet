@@ -143,7 +143,7 @@ bool CCharacter::IsGrounded()
 
 void CCharacter::HandleJetpack()
 {
-	vec2 Direction = normalize(vec2(m_LatestInput.m_TargetX, m_LatestInput.m_TargetY));
+	vec2 Direction = normalize(vec2(m_LatestInput.m_TargetX / (EngineFloat)4096.0, m_LatestInput.m_TargetY / (EngineFloat)4096.0));
 
 	bool FullAuto = false;
 	if(m_Core.m_ActiveWeapon == WEAPON_GRENADE || m_Core.m_ActiveWeapon == WEAPON_SHOTGUN || m_Core.m_ActiveWeapon == WEAPON_LASER)
@@ -351,7 +351,7 @@ void CCharacter::FireWeapon()
 	}
 
 	DoWeaponSwitch();
-	vec2 Direction = normalize(vec2(m_LatestInput.m_TargetX, m_LatestInput.m_TargetY));
+	vec2 Direction = normalize(vec2(m_LatestInput.m_TargetX / (EngineFloat)4096.0, m_LatestInput.m_TargetY / (EngineFloat)4096.0));
 
 	bool FullAuto = false;
 	if(m_Core.m_ActiveWeapon == WEAPON_GRENADE || m_Core.m_ActiveWeapon == WEAPON_SHOTGUN || m_Core.m_ActiveWeapon == WEAPON_LASER)
@@ -422,7 +422,7 @@ void CCharacter::FireWeapon()
 		{
 			CCharacter *pTarget = apEnts[i];
 
-			//if ((pTarget == this) || GameServer()->Collision()->IntersectLine(ProjStartPos, pTarget->m_Pos, NULL, NULL))
+			// if ((pTarget == this) || GameServer()->Collision()->IntersectLine(ProjStartPos, pTarget->m_Pos, NULL, NULL))
 			if((pTarget == this || (pTarget->IsAlive() && !CanCollide(pTarget->GetPlayer()->GetCID()))))
 				continue;
 
@@ -486,15 +486,15 @@ void CCharacter::FireWeapon()
 
 			new CProjectile(
 				GameWorld(),
-				WEAPON_GUN, //Type
-				m_pPlayer->GetCID(), //Owner
-				ProjStartPos, //Pos
-				Direction, //Dir
-				Lifetime, //Span
-				0, //Freeze
-				0, //Explosive
-				0, //Force
-				-1 //SoundImpact
+				WEAPON_GUN, // Type
+				m_pPlayer->GetCID(), // Owner
+				ProjStartPos, // Pos
+				Direction, // Dir
+				Lifetime, // Span
+				0, // Freeze
+				0, // Explosive
+				0, // Force
+				-1 // SoundImpact
 			);
 
 			GameServer()->CreateSound(m_Pos, SOUND_GUN_FIRE, Teams()->TeamMask(Team(), -1, m_pPlayer->GetCID()));
@@ -543,16 +543,16 @@ void CCharacter::FireWeapon()
 
 		new CProjectile(
 			GameWorld(),
-			WEAPON_GRENADE, //Type
-			m_pPlayer->GetCID(), //Owner
-			ProjStartPos, //Pos
-			Direction, //Dir
-			Lifetime, //Span
-			0, //Freeze
-			true, //Explosive
-			0, //Force
-			SOUND_GRENADE_EXPLODE //SoundImpact
-		); //SoundImpact
+			WEAPON_GRENADE, // Type
+			m_pPlayer->GetCID(), // Owner
+			ProjStartPos, // Pos
+			Direction, // Dir
+			Lifetime, // Span
+			0, // Freeze
+			true, // Explosive
+			0, // Force
+			SOUND_GRENADE_EXPLODE // SoundImpact
+		); // SoundImpact
 
 		GameServer()->CreateSound(m_Pos, SOUND_GRENADE_FIRE, Teams()->TeamMask(Team(), -1, m_pPlayer->GetCID()));
 	}
@@ -603,7 +603,7 @@ void CCharacter::FireWeapon()
 
 void CCharacter::HandleWeapons()
 {
-	//ninja
+	// ninja
 	HandleNinja();
 	HandleJetpack();
 
@@ -723,8 +723,8 @@ void CCharacter::ResetHook()
 void CCharacter::ResetInput()
 {
 	m_Input.m_Direction = 0;
-	//m_Input.m_Hook = 0;
-	// simulate releasing the fire button
+	// m_Input.m_Hook = 0;
+	//  simulate releasing the fire button
 	if((m_Input.m_Fire & 1) != 0)
 		m_Input.m_Fire++;
 	m_Input.m_Fire &= INPUT_STATE_MASK;
@@ -797,7 +797,7 @@ void CCharacter::TickDefered()
 		m_ReckoningCore.Quantize();
 	}
 
-	//lastsentcore
+	// lastsentcore
 	vec2 StartPos = m_Core.m_Pos;
 	vec2 StartVel = m_Core.m_Vel;
 	bool StuckBefore = GameServer()->Collision()->TestBox(m_Core.m_Pos, vec2(28.0f, 28.0f));
@@ -807,7 +807,6 @@ void CCharacter::TickDefered()
 	bool StuckAfterMove = GameServer()->Collision()->TestBox(m_Core.m_Pos, vec2(28.0f, 28.0f));
 	m_Core.Quantize();
 	bool StuckAfterQuant = GameServer()->Collision()->TestBox(m_Core.m_Pos, vec2(28.0f, 28.0f));
-	m_Pos = m_Core.m_Pos;
 
 	if(!StuckBefore && (StuckAfterMove || StuckAfterQuant))
 	{
@@ -834,6 +833,8 @@ void CCharacter::TickDefered()
 			StartVelX.u, StartVelY.u);
 		GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "game", aBuf);
 	}
+
+	m_Pos = m_Core.m_Pos;
 
 	{
 		int Events = m_Core.m_TriggeredEvents;
@@ -1052,7 +1053,7 @@ bool CCharacter::TakeDamage(vec2 Force, int Dmg, int From, int Weapon)
 	return true;
 }
 
-//TODO: Move the emote stuff to a function
+// TODO: Move the emote stuff to a function
 void CCharacter::SnapCharacter(int SnappingClient, int ID)
 {
 	CCharacterCore *pCore;
@@ -1267,7 +1268,8 @@ void CCharacter::Snap(int SnappingClient)
 		pDDNetCharacter->m_Flags |= CHARACTERFLAG_NO_MOVEMENTS;
 	}
 
-	pDDNetCharacter->m_FreezeEnd = m_DeepFreeze ? -1 : m_FreezeTime == 0 ? 0 : Server()->Tick() + m_FreezeTime;
+	pDDNetCharacter->m_FreezeEnd = m_DeepFreeze ? -1 : m_FreezeTime == 0 ? 0 :
+									       Server()->Tick() + m_FreezeTime;
 	pDDNetCharacter->m_Jumps = m_Core.m_Jumps;
 	pDDNetCharacter->m_TeleCheckpoint = m_TeleCheckpoint;
 	pDDNetCharacter->m_StrongWeakID = m_StrongWeakID;
@@ -1434,7 +1436,7 @@ bool CCharacter::IsSwitchActiveCb(int Number, void *pUser)
 void CCharacter::HandleTiles(int Index)
 {
 	int MapIndex = Index;
-	//int PureMapIndex = GameServer()->Collision()->GetPureMapIndex(m_Pos);
+	// int PureMapIndex = GameServer()->Collision()->GetPureMapIndex(m_Pos);
 	m_TileIndex = GameServer()->Collision()->GetTileIndex(MapIndex);
 	m_TileFIndex = GameServer()->Collision()->GetFTileIndex(MapIndex);
 	m_MoveRestrictions = GameServer()->Collision()->GetMoveRestrictions(IsSwitchActiveCb, this, m_Pos, 18.0f, MapIndex);

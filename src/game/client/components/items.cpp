@@ -15,6 +15,7 @@
 #include <game/client/components/effects.h>
 #include <game/client/components/flow.h>
 
+#include "base/math.h"
 #include "items.h"
 
 void CItems::RenderProjectile(const CProjectileData *pCurrent, int ItemID)
@@ -243,7 +244,7 @@ void CItems::RenderLaser(const struct CNetObj_Laser *pCurrent, bool IsPredicted)
 			Ticks = (float)(Client()->PredGameTick(g_Config.m_ClDummy) - pCurrent->m_StartTick) + Client()->PredIntraGameTick(g_Config.m_ClDummy);
 		else
 			Ticks = (float)(Client()->GameTick(g_Config.m_ClDummy) - pCurrent->m_StartTick) + Client()->IntraGameTick(g_Config.m_ClDummy);
-		float Ms = (Ticks / 50.0f) * 1000.0f;
+		float Ms = (Ticks / (EngineFloat)SERVER_TICK_SPEED) * 1000.0f;
 		float a = Ms / m_pClient->GetTunes(TuneZone).m_LaserBounceDelay;
 		a = clamp(a, 0.0f, 1.0f);
 		float Ia = 1 - a;

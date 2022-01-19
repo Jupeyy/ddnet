@@ -29,8 +29,8 @@ void CGhost::GetGhostSkin(CGhostSkin *pSkin, const char *pSkinName, int UseCusto
 
 void CGhost::GetGhostCharacter(CGhostCharacter *pGhostChar, const CNetObj_Character *pChar)
 {
-	pGhostChar->m_X = pChar->m_X;
-	pGhostChar->m_Y = pChar->m_Y;
+	pGhostChar->m_X = pChar->m_X / FRAGMENT_DEVIDER;
+	pGhostChar->m_Y = pChar->m_Y / FRAGMENT_DEVIDER;
 	pGhostChar->m_VelX = pChar->m_VelX;
 	pGhostChar->m_VelY = 0;
 	pGhostChar->m_Angle = pChar->m_Angle;
@@ -222,8 +222,8 @@ void CGhost::CheckStartLocal(bool Predicted)
 	{
 		int PrevTick = m_pClient->m_Snap.m_pLocalPrevCharacter->m_Tick;
 		int CurTick = m_pClient->m_Snap.m_pLocalCharacter->m_Tick;
-		vec2 PrevPos = vec2(m_pClient->m_Snap.m_pLocalPrevCharacter->m_X, m_pClient->m_Snap.m_pLocalPrevCharacter->m_Y);
-		vec2 Pos = vec2(m_pClient->m_Snap.m_pLocalCharacter->m_X, m_pClient->m_Snap.m_pLocalCharacter->m_Y);
+		vec2 PrevPos = vec2(m_pClient->m_Snap.m_pLocalPrevCharacter->m_X / FRAGMENT_DEVIDER, m_pClient->m_Snap.m_pLocalPrevCharacter->m_Y / FRAGMENT_DEVIDER);
+		vec2 Pos = vec2(m_pClient->m_Snap.m_pLocalCharacter->m_X / FRAGMENT_DEVIDER, m_pClient->m_Snap.m_pLocalCharacter->m_Y / FRAGMENT_DEVIDER);
 
 		// detecting death, needed because race allows immediate respawning
 		if((!m_Recording || m_AllowRestart) && m_LastDeathTick < PrevTick)

@@ -6,6 +6,12 @@
 #include <math.h>
 #include <stdlib.h>
 
+typedef long double EngineFloat;
+
+#define FRAGMENT_DEVIDER_BASE ((EngineFloat)SERVER_TICK_SPEED / (EngineFloat)50.0)
+#define FRAGMENT_DEVIDER_MULTIPLIER ((EngineFloat)100.0)
+#define FRAGMENT_DEVIDER (FRAGMENT_DEVIDER_BASE * FRAGMENT_DEVIDER_MULTIPLIER)
+
 template<typename T>
 constexpr inline T clamp(T val, T min, T max)
 {
@@ -17,9 +23,38 @@ constexpr inline float sign(float f)
 	return f < 0.0f ? -1.0f : 1.0f;
 }
 
+template<typename TName>
+inline TName round_to_float_frag(TName f, TName fragment)
+{
+	TName FragToOne = (TName)1.0 / fragment;
+
+	int FragmentInt = (int)((f)*FragToOne);
+	TName FragmentReal = (f - (TName)((int)f));
+
+	if(FragmentInt > 0)
+	{
+		if(FragmentReal < (TName)0.5)
+			return (TName)FragmentInt / FragToOne;
+
+		return (TName)(FragmentInt + 1) / FragToOne;
+	}
+
+	if(FragmentReal < -(TName)0.5)
+		return (TName)(FragmentInt + 1) / FragToOne;
+
+	return (TName)(FragmentInt) / FragToOne;
+}
+
+inline int round_to_int(long double f)
+{
+	if(f > 0)
+		return (int)(f + 0.5L);
+	return (int)(f - 0.5L);
+}
+
 constexpr inline int round_to_int(float f)
 {
-	return f > 0 ? (int)(f + 0.5f) : (int)(f - 0.5f);
+	return (f > 0) ? (int)(f + 0.5) : (int)(f - 0.5);
 }
 
 constexpr inline int round_truncate(float f)

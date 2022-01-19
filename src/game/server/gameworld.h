@@ -89,7 +89,7 @@ public:
 			Returns a pointer to the closest hit or NULL of there is no intersection.
 	*/
 	//class CCharacter *IntersectCharacter(vec2 Pos0, vec2 Pos1, float Radius, vec2 &NewPos, class CEntity *pNotThis = 0);
-	class CCharacter *IntersectCharacter(vec2 Pos0, vec2 Pos1, float Radius, vec2 &NewPos, class CCharacter *pNotThis = 0, int CollideWith = -1, class CCharacter *pThisOnly = 0);
+	class CCharacter *IntersectCharacter(vector2_base<EngineFloat> Pos0, vector2_base<EngineFloat> Pos1, float Radius, vector2_base<EngineFloat> &NewPos, class CCharacter *pNotThis = 0, int CollideWith = -1, class CCharacter *pThisOnly = 0);
 	/*
 		Function: ClosestCharacter
 			Finds the closest CCharacter to a specific point.

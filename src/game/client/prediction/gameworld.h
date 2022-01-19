@@ -34,7 +34,7 @@ public:
 	CEntity *FindFirst(int Type);
 	CEntity *FindLast(int Type);
 	int FindEntities(vec2 Pos, float Radius, CEntity **ppEnts, int Max, int Type);
-	class CCharacter *IntersectCharacter(vec2 Pos0, vec2 Pos1, float Radius, vec2 &NewPos, class CCharacter *pNotThis = 0, int CollideWith = -1, class CCharacter *pThisOnly = 0);
+	class CCharacter *IntersectCharacter(vector2_base<EngineFloat> Pos0, vector2_base<EngineFloat> Pos1, EngineFloat Radius, vector2_base<EngineFloat> &NewPos, class CCharacter *pNotThis = 0, int CollideWith = -1, class CCharacter *pThisOnly = 0);
 	void InsertEntity(CEntity *pEntity, bool Last = false);
 	void RemoveEntity(CEntity *pEntity);
 	void Tick();

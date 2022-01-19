@@ -27,15 +27,15 @@ public:
 	int Get() const { return m_Value; }
 	CTuneParam &operator=(int v)
 	{
-		m_Value = (int)(v * 100.0f);
+		m_Value = (int)(v * 100000.0f);
 		return *this;
 	}
-	CTuneParam &operator=(float v)
+	CTuneParam &operator=(EngineFloat v)
 	{
-		m_Value = (int)(v * 100.0f);
+		m_Value = (int)(v * 100000.0f);
 		return *this;
 	}
-	operator float() const { return m_Value / 100.0f; }
+	operator EngineFloat() const { return m_Value / 100000.0f; }
 };
 
 class CTuningParams
@@ -43,8 +43,8 @@ class CTuningParams
 public:
 	CTuningParams()
 	{
-		const float TicksPerSecond = 50.0f;
-#define MACRO_TUNING_PARAM(Name, ScriptName, Value, Description) m_##Name.Set((int)(Value * 100.0f));
+		const float TicksPerSecond = (EngineFloat)SERVER_TICK_SPEED;
+#define MACRO_TUNING_PARAM(Name, ScriptName, Value, Description) m_##Name.Set((int)(Value * 100000.0));
 #include "tuning.h"
 #undef MACRO_TUNING_PARAM
 	}
@@ -59,11 +59,32 @@ public:
 	{
 		return sizeof(CTuningParams) / sizeof(int);
 	}
-	bool Set(int Index, float Value);
-	bool Set(const char *pName, float Value);
+	bool Set(int Index, EngineFloat Value);
+	bool Set(const char *pName, EngineFloat Value);
 	bool Get(int Index, float *pValue) const;
 	bool Get(const char *pName, float *pValue) const;
 };
+
+inline vec2 GetDirection(int Angle)
+{
+	float a = Angle / (EngineFloat)4096.0;
+	return vec2(cosf(a), sinf(a));
+}
+
+inline vec2 GetDir(float Angle)
+{
+	return vec2(cosf(Angle), sinf(Angle));
+}
+
+inline float GetAngle(vec2 Dir)
+{
+	if(Dir.x == 0 && Dir.y == 0)
+		return 0.0f;
+	float a = atanf(Dir.y / Dir.x);
+	if(Dir.x < 0)
+		a = a + pi;
+	return a;
+}
 
 inline void StrToInts(int *pInts, int Num, const char *pStr)
 {
@@ -145,7 +166,7 @@ inline T SaturatedAdd(T Min, T Max, T Current, T Modifier)
 	}
 }
 
-float VelocityRamp(float Value, float Start, float Range, float Curvature);
+EngineFloat VelocityRamp(EngineFloat Value, EngineFloat Start, EngineFloat Range, EngineFloat Curvature);
 
 // hooking stuff
 enum
@@ -164,7 +185,7 @@ enum
 	COREEVENT_HOOK_ATTACH_GROUND = 0x10,
 	COREEVENT_HOOK_HIT_NOHOOK = 0x20,
 	COREEVENT_HOOK_RETRACT = 0x40,
-	//COREEVENT_HOOK_TELE=0x80,
+	// COREEVENT_HOOK_TELE=0x80,
 };
 
 class CWorldCore
@@ -201,14 +222,17 @@ class CCharacterCore
 	std::map<int, std::vector<vec2>> *m_pTeleOuts;
 
 public:
-	vec2 m_Pos;
-	vec2 m_Vel;
+	vector2_base<EngineFloat> m_Pos;
+	vector2_base<EngineFloat> m_Vel;
+	vector2_base<EngineFloat> m_OldVel;
 	bool m_Hook;
 	bool m_Collision;
 
-	vec2 m_HookPos;
-	vec2 m_HookDir;
-	vec2 m_HookTeleBase;
+	int m_Tick;
+
+	vector2_base<EngineFloat> m_HookPos;
+	vector2_base<EngineFloat> m_HookDir;
+	vector2_base<EngineFloat> m_HookTeleBase;
 	int m_HookTick;
 	int m_HookState;
 	int m_HookedPlayer;
@@ -241,7 +265,7 @@ public:
 	bool m_pReset;
 	class CCollision *Collision() { return m_pCollision; }
 
-	vec2 m_LastVel;
+	vector2_base<EngineFloat> m_LastVel;
 	int m_Colliding;
 	bool m_LeftWall;
 
@@ -274,7 +298,7 @@ private:
 	static bool IsSwitchActiveCb(int Number, void *pUser);
 };
 
-//input count
+// input count
 struct CInputCount
 {
 	int m_Presses;

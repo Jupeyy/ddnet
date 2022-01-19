@@ -22,7 +22,7 @@ struct CParticle
 		m_Color = ColorRGBA(1, 1, 1, 1);
 	}
 
-	vec2 m_Pos;
+	vector2_base<EngineFloat> m_Pos;
 	vec2 m_Vel;
 
 	int m_Spr;

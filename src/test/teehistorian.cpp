@@ -190,8 +190,8 @@ protected:
 	{
 		CNetObj_CharacterCore Char;
 		mem_zero(&Char, sizeof(Char));
-		Char.m_X = x;
-		Char.m_Y = y;
+		Char.m_X = x * FRAGMENT_DEVIDER;
+		Char.m_Y = y * FRAGMENT_DEVIDER;
 		m_TH.RecordPlayer(ClientID, &Char);
 	}
 };

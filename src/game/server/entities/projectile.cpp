@@ -33,7 +33,7 @@ CProjectile::CProjectile(
 	m_LifeSpan = Span;
 	m_Owner = Owner;
 	m_Force = Force;
-	//m_Damage = Damage;
+	// m_Damage = Damage;
 	m_SoundImpact = SoundImpact;
 	m_StartTick = Server()->Tick();
 	m_Explosive = Explosive;
@@ -111,8 +111,8 @@ void CProjectile::Tick()
 	float Ct = (Server()->Tick() - m_StartTick) / (float)Server()->TickSpeed();
 	vec2 PrevPos = GetPos(Pt);
 	vec2 CurPos = GetPos(Ct);
-	vec2 ColPos;
-	vec2 NewPos;
+	vector2_base<EngineFloat> ColPos;
+	vector2_base<EngineFloat> NewPos;
 	int Collide = GameServer()->Collision()->IntersectLine(PrevPos, CurPos, &ColPos, &NewPos);
 	CCharacter *pOwnerChar = 0;
 
@@ -177,7 +177,7 @@ void CProjectile::Tick()
 		if(pOwnerChar && !GameLayerClipped(ColPos) &&
 			((m_Type == WEAPON_GRENADE && pOwnerChar->HasTelegunGrenade()) || (m_Type == WEAPON_GUN && pOwnerChar->HasTelegunGun())))
 		{
-			int MapIndex = GameServer()->Collision()->GetPureMapIndex(pTargetChr ? pTargetChr->m_Pos : ColPos);
+			int MapIndex = GameServer()->Collision()->GetPureMapIndex(pTargetChr ? vector2_base<EngineFloat>(pTargetChr->m_Pos) : ColPos);
 			int TileFIndex = GameServer()->Collision()->GetFTileIndex(MapIndex);
 			bool IsSwitchTeleGun = GameServer()->Collision()->GetSwitchType(MapIndex) == TILE_ALLOW_TELE_GUN;
 			bool IsBlueSwitchTeleGun = GameServer()->Collision()->GetSwitchType(MapIndex) == TILE_ALLOW_BLUE_TELE_GUN;
@@ -202,7 +202,7 @@ void CProjectile::Tick()
 				vec2 PossiblePos;
 
 				if(!Collide)
-					Found = GetNearestAirPosPlayer(pTargetChr ? pTargetChr->m_Pos : ColPos, &PossiblePos);
+					Found = GetNearestAirPosPlayer(pTargetChr ? pTargetChr->m_Pos : vec2(ColPos), &PossiblePos);
 				else
 					Found = GetNearestAirPos(NewPos, CurPos, &PossiblePos);
 
@@ -374,17 +374,17 @@ bool CProjectile::FillExtraInfo(CNetObj_DDNetProjectile *pProj)
 	const int MaxPos = 0x7fffffff / 100;
 	if(abs((int)m_Pos.y) + 1 >= MaxPos || abs((int)m_Pos.x) + 1 >= MaxPos)
 	{
-		//If the modified data would be too large to fit in an integer, send normal data instead
+		// If the modified data would be too large to fit in an integer, send normal data instead
 		return false;
 	}
-	//Send additional/modified info, by modifiying the fields of the netobj
+	// Send additional/modified info, by modifiying the fields of the netobj
 	float Angle = -atan2f(m_Direction.x, m_Direction.y);
 
 	int Data = 0;
 	Data |= (abs(m_Owner) & 255) << 0;
 	if(m_Owner < 0)
 		Data |= PROJECTILEFLAG_NO_OWNER;
-	//This bit tells the client to use the extra info
+	// This bit tells the client to use the extra info
 	Data |= PROJECTILEFLAG_IS_DDNET;
 	// PROJECTILEFLAG_BOUNCE_HORIZONTAL, PROJECTILEFLAG_BOUNCE_VERTICAL
 	Data |= (m_Bouncing & 3) << 10;

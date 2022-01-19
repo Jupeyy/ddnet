@@ -73,8 +73,8 @@ void CProjectile::Tick()
 	float Ct = (GameWorld()->GameTick() - m_StartTick) / (float)GameWorld()->GameTickSpeed();
 	vec2 PrevPos = GetPos(Pt);
 	vec2 CurPos = GetPos(Ct);
-	vec2 ColPos;
-	vec2 NewPos;
+	vector2_base<EngineFloat> ColPos;
+	vector2_base<EngineFloat> NewPos;
 	int Collide = Collision()->IntersectLine(PrevPos, CurPos, &ColPos, &NewPos);
 	CCharacter *pOwnerChar = GameWorld()->GetCharacterByID(m_Owner);
 
