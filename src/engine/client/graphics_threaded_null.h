@@ -76,7 +76,7 @@ public:
 
 	void TextureSet(CTextureHandle TextureID) override{};
 
-	void Clear(float r, float g, float b) override{};
+	void Clear(float r, float g, float b, bool ForceClearNow = false) override{};
 
 	void QuadsBegin() override{};
 	void QuadsEnd() override{};
@@ -188,7 +188,7 @@ public:
 
 	SWarning *GetCurWarning() override { return NULL; };
 
-	void GetDriverVersion(EGraphicsDriverAgeType DriverAgeType, int &Major, int &Minor, int &Patch) override {}
+	bool GetDriverVersion(EGraphicsDriverAgeType DriverAgeType, int &Major, int &Minor, int &Patch, const char *&pName, EBackendType BackendType) override { return false; }
 	bool IsConfigModernAPI() override { return false; }
 	bool IsTileBufferingEnabled() override { return false; }
 	bool IsQuadBufferingEnabled() override { return false; }

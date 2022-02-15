@@ -5,6 +5,7 @@
 
 #include <base/detect.h>
 
+#include "engine/graphics.h"
 #include "graphics_defines.h"
 
 #include "blocklist_driver.h"
@@ -87,13 +88,6 @@ class CCommandProcessorFragment_General
 
 public:
 	bool RunCommand(const CCommandBuffer::SCommand *pBaseCommand);
-};
-
-enum EBackendType
-{
-	BACKEND_TYPE_OPENGL = 0,
-	BACKEND_TYPE_OPENGL_ES,
-	BACKEND_TYPE_VULKAN,
 };
 
 struct SBackendCapabilites
@@ -200,7 +194,7 @@ class CGraphicsBackend_SDL_GL : public CGraphicsBackend_Threaded
 	char m_aVersionString[gs_GPUInfoStringSize] = {};
 	char m_aRendererString[gs_GPUInfoStringSize] = {};
 
-	EBackendType m_BackendType;
+	EBackendType m_BackendType = BACKEND_TYPE_AUTO;
 
 	char m_aErrorString[256];
 
@@ -240,7 +234,7 @@ public:
 	virtual void WindowDestroyNtf(uint32_t WindowID);
 	virtual void WindowCreateNtf(uint32_t WindowID);
 
-	virtual void GetDriverVersion(EGraphicsDriverAgeType DriverAgeType, int &Major, int &Minor, int &Patch);
+	virtual bool GetDriverVersion(EGraphicsDriverAgeType DriverAgeType, int &Major, int &Minor, int &Patch, const char *&pName, EBackendType BackendType);
 	virtual bool IsConfigModernAPI() { return IsModernAPI(m_BackendType); }
 	virtual bool UseTrianglesAsQuad() { return m_Capabilites.m_TrianglesAsQuads; }
 	virtual bool HasTileBuffering() { return m_Capabilites.m_TileBuffering; }

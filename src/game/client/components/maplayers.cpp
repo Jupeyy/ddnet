@@ -844,6 +844,7 @@ void CMapLayers::OnMapLoad()
 							// then create the buffer container
 							SBufferContainerInfo ContainerInfo;
 							ContainerInfo.m_Stride = (DoTextureCoords ? (sizeof(float) * 2 + sizeof(vec3)) : 0);
+							ContainerInfo.m_VertBufferBindingIndex = BufferObjectIndex;
 							ContainerInfo.m_Attributes.emplace_back();
 							SBufferContainerInfo::SAttribute *pAttr = &ContainerInfo.m_Attributes.back();
 							pAttr->m_DataTypeCount = 2;
@@ -946,6 +947,7 @@ void CMapLayers::OnMapLoad()
 					// then create the buffer container
 					SBufferContainerInfo ContainerInfo;
 					ContainerInfo.m_Stride = (Textured ? (sizeof(STmpQuadTextured) / 4) : (sizeof(STmpQuad) / 4));
+					ContainerInfo.m_VertBufferBindingIndex = BufferObjectIndex;
 					ContainerInfo.m_Attributes.emplace_back();
 					SBufferContainerInfo::SAttribute *pAttr = &ContainerInfo.m_Attributes.back();
 					pAttr->m_DataTypeCount = 4;

@@ -95,7 +95,6 @@ endif()
 set(AUTO_DEPENDENCIES_DEFAULT OFF)
 if(TARGET_OS STREQUAL "windows")
   set(AUTO_DEPENDENCIES_DEFAULT ON)
-elseif(TARGET_OS STREQUAL "linux")
 endif()
 
 option(WEBSOCKETS "Enable websockets support" OFF)
@@ -116,6 +115,7 @@ option(DISCORD "Enable Discord rich presence support" OFF)
 option(DISCORD_DYNAMIC "Enable discovering Discord rich presence libraries at runtime (Linux only)" OFF)
 option(PREFER_BUNDLED_LIBS "Prefer bundled libraries over system libraries" ${AUTO_DEPENDENCIES_DEFAULT})
 option(DEV "Don't generate stuff necessary for packaging" OFF)
+option(VULKAN "Enable the vulkan backend" ON)
 
 if(TEST_MYSQL)
   set(MYSQL ON)
@@ -445,6 +445,13 @@ if(TARGET_OS AND TARGET_OS STREQUAL "mac")
   find_program(DMGBUILD dmgbuild)
 endif()
 
+if(VULKAN)
+  find_package(Vulkan)
+else()
+  set(VULKAN_LIBRARIES)
+  set(VULKAN_INCLUDE_DIRS)
+endif()
+
 message(STATUS "******** ${CMAKE_PROJECT_NAME} ********")
 set(TARGET "Target OS: ${TARGET_OS} ${CMAKE_SYSTEM_PROCESSOR}")
 if(TARGET_OS STREQUAL "mac")
@@ -504,6 +511,10 @@ if(DISCORD)
 endif()
 if(WEBSOCKETS)
   show_dependency_status("Websockets" WEBSOCKETS)
+endif()
+
+if(VULKAN)
+  show_dependency_status("Vulkan" VULKAN)
 endif()
 
 if(CLIENT AND NOT(CURL_FOUND))
@@ -567,6 +578,10 @@ if(NOT(GTEST_FOUND))
   else()
     message(STATUS "To run the tests, you have to install GTest")
   endif()
+endif()
+
+if(VULKAN AND CLIENT AND NOT(VULKAN_FOUND))
+  message(SEND_ERROR "You must install Vulkan libraries to compile the DDNet client")
 endif()
 
 if(TARGET_OS STREQUAL "windows")
@@ -1254,6 +1269,63 @@ set(EXPECTED_DATA
   shader/text.vert
   shader/tile.frag
   shader/tile.vert
+  shader/vulkan/compile.sh
+  shader/vulkan/prim.frag
+  shader/vulkan/prim.frag.spv
+  shader/vulkan/prim.vert
+  shader/vulkan/prim.vert.spv
+  shader/vulkan/prim3d.frag
+  shader/vulkan/prim3d.frag.spv
+  shader/vulkan/prim3d.vert
+  shader/vulkan/prim3d.vert.spv
+  shader/vulkan/prim3d_textured.frag.spv
+  shader/vulkan/prim3d_textured.vert.spv
+  shader/vulkan/prim_textured.frag.spv
+  shader/vulkan/prim_textured.vert.spv
+  shader/vulkan/primex.frag
+  shader/vulkan/primex.frag.spv
+  shader/vulkan/primex.vert
+  shader/vulkan/primex.vert.spv
+  shader/vulkan/primex_rotationless.frag.spv
+  shader/vulkan/primex_rotationless.vert.spv
+  shader/vulkan/primex_tex.frag.spv
+  shader/vulkan/primex_tex.vert.spv
+  shader/vulkan/primex_tex_rotationless.frag.spv
+  shader/vulkan/primex_tex_rotationless.vert.spv
+  shader/vulkan/quad.frag
+  shader/vulkan/quad.frag.spv
+  shader/vulkan/quad.vert
+  shader/vulkan/quad.vert.spv
+  shader/vulkan/quad_push.frag.spv
+  shader/vulkan/quad_push.vert.spv
+  shader/vulkan/quad_push_textured.frag.spv
+  shader/vulkan/quad_push_textured.vert.spv
+  shader/vulkan/quad_textured.frag.spv
+  shader/vulkan/quad_textured.vert.spv
+  shader/vulkan/spritemulti.frag
+  shader/vulkan/spritemulti.frag.spv
+  shader/vulkan/spritemulti.vert
+  shader/vulkan/spritemulti.vert.spv
+  shader/vulkan/spritemulti_push.frag.spv
+  shader/vulkan/spritemulti_push.vert.spv
+  shader/vulkan/text.frag
+  shader/vulkan/text.frag.spv
+  shader/vulkan/text.vert
+  shader/vulkan/text.vert.spv
+  shader/vulkan/tile.frag
+  shader/vulkan/tile.frag.spv
+  shader/vulkan/tile.vert
+  shader/vulkan/tile.vert.spv
+  shader/vulkan/tile_border.frag.spv
+  shader/vulkan/tile_border.vert.spv
+  shader/vulkan/tile_border_line.frag.spv
+  shader/vulkan/tile_border_line.vert.spv
+  shader/vulkan/tile_border_line_textured.frag.spv
+  shader/vulkan/tile_border_line_textured.vert.spv
+  shader/vulkan/tile_border_textured.frag.spv
+  shader/vulkan/tile_border_textured.vert.spv
+  shader/vulkan/tile_textured.frag.spv
+  shader/vulkan/tile_textured.vert.spv
   skins/Aoe4leg.png
   skins/PaladiN.png
   skins/antiantey.png
@@ -1378,7 +1450,7 @@ set(EXPECTED_DATA
   wordlist.txt
 )
 
-set_glob(DATA GLOB_RECURSE "frag;json;map;otf;png;rules;ttf;txt;vert;wv" data ${EXPECTED_DATA})
+set_glob(DATA GLOB_RECURSE "frag;json;map;otf;png;rules;sh;spv;ttf;txt;vert;wv" data ${EXPECTED_DATA})
 
 ########################################################################
 # COPY DATA AND SHARED LIBS
@@ -1399,6 +1471,7 @@ set(COPY_FILES
   ${FFMPEG_COPY_FILES}
   ${WEBSOCKETS_COPY_FILES}
   ${DISCORDSDK_COPY_FILES}
+  ${VULKAN_COPY_FILES}
 )
 file(COPY ${COPY_FILES} DESTINATION .)
 
@@ -1749,6 +1822,8 @@ if(CLIENT)
     backend/opengles/gles_class_defines.h
     backend/opengles/opengles_sl.cpp
     backend/opengles/opengles_sl_program.cpp
+    backend/vulkan/backend_vulkan.cpp
+    backend/vulkan/backend_vulkan.h
     backend_sdl.cpp
     backend_sdl.h
     blocklist_driver.cpp
@@ -1936,6 +2011,8 @@ if(CLIENT)
     ${OPUS_LIBRARIES}
     ${OGG_LIBRARIES}
 
+    ${VULKAN_LIBRARIES}
+
     ${TARGET_STEAMAPI}
 
     ${PLATFORM_CLIENT_LIBS}
@@ -2007,6 +2084,8 @@ if(CLIENT)
     ${FFMPEG_INCLUDE_DIRS}
     ${DISCORDSDK_INCLUDE_DIRS}
 
+    ${VULKAN_INCLUDE_DIRS}
+
     ${PLATFORM_CLIENT_INCLUDE_DIRS}
   )
 
@@ -2037,6 +2116,10 @@ if(CLIENT)
 
   if(GLEW_BUNDLED)
 	  target_compile_definitions(${TARGET_CLIENT} PRIVATE CONF_GLEW_HAS_CONTEXT_INIT)
+  endif()
+
+  if(VULKAN)
+	  target_compile_definitions(${TARGET_CLIENT} PRIVATE CONF_BACKEND_VULKAN)
   endif()
 
   list(APPEND TARGETS_OWN ${TARGET_CLIENT})

@@ -35,6 +35,8 @@
 #include <utility>
 #include <vector>
 
+#include <array>
+
 CMenusKeyBinder CMenus::m_Binder;
 
 CMenusKeyBinder::CMenusKeyBinder()
@@ -1094,9 +1096,7 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 	static CVideoMode s_aModes[MAX_RESOLUTIONS];
 	static int s_NumNodes = Graphics()->GetVideoModes(s_aModes, MAX_RESOLUTIONS, g_Config.m_GfxScreen);
 	static int s_GfxFsaaSamples = g_Config.m_GfxFsaaSamples;
-	static int s_GfxModernGLVersion = Graphics()->IsConfigModernAPI();
-	static int s_GfxEnableTextureUnitOptimization = g_Config.m_GfxEnableTextureUnitOptimization;
-	static int s_GfxUsePreinitBuffer = g_Config.m_GfxUsePreinitBuffer;
+	static bool s_GfxBackendChanged = false;
 	static int s_GfxHighdpi = g_Config.m_GfxHighdpi;
 	static int s_InitDisplayAllVideoModes = g_Config.m_GfxDisplayAllVideoModes;
 
@@ -1236,61 +1236,11 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 	if(DoButton_CheckBox(&g_Config.m_GfxHighDetail, Localize("High Detail"), g_Config.m_GfxHighDetail, &Button))
 		g_Config.m_GfxHighDetail ^= 1;
 
-	bool IsModernGL = Graphics()->IsConfigModernAPI();
-
-	// only promote modern GL in menu settings if the driver isn't on the blocklist already
-	if(g_Config.m_GfxDriverIsBlocked == 0)
-	{
-		MainView.HSplitTop(20.0f, &Button, &MainView);
-
-		if(DoButton_CheckBox(&g_Config.m_GfxGLMajor, Localize("Use modern OpenGL"), IsModernGL, &Button))
-		{
-			CheckSettings = true;
-			if(IsModernGL)
-			{
-				Graphics()->GetDriverVersion(GRAPHICS_DRIVER_AGE_TYPE_DEFAULT, g_Config.m_GfxGLMajor, g_Config.m_GfxGLMinor, g_Config.m_GfxGLPatch);
-				IsModernGL = false;
-			}
-			else
-			{
-				Graphics()->GetDriverVersion(GRAPHICS_DRIVER_AGE_TYPE_MODERN, g_Config.m_GfxGLMajor, g_Config.m_GfxGLMinor, g_Config.m_GfxGLPatch);
-				IsModernGL = true;
-			}
-		}
-
-		if(IsModernGL)
-		{
-			MainView.HSplitTop(20.0f, &Button, &MainView);
-			if(DoButton_CheckBox(&g_Config.m_GfxUsePreinitBuffer, Localize("Preinit VBO (iGPUs only)"), g_Config.m_GfxUsePreinitBuffer, &Button))
-			{
-				CheckSettings = true;
-				g_Config.m_GfxUsePreinitBuffer ^= 1;
-			}
-
-			MainView.HSplitTop(20.0f, &Button, &MainView);
-			if(DoButton_CheckBox(&g_Config.m_GfxEnableTextureUnitOptimization, Localize("Multiple texture units (disable for macOS)"), g_Config.m_GfxEnableTextureUnitOptimization, &Button))
-			{
-				CheckSettings = true;
-				g_Config.m_GfxEnableTextureUnitOptimization ^= 1;
-			}
-		}
-	}
-
 	MainView.HSplitTop(20.0f, &Button, &MainView);
 	if(DoButton_CheckBox(&g_Config.m_GfxHighdpi, Localize("Use high DPI"), g_Config.m_GfxHighdpi, &Button))
 	{
 		CheckSettings = true;
 		g_Config.m_GfxHighdpi ^= 1;
-	}
-
-	// check if the new settings require a restart
-	if(CheckSettings)
-	{
-		m_NeedRestartGraphics = !(s_GfxFsaaSamples == g_Config.m_GfxFsaaSamples &&
-					  s_GfxModernGLVersion == (int)IsModernGL &&
-					  s_GfxUsePreinitBuffer == g_Config.m_GfxUsePreinitBuffer &&
-					  s_GfxEnableTextureUnitOptimization == g_Config.m_GfxEnableTextureUnitOptimization &&
-					  s_GfxHighdpi == g_Config.m_GfxHighdpi);
 	}
 
 	MainView.HSplitTop(20.0f, &Label, &MainView);
@@ -1314,13 +1264,152 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 	MainView.y = HSLBar.y;
 	MainView.h = MainView.h - MainView.y;
 
+	// Backend list
+	struct SMenuBackendInfo
+	{
+		int m_Major = 0;
+		int m_Minor = 0;
+		int m_Patch = 0;
+		const char *m_pBackendName = "";
+		bool m_Found = false;
+	};
+	std::array<std::array<SMenuBackendInfo, EGraphicsDriverAgeType::GRAPHICS_DRIVER_AGE_TYPE_COUNT>, EBackendType::BACKEND_TYPE_COUNT> aaSupportedBackends{};
+	uint32_t FoundBackendCount = 0;
+	for(uint32_t i = 0; i < BACKEND_TYPE_COUNT; ++i)
+	{
+		if(EBackendType(i) == BACKEND_TYPE_AUTO)
+			continue;
+		for(uint32_t n = 0; n < GRAPHICS_DRIVER_AGE_TYPE_COUNT; ++n)
+		{
+			auto &Info = aaSupportedBackends[i][n];
+			if(Graphics()->GetDriverVersion(EGraphicsDriverAgeType(n), Info.m_Major, Info.m_Minor, Info.m_Patch, Info.m_pBackendName, EBackendType(i)))
+			{
+				// don't count blocked opengl drivers
+				if(EBackendType(i) != BACKEND_TYPE_OPENGL || EGraphicsDriverAgeType(n) == GRAPHICS_DRIVER_AGE_TYPE_LEGACY || g_Config.m_GfxDriverIsBlocked == 0)
+				{
+					Info.m_Found = true;
+					++FoundBackendCount;
+				}
+			}
+		}
+	}
+
+	if(FoundBackendCount > 1)
+	{
+		MainView.HSplitTop(10.0f, nullptr, &MainView);
+		MainView.HSplitTop(20.0f, &Text, &MainView);
+		UI()->DoLabelScaled(&Text, Localize("Renderer"), 16.0f, TEXTALIGN_CENTER);
+
+		static float s_ScrollValueDropBackend = 0;
+		static int s_BackendDropDownState = 0;
+
+		static std::vector<std::unique_ptr<int>> vBackendIDs;
+		static std::vector<const void *> vBackendIDPtrs;
+		static std::vector<std::string> vBackendIDNames;
+		static std::vector<const char *> vBackendIDNamesCStr;
+		static std::vector<SMenuBackendInfo> vBackendInfos;
+
+		size_t BackendCount = FoundBackendCount + 2;
+		vBackendIDs.resize(BackendCount);
+		vBackendIDPtrs.resize(BackendCount);
+		vBackendIDNames.resize(BackendCount);
+		vBackendIDNamesCStr.resize(BackendCount);
+		vBackendInfos.resize(BackendCount);
+
+		char aTmpBackendName[256];
+
+		int OldSelectedBackend = -1;
+		uint32_t CurCounter = 0;
+		for(uint32_t i = 0; i < BACKEND_TYPE_COUNT; ++i)
+		{
+			for(uint32_t n = 0; n < GRAPHICS_DRIVER_AGE_TYPE_COUNT; ++n)
+			{
+				auto &Info = aaSupportedBackends[i][n];
+				if(Info.m_Found)
+				{
+					if(vBackendIDs[CurCounter].get() == nullptr)
+						vBackendIDs[CurCounter] = std::make_unique<int>();
+					vBackendIDPtrs[CurCounter] = vBackendIDs[CurCounter].get();
+					if(CurCounter == 0)
+					{
+						str_format(aTmpBackendName, sizeof(aTmpBackendName), "%s", Localize("auto"));
+						vBackendIDNames[CurCounter] = aTmpBackendName;
+						vBackendIDNamesCStr[CurCounter] = vBackendIDNames[CurCounter].c_str();
+						if(str_comp("auto", g_Config.m_GfxBackend) == 0)
+						{
+							OldSelectedBackend = 0;
+						}
+
+						vBackendInfos[CurCounter].m_pBackendName = "auto";
+						vBackendInfos[CurCounter].m_Major = 3;
+						vBackendInfos[CurCounter].m_Minor = 0;
+						vBackendInfos[CurCounter].m_Patch = 0;
+
+						++CurCounter;
+						if(vBackendIDs[CurCounter].get() == nullptr)
+							vBackendIDs[CurCounter] = std::make_unique<int>();
+						vBackendIDPtrs[CurCounter] = vBackendIDs[CurCounter].get();
+					}
+
+					{
+						str_format(aTmpBackendName, sizeof(aTmpBackendName), "%s (%d.%d.%d)", Info.m_pBackendName, Info.m_Major, Info.m_Minor, Info.m_Patch);
+						vBackendIDNames[CurCounter] = aTmpBackendName;
+						vBackendIDNamesCStr[CurCounter] = vBackendIDNames[CurCounter].c_str();
+						if(str_comp_nocase(Info.m_pBackendName, g_Config.m_GfxBackend) == 0 && g_Config.m_GfxGLMajor == Info.m_Major && g_Config.m_GfxGLMinor == Info.m_Minor && g_Config.m_GfxGLPatch == Info.m_Patch)
+						{
+							OldSelectedBackend = CurCounter;
+						}
+
+						vBackendInfos[CurCounter] = Info;
+					}
+					++CurCounter;
+				}
+			}
+		}
+
+		if(OldSelectedBackend != -1)
+		{
+			// no custom selected
+			BackendCount -= 1;
+		}
+		else
+		{
+			// custom selected one
+			if(vBackendIDs[CurCounter].get() == nullptr)
+				vBackendIDs[CurCounter] = std::make_unique<int>();
+			vBackendIDPtrs[CurCounter] = vBackendIDs[CurCounter].get();
+
+			str_format(aTmpBackendName, sizeof(aTmpBackendName), "%s", Localize("custom"));
+			vBackendIDNames[CurCounter] = aTmpBackendName;
+			vBackendIDNamesCStr[CurCounter] = vBackendIDNames[CurCounter].c_str();
+			OldSelectedBackend = CurCounter;
+
+			vBackendInfos[CurCounter].m_pBackendName = "custom";
+			vBackendInfos[CurCounter].m_Major = g_Config.m_GfxGLMajor;
+			vBackendInfos[CurCounter].m_Minor = g_Config.m_GfxGLMinor;
+			vBackendInfos[CurCounter].m_Patch = g_Config.m_GfxGLPatch;
+		}
+
+		static int s_BackendCount = 0;
+		s_BackendCount = BackendCount;
+
+		const int NewBackend = RenderDropDown(s_BackendDropDownState, &MainView, OldSelectedBackend, vBackendIDPtrs.data(), vBackendIDNamesCStr.data(), s_BackendCount, &s_BackendCount, s_ScrollValueDropBackend);
+		if(OldSelectedBackend != NewBackend)
+		{
+			str_copy(g_Config.m_GfxBackend, vBackendInfos[NewBackend].m_pBackendName, sizeof(g_Config.m_GfxBackend));
+			g_Config.m_GfxGLMajor = vBackendInfos[NewBackend].m_Major;
+			g_Config.m_GfxGLMinor = vBackendInfos[NewBackend].m_Minor;
+			g_Config.m_GfxGLPatch = vBackendInfos[NewBackend].m_Patch;
+		}
+	}
+
 	// GPU list
 	const auto &GPUList = Graphics()->GetGPUs();
 	if(GPUList.m_GPUs.size() > 1)
 	{
 		MainView.HSplitTop(10.0f, nullptr, &MainView);
 		MainView.HSplitTop(20.0f, &Text, &MainView);
-		UI()->DoLabelScaled(&Text, Localize("Graphic cards"), 16.0f, TEXTALIGN_CENTER);
+		UI()->DoLabelScaled(&Text, Localize("Graphics cards"), 16.0f, TEXTALIGN_CENTER);
 
 		static float s_ScrollValueDropGPU = 0;
 		static int s_GPUDropDownState = 0;
@@ -1340,7 +1429,7 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 		for(size_t i = 0; i < GPUCount; ++i)
 		{
 			if(vGPUIDs[i].get() == nullptr)
-				vGPUIDs[i] = std::unique_ptr<int>(new int());
+				vGPUIDs[i] = std::make_unique<int>();
 			vGPUIDPtrs[i] = vGPUIDs[i].get();
 			if(i == 0)
 			{
@@ -1372,6 +1461,14 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 			else
 				str_copy(g_Config.m_GfxGPUName, GPUList.m_GPUs[NewGPU - 1].m_Name, sizeof(g_Config.m_GfxGPUName));
 		}
+	}
+
+	// check if the new settings require a restart
+	if(CheckSettings)
+	{
+		m_NeedRestartGraphics = !(s_GfxFsaaSamples == g_Config.m_GfxFsaaSamples &&
+					  s_GfxBackendChanged &&
+					  s_GfxHighdpi == g_Config.m_GfxHighdpi);
 	}
 }
 

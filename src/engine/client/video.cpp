@@ -100,6 +100,7 @@ void CVideo::Start()
 	size_t NVals = FORMAT_NCHANNELS * m_Width * m_Height;
 	size_t GLNVals = FORMAT_GL_NCHANNELS * m_Width * m_Height;
 	m_pPixels = (uint8_t *)malloc(GLNVals * sizeof(TWGLubyte));
+	m_PixelHelper.resize(NVals * sizeof(uint8_t));
 	m_pRGB = (uint8_t *)malloc(NVals * sizeof(uint8_t));
 
 	/* Add the audio and video streams using the default format codecs
@@ -375,13 +376,13 @@ void CVideo::ReadRGBFromGL()
 	m_pGraphics->GetReadPresentedImageDataFuncUnsafe()(Width, Height, Format, m_PixelHelper);
 
 	/* Get RGBA to align to 32 bits instead of just 24 for RGB. May be faster for FFmpeg. */
-	for(int i = 0; i < m_Height; i++)
+	for(uint32_t i = 0; i < (uint32_t)m_Height; i++)
 	{
-		for(int j = 0; j < m_Width; j++)
+		for(uint32_t j = 0; j < (uint32_t)m_Width; j++)
 		{
-			size_t CurGL = FORMAT_GL_NCHANNELS * (m_Width * (m_Height - i - 1) + j);
-			size_t CurRGB = FORMAT_NCHANNELS * (m_Width * i + j);
-			for(int k = 0; k < (int)FORMAT_NCHANNELS; k++)
+			size_t CurGL = 4 * (m_Width * (m_Height - i - 1) + j);
+			size_t CurRGB = 3 * (m_Width * i + j);
+			for(uint32_t k = 0; k < (uint32_t)3; k++)
 				m_pRGB[CurRGB + k] = m_PixelHelper[CurGL + k];
 		}
 	}

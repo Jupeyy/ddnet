@@ -768,14 +768,17 @@ void CGraphics_Threaded::KickCommandBuffer()
 	m_pCommandBuffer->Reset();
 }
 
-void CGraphics_Threaded::ScreenshotDirect()
+bool CGraphics_Threaded::ScreenshotDirect()
 {
 	// add swap command
 	CImageInfo Image;
 	mem_zero(&Image, sizeof(Image));
 
-	CCommandBuffer::SCommand_Screenshot Cmd;
+	bool DidSwap = false;
+
+	CCommandBuffer::SCommand_TrySwapAndScreenshot Cmd;
 	Cmd.m_pImage = &Image;
+	Cmd.m_pSwapped = &DidSwap;
 	AddCmd(
 		Cmd, [] { return true; }, "failed to take screenshot.");
 
@@ -807,6 +810,8 @@ void CGraphics_Threaded::ScreenshotDirect()
 
 		free(Image.m_pData);
 	}
+
+	return DidSwap;
 }
 
 void CGraphics_Threaded::TextureSet(CTextureHandle TextureID)
@@ -815,13 +820,14 @@ void CGraphics_Threaded::TextureSet(CTextureHandle TextureID)
 	m_State.m_Texture = TextureID.Id();
 }
 
-void CGraphics_Threaded::Clear(float r, float g, float b)
+void CGraphics_Threaded::Clear(float r, float g, float b, bool ForceClearNow)
 {
 	CCommandBuffer::SCommand_Clear Cmd;
 	Cmd.m_Color.r = r;
 	Cmd.m_Color.g = g;
 	Cmd.m_Color.b = b;
 	Cmd.m_Color.a = 0;
+	Cmd.m_ForceClear = ForceClearNow;
 	AddCmd(
 		Cmd, [] { return true; }, "failed to clear graphics.");
 }
@@ -2616,14 +2622,16 @@ void CGraphics_Threaded::Swap()
 		}
 	}
 
-	// TODO: screenshot support
+	bool TookScreenshotAndSwapped = false;
+
 	if(m_DoScreenshot)
 	{
 		if(WindowActive())
-			ScreenshotDirect();
+			TookScreenshotAndSwapped = ScreenshotDirect();
 		m_DoScreenshot = false;
 	}
 
+	if(!TookScreenshotAndSwapped)
 	{
 		// add swap command
 		CCommandBuffer::SCommand_Swap Cmd;

@@ -128,7 +128,7 @@ public:
 
 		// misc
 		CMD_VSYNC,
-		CMD_SCREENSHOT,
+		CMD_TRY_SWAP_AND_SCREENSHOT,
 		CMD_UPDATE_VIEWPORT,
 
 		// in Android a window that minimizes gets destroyed
@@ -213,6 +213,7 @@ public:
 		SCommand_Clear() :
 			SCommand(CMD_CLEAR) {}
 		SColorf m_Color;
+		bool m_ForceClear;
 	};
 
 	struct SCommand_Signal : public SCommand
@@ -477,11 +478,12 @@ public:
 		void *m_pOffset;
 	};
 
-	struct SCommand_Screenshot : public SCommand
+	struct SCommand_TrySwapAndScreenshot : public SCommand
 	{
-		SCommand_Screenshot() :
-			SCommand(CMD_SCREENSHOT) {}
+		SCommand_TrySwapAndScreenshot() :
+			SCommand(CMD_TRY_SWAP_AND_SCREENSHOT) {}
 		CImageInfo *m_pImage; // processor will fill this out, the one who adds this command must free the data as well
+		bool *m_pSwapped;
 	};
 
 	struct SCommand_Swap : public SCommand
@@ -733,7 +735,7 @@ public:
 	virtual bool IsIdle() const = 0;
 	virtual void WaitForIdle() = 0;
 
-	virtual void GetDriverVersion(EGraphicsDriverAgeType DriverAgeType, int &Major, int &Minor, int &Patch) {}
+	virtual bool GetDriverVersion(EGraphicsDriverAgeType DriverAgeType, int &Major, int &Minor, int &Patch, const char *&pName, EBackendType BackendType) = 0;
 	// checks if the current values of the config are a graphics modern API
 	virtual bool IsConfigModernAPI() { return false; }
 	virtual bool UseTrianglesAsQuad() { return false; }
@@ -961,11 +963,11 @@ public:
 	void CopyTextureBufferSub(uint8_t *pDestBuffer, uint8_t *pSourceBuffer, int FullWidth, int FullHeight, int ColorChannelCount, int SubOffsetX, int SubOffsetY, int SubCopyWidth, int SubCopyHeight) override;
 	void CopyTextureFromTextureBufferSub(uint8_t *pDestBuffer, int DestWidth, int DestHeight, uint8_t *pSourceBuffer, int SrcWidth, int SrcHeight, int ColorChannelCount, int SrcSubOffsetX, int SrcSubOffsetY, int SrcSubCopyWidth, int SrcSubCopyHeight) override;
 
-	void ScreenshotDirect();
+	bool ScreenshotDirect();
 
 	void TextureSet(CTextureHandle TextureID) override;
 
-	void Clear(float r, float g, float b) override;
+	void Clear(float r, float g, float b, bool ForceClearNow = false) override;
 
 	void QuadsBegin() override;
 	void QuadsEnd() override;
@@ -1260,7 +1262,7 @@ public:
 
 	SWarning *GetCurWarning() override;
 
-	void GetDriverVersion(EGraphicsDriverAgeType DriverAgeType, int &Major, int &Minor, int &Patch) override { m_pBackend->GetDriverVersion(DriverAgeType, Major, Minor, Patch); }
+	bool GetDriverVersion(EGraphicsDriverAgeType DriverAgeType, int &Major, int &Minor, int &Patch, const char *&pName, EBackendType BackendType) override { return m_pBackend->GetDriverVersion(DriverAgeType, Major, Minor, Patch, pName, BackendType); }
 	bool IsConfigModernAPI() override { return m_pBackend->IsConfigModernAPI(); }
 	bool IsTileBufferingEnabled() override { return m_GLTileBufferingEnabled; }
 	bool IsQuadBufferingEnabled() override { return m_GLQuadBufferingEnabled; }
