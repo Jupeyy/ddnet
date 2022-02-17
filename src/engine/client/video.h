@@ -16,6 +16,8 @@ extern "C" {
 
 #include <engine/shared/demo.h>
 #include <engine/shared/video.h>
+
+#include <vector>
 #define ALEN 2048
 
 extern LOCK g_WriteLock;
@@ -103,6 +105,8 @@ private:
 	bool m_HasAudio;
 
 	TWGLubyte *m_pPixels;
+
+	std::vector<uint8_t> m_PixelHelper;
 
 	OutputStream m_VideoStream;
 	OutputStream m_AudioStream;

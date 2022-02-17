@@ -4,13 +4,9 @@
 #include <engine/shared/config.h>
 #include <engine/storage.h>
 
-#include "video.h"
+#include <engine/client/graphics_threaded.h>
 
-#ifndef CONF_BACKEND_OPENGL_ES
-#include <GL/glew.h>
-#else
-#include <GLES3/gl3.h>
-#endif
+#include "video.h"
 
 // This code is mostly stolen from https://github.com/FFmpeg/FFmpeg/blob/master/doc/examples/muxing.c
 
@@ -373,13 +369,12 @@ void CVideo::FillVideoFrame()
 
 void CVideo::ReadRGBFromGL()
 {
+	uint32_t Width;
+	uint32_t Height;
+	uint32_t Format;
+	m_pGraphics->GetReadPresentedImageDataFuncUnsafe()(Width, Height, Format, m_PixelHelper);
+
 	/* Get RGBA to align to 32 bits instead of just 24 for RGB. May be faster for FFmpeg. */
-	glReadBuffer(GL_FRONT);
-	GLint Alignment;
-	glGetIntegerv(GL_PACK_ALIGNMENT, &Alignment);
-	glPixelStorei(GL_PACK_ALIGNMENT, 1);
-	glReadPixels(0, 0, m_Width, m_Height, GL_RGBA, GL_UNSIGNED_BYTE, m_pPixels);
-	glPixelStorei(GL_PACK_ALIGNMENT, Alignment);
 	for(int i = 0; i < m_Height; i++)
 	{
 		for(int j = 0; j < m_Width; j++)
@@ -387,7 +382,7 @@ void CVideo::ReadRGBFromGL()
 			size_t CurGL = FORMAT_GL_NCHANNELS * (m_Width * (m_Height - i - 1) + j);
 			size_t CurRGB = FORMAT_NCHANNELS * (m_Width * i + j);
 			for(int k = 0; k < (int)FORMAT_NCHANNELS; k++)
-				m_pRGB[CurRGB + k] = m_pPixels[CurGL + k];
+				m_pRGB[CurRGB + k] = m_PixelHelper[CurGL + k];
 		}
 	}
 }
