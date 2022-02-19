@@ -721,6 +721,8 @@ class CCommandProcessorFragment_Vulkan : public CCommandProcessorFragment_GLBase
 	struct SUniformTileGPosBorder : public SUniformTileGPosBorderLine
 	{
 		int32_t m_JumpIndex;
+		int32_t m_VertexIndexOffset;
+		int32_t m_InstancesPerInstaceIndex;
 	};
 
 	struct SUniformTileGVertColor
@@ -730,7 +732,7 @@ class CCommandProcessorFragment_Vulkan : public CCommandProcessorFragment_GLBase
 
 	struct SUniformTileGVertColorAlign
 	{
-		float m_aPad[(64 - 52) / 4];
+		float m_aPad[(64 - 60) / 4];
 	};
 
 	struct SUniformPrimExGPosRotationless
@@ -2700,7 +2702,7 @@ protected:
 		ExecBufferFillDynamicStates(State, ExecBuffer);
 	}
 
-	void RenderTileLayer(SRenderCommandExecuteBuffer &ExecBuffer, const CCommandBuffer::SState &State, int Type, const GL_SColorf &Color, const vec2 &Dir, const vec2 &Off, int32_t JumpIndex, size_t IndicesDrawNum, char *const *pIndicesOffsets, const unsigned int *pDrawCount, size_t InstanceCount)
+	void RenderTileLayer(SRenderCommandExecuteBuffer &ExecBuffer, const CCommandBuffer::SState &State, int Type, const GL_SColorf &Color, const vec2 &Dir, const vec2 &Off, int32_t JumpIndex, size_t IndicesDrawNum, char *const *pIndicesOffsets, const unsigned int *pDrawCount, size_t InstanceCount, size_t FirstInstanceIndex)
 	{
 		std::array<float, (size_t)4 * 2> m;
 		GetStateMatrix(State, m);
@@ -2736,9 +2738,13 @@ protected:
 
 		if(Type == 1)
 		{
+			VkDeviceSize IndexOffset = (VkDeviceSize)((ptrdiff_t)pIndicesOffsets[0]);
+			int32_t VertexOffset = -(IndexOffset / (6 * sizeof(uint32_t))) * 4;
 			mem_copy(&VertexPushConstants.m_Dir, &Dir, sizeof(Dir));
 			mem_copy(&VertexPushConstants.m_Offset, &Off, sizeof(Off));
 			VertexPushConstants.m_JumpIndex = JumpIndex;
+			VertexPushConstants.m_VertexIndexOffset = VertexOffset;
+			VertexPushConstants.m_InstancesPerInstaceIndex = gs_TileLayerBorderTileCount;
 			VertexPushConstantSize = sizeof(SUniformTileGPosBorder);
 		}
 		else if(Type == 2)
@@ -2757,7 +2763,7 @@ protected:
 			VkDeviceSize IndexOffset = (VkDeviceSize)((ptrdiff_t)pIndicesOffsets[i]);
 			vkCmdBindIndexBuffer(CommandBuffer, m_RenderIndexBuffer, IndexOffset, VK_INDEX_TYPE_UINT32);
 
-			vkCmdDrawIndexed(CommandBuffer, static_cast<uint32_t>(pDrawCount[i]), InstanceCount, 0, 0, 0);
+			vkCmdDrawIndexed(CommandBuffer, static_cast<uint32_t>(pDrawCount[i]), InstanceCount, 0, 0, FirstInstanceIndex);
 		}
 	}
 
@@ -6397,7 +6403,7 @@ public:
 		vec2 Dir{};
 		vec2 Off{};
 		int32_t JumpIndex = 0;
-		RenderTileLayer(ExecBuffer, pCommand->m_State, Type, pCommand->m_Color, Dir, Off, JumpIndex, (size_t)pCommand->m_IndicesDrawNum, pCommand->m_pIndicesOffsets, pCommand->m_pDrawCount, 1);
+		RenderTileLayer(ExecBuffer, pCommand->m_State, Type, pCommand->m_Color, Dir, Off, JumpIndex, (size_t)pCommand->m_IndicesDrawNum, pCommand->m_pIndicesOffsets, pCommand->m_pDrawCount, 1, 0);
 	}
 
 	void Cmd_RenderBorderTile_FillExecuteBuffer(SRenderCommandExecuteBuffer &ExecBuffer, const CCommandBuffer::SCommand_RenderBorderTile *pCommand)
@@ -6410,8 +6416,17 @@ public:
 		int Type = 1;
 		vec2 Dir = {pCommand->m_Dir[0], pCommand->m_Dir[1]};
 		vec2 Off = {pCommand->m_Offset[0], pCommand->m_Offset[1]};
-		unsigned int DrawNum = 6;
-		RenderTileLayer(ExecBuffer, pCommand->m_State, Type, pCommand->m_Color, Dir, Off, pCommand->m_JumpIndex, (size_t)1, &pCommand->m_pIndicesOffset, &DrawNum, pCommand->m_DrawNum);
+		{
+			uint32_t InstanceCountRequired = (pCommand->m_DrawNum / gs_TileLayerBorderTileCount) + 1;
+			unsigned int DrawNum = 6 * gs_TileLayerBorderTileCount;
+			bool NeedsFirstDraw = (InstanceCountRequired - 1) > 0;
+			if(NeedsFirstDraw)
+				RenderTileLayer(ExecBuffer, pCommand->m_State, Type, pCommand->m_Color, Dir, Off, pCommand->m_JumpIndex, (size_t)1, &pCommand->m_pIndicesOffset, &DrawNum, InstanceCountRequired - 1, 0);
+
+			DrawNum = 6 * (pCommand->m_DrawNum % gs_TileLayerBorderTileCount);
+			if(DrawNum > 0)
+				RenderTileLayer(ExecBuffer, pCommand->m_State, Type, pCommand->m_Color, Dir, Off, pCommand->m_JumpIndex, (size_t)1, &pCommand->m_pIndicesOffset, &DrawNum, 1, InstanceCountRequired - 1);
+		}
 	}
 
 	void Cmd_RenderBorderTileLine_FillExecuteBuffer(SRenderCommandExecuteBuffer &ExecBuffer, const CCommandBuffer::SCommand_RenderBorderTileLine *pCommand)
@@ -6424,7 +6439,7 @@ public:
 		int Type = 2;
 		vec2 Dir = {pCommand->m_Dir[0], pCommand->m_Dir[1]};
 		vec2 Off = {pCommand->m_Offset[0], pCommand->m_Offset[1]};
-		RenderTileLayer(ExecBuffer, pCommand->m_State, Type, pCommand->m_Color, Dir, Off, 0, (size_t)1, &pCommand->m_pIndicesOffset, &pCommand->m_IndexDrawNum, pCommand->m_DrawNum);
+		RenderTileLayer(ExecBuffer, pCommand->m_State, Type, pCommand->m_Color, Dir, Off, 0, (size_t)1, &pCommand->m_pIndicesOffset, &pCommand->m_IndexDrawNum, pCommand->m_DrawNum, 0);
 	}
 
 	void Cmd_RenderQuadLayer_FillExecuteBuffer(SRenderCommandExecuteBuffer &ExecBuffer, const CCommandBuffer::SCommand_RenderQuadLayer *pCommand)

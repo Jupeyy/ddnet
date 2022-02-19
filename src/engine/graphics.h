@@ -153,6 +153,9 @@ struct GL_SVertexTex3DStream
 	GL_STexCoord3D m_Tex;
 };
 
+// don't forget to upload this to the shader, if you want to use it there
+static constexpr uint32_t gs_TileLayerBorderTileCount = 100000;
+
 enum EGraphicsDriverAgeType
 {
 	GRAPHICS_DRIVER_AGE_TYPE_LEGACY = 0,

@@ -88,12 +88,12 @@ class CMapLayers : public CComponent
 		};
 		STileVisual *m_TilesOfLayer;
 
-		STileVisual m_BorderTopLeft;
-		STileVisual m_BorderTopRight;
-		STileVisual m_BorderBottomRight;
-		STileVisual m_BorderBottomLeft;
+		STileVisual *m_pBorderTopLeft;
+		STileVisual *m_pBorderTopRight;
+		STileVisual *m_pBorderBottomRight;
+		STileVisual *m_pBorderBottomLeft;
 
-		STileVisual m_BorderKillTile; //end of map kill tile -- game layer only
+		STileVisual *m_pBorderKillTile; //end of map kill tile -- game layer only
 
 		STileVisual *m_BorderTop;
 		STileVisual *m_BorderLeft;

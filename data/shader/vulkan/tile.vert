@@ -16,6 +16,8 @@ layout(push_constant) uniform SPosBO {
 
 #if defined(TW_TILE_BORDER)
 	layout(offset = 48) uniform int gJumpIndex;
+	layout(offset = 52) uniform int gVertIndexOffset;
+	layout(offset = 56) uniform int gInstancesPerInstaceIndex;
 #endif
 } gPosBO;
 
@@ -26,9 +28,10 @@ layout (location = 0) noperspective out vec3 TexCoord;
 void main()
 {
 #if defined(TW_TILE_BORDER)
+	int TileInstanceIndex = int((gl_VertexIndex + gPosBO.gVertIndexOffset) / 4) + int(gl_InstanceIndex * gPosBO.gInstancesPerInstaceIndex);
 	vec4 VertPos = vec4(inVertex, 0.0, 1.0);
-	int XCount = gl_InstanceIndex - (int(gl_InstanceIndex/gPosBO.gJumpIndex) * gPosBO.gJumpIndex);
-	int YCount = (int(gl_InstanceIndex/gPosBO.gJumpIndex));
+	int XCount = TileInstanceIndex - (int(TileInstanceIndex/gPosBO.gJumpIndex) * gPosBO.gJumpIndex);
+	int YCount = (int(TileInstanceIndex/gPosBO.gJumpIndex));
 	VertPos.x += gPosBO.gOffset.x + gPosBO.gDir.x * float(XCount);
 	VertPos.y += gPosBO.gOffset.y + gPosBO.gDir.y * float(YCount);
 		
