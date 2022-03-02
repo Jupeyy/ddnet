@@ -32,12 +32,12 @@ void CPickup::Tick()
 					continue;
 				if(pChr->m_Super)
 					continue;
-				for(int i = WEAPON_SHOTGUN; i < NUM_WEAPONS; i++)
+				for(int w = WEAPON_SHOTGUN; w < NUM_WEAPONS; w++)
 				{
-					if(pChr->GetWeaponGot(i))
+					if(pChr->GetWeaponGot(w))
 					{
-						pChr->SetWeaponGot(i, false);
-						pChr->SetWeaponAmmo(i, 0);
+						pChr->SetWeaponGot(w, false);
+						pChr->SetWeaponAmmo(w, 0);
 						sound = true;
 					}
 				}

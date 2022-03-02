@@ -383,9 +383,9 @@ void CUIRect::HMargin(float Cut, CUIRect *pOtherRect) const
 	pOtherRect->h = r.h - 2 * Cut;
 }
 
-bool CUIRect::Inside(float x, float y) const
+bool CUIRect::Inside(float PosX, float PosY) const
 {
-	return x >= this->x && x < this->x + this->w && y >= this->y && y < this->y + this->h;
+	return PosX >= this->x && PosX < this->x + this->w && PosY >= this->y && PosY < this->y + this->h;
 }
 
 int CUI::DoButtonLogic(const void *pID, const char *pText, int Checked, const CUIRect *pRect)

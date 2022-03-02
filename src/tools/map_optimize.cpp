@@ -82,7 +82,7 @@ int main(int argc, const char **argv)
 	dbg_logger_stdout();
 
 	IStorage *pStorage = CreateStorage("Teeworlds", IStorage::STORAGETYPE_BASIC, argc, argv);
-	int Index, ID = 0, Type = 0, Size;
+	int ID = 0, Type = 0, Size;
 	void *pPtr;
 	char aFileName[IO_MAX_PATH_LENGTH];
 	CDataFileReader DataFile;
@@ -165,11 +165,11 @@ int main(int argc, const char **argv)
 					aImageFlags[pTLayer->m_Image] |= 1;
 					// check tiles that are used in this image
 					int DataIndex = pTLayer->m_Data;
-					unsigned int Size = DataFile.GetDataSize(DataIndex);
+					unsigned int TileLayerSize = DataFile.GetDataSize(DataIndex);
 					void *pTiles = DataFile.GetData(DataIndex);
 					unsigned int TileSize = sizeof(CTile);
 
-					if(Size >= pTLayer->m_Width * pTLayer->m_Height * TileSize)
+					if(TileLayerSize >= pTLayer->m_Width * pTLayer->m_Height * TileSize)
 					{
 						int x = 0;
 						int y = 0;
@@ -217,7 +217,7 @@ int main(int argc, const char **argv)
 	}
 
 	// add all data
-	for(Index = 0; Index < DataFile.NumData(); Index++)
+	for(int Index = 0; Index < DataFile.NumData(); Index++)
 	{
 		bool DeletePtr = false;
 		pPtr = DataFile.GetData(Index);
@@ -246,11 +246,11 @@ int main(int argc, const char **argv)
 				// all tiles that aren't used are cleared(if image was only used by tilemap)
 				if(aImageFlags[ImageIndex] == 1)
 				{
-					for(int i = 0; i < 256; ++i)
+					for(int k = 0; k < 256; ++k)
 					{
-						if(!aImageTiles[ImageIndex][i])
+						if(!aImageTiles[ImageIndex][k])
 						{
-							ClearPixelsTile(pImgBuff, Width, Height, i);
+							ClearPixelsTile(pImgBuff, Width, Height, k);
 						}
 					}
 
@@ -278,12 +278,12 @@ int main(int argc, const char **argv)
 				{
 					if(DilateAs2DArray)
 					{
-						for(int i = 0; i < 256; ++i)
+						for(int k = 0; k < 256; ++k)
 						{
 							int ImgTileW = Width / 16;
 							int ImgTileH = Height / 16;
-							int x = (i % 16) * ImgTileW;
-							int y = (i / 16) * ImgTileH;
+							int x = (k % 16) * ImgTileW;
+							int y = (k / 16) * ImgTileH;
 							DilateImageSub(pImgBuff, Width, Height, 4, x, y, ImgTileW, ImgTileH);
 						}
 					}

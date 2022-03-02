@@ -400,7 +400,7 @@ public:
 
 	virtual void TakeScreenshot(const char *pFilename) = 0;
 	virtual void TakeCustomScreenshot(const char *pFilename) = 0;
-	virtual int GetVideoModes(CVideoMode *pModes, int MaxModes, int Screen) = 0;
+	virtual int GetVideoModes(CVideoMode *pModes, int MaxModes, int GfxScreen) = 0;
 
 	virtual void Swap() = 0;
 	virtual int GetNumScreens() const = 0;

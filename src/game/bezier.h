@@ -12,12 +12,12 @@ class CCubicBezier
 	float b;
 	float c;
 	float d;
-	CCubicBezier(float a, float b, float c, float d)
+	CCubicBezier(float aother, float bother, float cother, float dother)
 	{
-		this->a = a;
-		this->b = b;
-		this->c = c;
-		this->d = d;
+		this->a = aother;
+		this->b = bother;
+		this->c = cother;
+		this->d = dother;
 	}
 
 public:

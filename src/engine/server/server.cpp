@@ -932,7 +932,6 @@ void CServer::DoSnapshot()
 			if(DeltaSize)
 			{
 				// compress it
-				int SnapshotSize;
 				const int MaxSize = MAX_SNAPSHOT_PACKSIZE;
 				int NumPackets;
 
@@ -1512,9 +1511,9 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 				m_aClients[ClientID].m_State = CClient::STATE_INGAME;
 				if(IsSixup(ClientID))
 				{
-					CMsgPacker Msg(4, true, true); //NETMSG_SERVERINFO //TODO: Import the shared protocol from 7 aswell
-					GetServerInfoSixup(&Msg, -1, false);
-					SendMsg(&Msg, MSGFLAG_VITAL | MSGFLAG_FLUSH, ClientID);
+					CMsgPacker MsgPacket(4, true, true); //NETMSG_SERVERINFO //TODO: Import the shared protocol from 7 aswell
+					GetServerInfoSixup(&MsgPacket, -1, false);
+					SendMsg(&MsgPacket, MSGFLAG_VITAL | MSGFLAG_FLUSH, ClientID);
 				}
 				GameServer()->OnClientEnter(ClientID);
 			}
@@ -1544,10 +1543,10 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 			{
 				int TimeLeft = ((TickStartTime(IntendedTick) - time_get()) * 1000) / time_freq();
 
-				CMsgPacker Msg(NETMSG_INPUTTIMING, true);
-				Msg.AddInt(IntendedTick);
-				Msg.AddInt(TimeLeft);
-				SendMsg(&Msg, 0, ClientID);
+				CMsgPacker MsgPacket(NETMSG_INPUTTIMING, true);
+				MsgPacket.AddInt(IntendedTick);
+				MsgPacket.AddInt(TimeLeft);
+				SendMsg(&MsgPacket, 0, ClientID);
 			}
 
 			m_aClients[ClientID].m_LastInputTick = IntendedTick;
@@ -1641,15 +1640,15 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 					{
 						if(!IsSixup(ClientID))
 						{
-							CMsgPacker Msg(NETMSG_RCON_AUTH_STATUS, true);
-							Msg.AddInt(1); //authed
-							Msg.AddInt(1); //cmdlist
-							SendMsg(&Msg, MSGFLAG_VITAL, ClientID);
+							CMsgPacker MsgPacket(NETMSG_RCON_AUTH_STATUS, true);
+							MsgPacket.AddInt(1); //authed
+							MsgPacket.AddInt(1); //cmdlist
+							SendMsg(&MsgPacket, MSGFLAG_VITAL, ClientID);
 						}
 						else
 						{
-							CMsgPacker Msg(11, true, true); //NETMSG_RCON_AUTH_ON
-							SendMsg(&Msg, MSGFLAG_VITAL, ClientID);
+							CMsgPacker MsgPacket(11, true, true); //NETMSG_RCON_AUTH_ON
+							SendMsg(&MsgPacket, MSGFLAG_VITAL, ClientID);
 						}
 
 						m_aClients[ClientID].m_Authed = AuthLevel; // Keeping m_Authed around is unwise...
@@ -1710,8 +1709,8 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 		}
 		else if(Msg == NETMSG_PING)
 		{
-			CMsgPacker Msg(NETMSG_PING_REPLY, true);
-			SendMsg(&Msg, 0, ClientID);
+			CMsgPacker MsgPacket(NETMSG_PING_REPLY, true);
+			SendMsg(&MsgPacket, 0, ClientID);
 		}
 		else if(Msg == NETMSG_PINGEX)
 		{
@@ -1720,9 +1719,9 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 			{
 				return;
 			}
-			CMsgPacker Msg(NETMSG_PONGEX, true);
-			Msg.AddRaw(pID, sizeof(*pID));
-			SendMsg(&Msg, MSGFLAG_FLUSH, ClientID);
+			CMsgPacker MsgPacket(NETMSG_PONGEX, true);
+			MsgPacket.AddRaw(pID, sizeof(*pID));
+			SendMsg(&MsgPacket, MSGFLAG_FLUSH, ClientID);
 		}
 		else
 		{
@@ -2268,17 +2267,17 @@ void CServer::PumpNetwork(bool PacketWaiting)
 	{
 		unsigned char aBuffer[NET_MAX_PAYLOAD];
 		int Flags;
-		CNetChunk Packet;
-		mem_zero(&Packet, sizeof(Packet));
-		Packet.m_pData = aBuffer;
-		while(Antibot()->OnEngineSimulateClientMessage(&Packet.m_ClientID, aBuffer, sizeof(aBuffer), &Packet.m_DataSize, &Flags))
+		CNetChunk PacketChunk;
+		mem_zero(&PacketChunk, sizeof(PacketChunk));
+		PacketChunk.m_pData = aBuffer;
+		while(Antibot()->OnEngineSimulateClientMessage(&PacketChunk.m_ClientID, aBuffer, sizeof(aBuffer), &PacketChunk.m_DataSize, &Flags))
 		{
-			Packet.m_Flags = 0;
+			PacketChunk.m_Flags = 0;
 			if(Flags & MSGFLAG_VITAL)
 			{
-				Packet.m_Flags |= NET_CHUNKFLAG_VITAL;
+				PacketChunk.m_Flags |= NET_CHUNKFLAG_VITAL;
 			}
-			ProcessClientPacket(&Packet);
+			ProcessClientPacket(&PacketChunk);
 		}
 	}
 
@@ -2492,9 +2491,9 @@ int CServer::Run()
 	Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", "version " GAME_RELEASE_VERSION " on " CONF_PLATFORM_STRING " " CONF_ARCH_STRING);
 	if(GIT_SHORTREV_HASH)
 	{
-		char aBuf[64];
-		str_format(aBuf, sizeof(aBuf), "git revision hash: %s", GIT_SHORTREV_HASH);
-		Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", aBuf);
+		char aHashBuf[64];
+		str_format(aHashBuf, sizeof(aHashBuf), "git revision hash: %s", GIT_SHORTREV_HASH);
+		Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", aHashBuf);
 	}
 
 	// process pending commands
@@ -2607,11 +2606,11 @@ int CServer::Run()
 							char aAddrStr[NETADDR_MAXSTRSIZE];
 							net_addr_str(m_NetServer.ClientAddr(ClientID), aAddrStr, sizeof(aAddrStr), true);
 
-							char aBuf[256];
+							char aBuff[256];
 
-							str_format(aBuf, sizeof(aBuf), "ClientID=%d addr=<{%s}> secure=%s blacklisted", ClientID, aAddrStr, m_NetServer.HasSecurityToken(ClientID) ? "yes" : "no");
+							str_format(aBuff, sizeof(aBuff), "ClientID=%d addr=<{%s}> secure=%s blacklisted", ClientID, aAddrStr, m_NetServer.HasSecurityToken(ClientID) ? "yes" : "no");
 
-							Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "dnsbl", aBuf);
+							Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "dnsbl", aBuff);
 						}
 					}
 
@@ -2712,8 +2711,8 @@ int CServer::Run()
 				m_ReloadedWhenEmpty = false;
 
 				set_new_tick();
-				int64_t t = time_get();
-				int x = (TickStartTime(m_CurrentGameTick + 1) - t) * 1000000 / time_freq() + 1;
+				int64_t TimeNow = time_get();
+				int x = (TickStartTime(m_CurrentGameTick + 1) - TimeNow) * 1000000 / time_freq() + 1;
 
 				PacketWaiting = x > 0 ? net_socket_read_wait(m_NetServer.Socket(), x) : true;
 			}

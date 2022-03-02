@@ -245,6 +245,10 @@ if(NOT MSVC AND NOT HAIKU)
   add_c_compiler_flag_if_supported(OUR_FLAGS_OWN -Wlogical-op)
   add_c_compiler_flag_if_supported(OUR_FLAGS_OWN -Wrestrict)
   add_c_compiler_flag_if_supported(OUR_FLAGS_OWN -Wthread-safety)
+  # Disallow shadowing variable names, since they are easy to confuse in a scope.
+  add_c_compiler_flag_if_supported(OUR_FLAGS_OWN -Wshadow)
+  add_c_compiler_flag_if_supported(OUR_FLAGS_OWN -Werror)
+
   # TODO: Enable for C++ code except gtest
   #add_cxx_compiler_flag_if_supported(OUR_FLAGS_OWN "-Wuseless-cast")
 endif()

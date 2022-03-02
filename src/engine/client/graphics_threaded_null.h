@@ -173,7 +173,7 @@ public:
 	void Swap() override{};
 	bool SetVSync(bool State) override { return false; };
 
-	int GetVideoModes(CVideoMode *pModes, int MaxModes, int Screen) override { return 0; };
+	int GetVideoModes(CVideoMode *pModes, int MaxModes, int GfxScreen) override { return 0; };
 
 	virtual int GetDesktopScreenWidth() const { return g_Config.m_GfxDesktopWidth; }
 	virtual int GetDesktopScreenHeight() const { return g_Config.m_GfxDesktopHeight; }

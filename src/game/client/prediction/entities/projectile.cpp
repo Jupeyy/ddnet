@@ -141,10 +141,10 @@ void CProjectile::Tick()
 			if(m_Owner >= 0)
 				pOwnerChar = GameWorld()->GetCharacterByID(m_Owner);
 
-			int64_t TeamMask = -1LL;
+			int64_t ExplosionTeamMask = -1LL;
 
 			GameWorld()->CreateExplosion(ColPos, m_Owner, m_Type, m_Owner == -1, (!pOwnerChar ? -1 : pOwnerChar->Team()),
-				(m_Owner != -1) ? TeamMask : -1LL);
+				(m_Owner != -1) ? ExplosionTeamMask : -1LL);
 		}
 		m_MarkedForDestroy = true;
 	}

@@ -418,7 +418,6 @@ bool CScoreWorker::SaveScore(IDbConnection *pSqlServer, const ISqlData *pGameDat
 		}
 		pSqlServer->BindString(1, pData->m_aMap);
 
-		bool End;
 		if(pSqlServer->Step(&End, pError, ErrorSize))
 		{
 			return true;

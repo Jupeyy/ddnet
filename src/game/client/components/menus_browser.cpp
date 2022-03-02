@@ -837,8 +837,8 @@ void CMenus::RenderServerbrowserFilters(CUIRect View)
 					Rect.w = TypesWidth;
 					Rect.h = TypesHeight;
 
-					int Button = UI()->DoButtonLogic(&s_aTypeButtons[TypeIndex], "", 0, &Rect);
-					if(Button == 1 || Button == 2)
+					int MouseButton = UI()->DoButtonLogic(&s_aTypeButtons[TypeIndex], "", 0, &Rect);
+					if(MouseButton == 1 || MouseButton == 2)
 					{
 						// left/right click to toggle filter
 						if(pFilterExcludeTypes[0] == '\0')
@@ -878,7 +878,7 @@ void CMenus::RenderServerbrowserFilters(CUIRect View)
 
 						ServerBrowser()->Refresh(ServerBrowser()->GetCurrentType());
 					}
-					else if(Button == 3)
+					else if(MouseButton == 3)
 					{
 						// middle click to reset (re-enable all)
 						pFilterExcludeTypes[0] = '\0';
@@ -932,8 +932,8 @@ void CMenus::RenderServerbrowserFilters(CUIRect View)
 					Rect.w = FlagWidth;
 					Rect.h = FlagHeight;
 
-					int Button = UI()->DoButtonLogic(&s_aFlagButtons[CountryIndex], "", 0, &Rect);
-					if(Button == 1 || Button == 2)
+					int MouseButton = UI()->DoButtonLogic(&s_aFlagButtons[CountryIndex], "", 0, &Rect);
+					if(MouseButton == 1 || MouseButton == 2)
 					{
 						// left/right click to toggle filter
 						if(pFilterExcludeCountries[0] == '\0')
@@ -973,7 +973,7 @@ void CMenus::RenderServerbrowserFilters(CUIRect View)
 
 						ServerBrowser()->Refresh(ServerBrowser()->GetCurrentType());
 					}
-					else if(Button == 3)
+					else if(MouseButton == 3)
 					{
 						// middle click to reset (re-enable all)
 						pFilterExcludeCountries[0] = '\0';

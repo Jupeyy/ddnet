@@ -71,7 +71,6 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 	static int s_ClShowConsole = g_Config.m_ClShowConsole;
 #endif
 
-	char aBuf[128];
 	CUIRect Label, Button, Left, Right, Game, Client;
 	MainView.HSplitTop(150.0f, &Game, &Client);
 
@@ -152,6 +151,7 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 
 		if(g_Config.m_ClNameplates)
 		{
+			char aBuf[128];
 			Right.HSplitTop(2.5f, 0, &Right);
 			Right.HSplitTop(20.0f, &Label, &Right);
 			Right.HSplitTop(20.0f, &Button, &Right);

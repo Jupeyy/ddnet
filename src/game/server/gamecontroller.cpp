@@ -200,9 +200,9 @@ bool IGameController::OnEntity(int Index, vec2 Pos, int Layer, int Flags, int Nu
 
 	if(Index >= ENTITY_SPAWN && Index <= ENTITY_SPAWN_BLUE)
 	{
-		int Type = Index - ENTITY_SPAWN;
-		m_aaSpawnPoints[Type][m_aNumSpawnPoints[Type]] = Pos;
-		m_aNumSpawnPoints[Type] = minimum(m_aNumSpawnPoints[Type] + 1, (int)(sizeof(m_aaSpawnPoints[0]) / sizeof(m_aaSpawnPoints[0][0])));
+		int EntityType = Index - ENTITY_SPAWN;
+		m_aaSpawnPoints[EntityType][m_aNumSpawnPoints[EntityType]] = Pos;
+		m_aNumSpawnPoints[EntityType] = minimum(m_aNumSpawnPoints[EntityType] + 1, (int)(sizeof(m_aaSpawnPoints[0]) / sizeof(m_aaSpawnPoints[0][0])));
 	}
 
 	else if(Index == ENTITY_DOOR)

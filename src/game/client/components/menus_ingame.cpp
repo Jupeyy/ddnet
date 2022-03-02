@@ -667,7 +667,7 @@ void CMenus::RenderServerControl(CUIRect MainView)
 
 	// vote menu
 	{
-		CUIRect Button, QuickSearch;
+		CUIRect QuickSearchButton, QuickSearch;
 
 		// render quick search
 		{
@@ -692,10 +692,10 @@ void CMenus::RenderServerControl(CUIRect MainView)
 			UIEx()->DoClearableEditBox(&m_aFilterString, &s_ClearButton, &QuickSearch, m_aFilterString, sizeof(m_aFilterString), 14.0f, &s_Offset, false, CUI::CORNER_ALL, Localize("Search"));
 		}
 
-		Bottom.VSplitRight(120.0f, &Bottom, &Button);
+		Bottom.VSplitRight(120.0f, &Bottom, &QuickSearchButton);
 
 		static int s_CallVoteButton = 0;
-		if(DoButton_Menu(&s_CallVoteButton, Localize("Call vote"), 0, &Button) || Call)
+		if(DoButton_Menu(&s_CallVoteButton, Localize("Call vote"), 0, &QuickSearchButton) || Call)
 		{
 			if(s_ControlPage == 0)
 			{
@@ -748,10 +748,10 @@ void CMenus::RenderServerControl(CUIRect MainView)
 
 			// force vote
 			Bottom.VSplitLeft(5.0f, 0, &Bottom);
-			Bottom.VSplitLeft(120.0f, &Button, &Bottom);
+			Bottom.VSplitLeft(120.0f, &QuickSearchButton, &Bottom);
 
 			static int s_ForceVoteButton = 0;
-			if(DoButton_Menu(&s_ForceVoteButton, Localize("Force vote"), 0, &Button))
+			if(DoButton_Menu(&s_ForceVoteButton, Localize("Force vote"), 0, &QuickSearchButton))
 			{
 				if(s_ControlPage == 0)
 					m_pClient->m_Voting.CallvoteOption(m_CallvoteSelectedOption, m_aCallvoteReason, true);
@@ -780,38 +780,38 @@ void CMenus::RenderServerControl(CUIRect MainView)
 			{
 				// remove vote
 				Bottom.VSplitRight(10.0f, &Bottom, 0);
-				Bottom.VSplitRight(120.0f, 0, &Button);
+				Bottom.VSplitRight(120.0f, 0, &QuickSearchButton);
 				static int s_RemoveVoteButton = 0;
-				if(DoButton_Menu(&s_RemoveVoteButton, Localize("Remove"), 0, &Button))
+				if(DoButton_Menu(&s_RemoveVoteButton, Localize("Remove"), 0, &QuickSearchButton))
 					m_pClient->m_Voting.RemovevoteOption(m_CallvoteSelectedOption);
 
 				// add vote
 				RconExtension.HSplitTop(20.0f, &Bottom, &RconExtension);
 				Bottom.VSplitLeft(5.0f, 0, &Bottom);
-				Bottom.VSplitLeft(250.0f, &Button, &Bottom);
-				UI()->DoLabelScaled(&Button, Localize("Vote description:"), 14.0f, TEXTALIGN_LEFT);
+				Bottom.VSplitLeft(250.0f, &QuickSearchButton, &Bottom);
+				UI()->DoLabelScaled(&QuickSearchButton, Localize("Vote description:"), 14.0f, TEXTALIGN_LEFT);
 
-				Bottom.VSplitLeft(20.0f, 0, &Button);
-				UI()->DoLabelScaled(&Button, Localize("Vote command:"), 14.0f, TEXTALIGN_LEFT);
+				Bottom.VSplitLeft(20.0f, 0, &QuickSearchButton);
+				UI()->DoLabelScaled(&QuickSearchButton, Localize("Vote command:"), 14.0f, TEXTALIGN_LEFT);
 
 				static char s_aVoteDescription[64] = {0};
 				static char s_aVoteCommand[512] = {0};
 				RconExtension.HSplitTop(20.0f, &Bottom, &RconExtension);
 				Bottom.VSplitRight(10.0f, &Bottom, 0);
-				Bottom.VSplitRight(120.0f, &Bottom, &Button);
+				Bottom.VSplitRight(120.0f, &Bottom, &QuickSearchButton);
 				static int s_AddVoteButton = 0;
-				if(DoButton_Menu(&s_AddVoteButton, Localize("Add"), 0, &Button))
+				if(DoButton_Menu(&s_AddVoteButton, Localize("Add"), 0, &QuickSearchButton))
 					if(s_aVoteDescription[0] != 0 && s_aVoteCommand[0] != 0)
 						m_pClient->m_Voting.AddvoteOption(s_aVoteDescription, s_aVoteCommand);
 
 				Bottom.VSplitLeft(5.0f, 0, &Bottom);
-				Bottom.VSplitLeft(250.0f, &Button, &Bottom);
+				Bottom.VSplitLeft(250.0f, &QuickSearchButton, &Bottom);
 				static float s_OffsetDesc = 0.0f;
-				UIEx()->DoEditBox(&s_aVoteDescription, &Button, s_aVoteDescription, sizeof(s_aVoteDescription), 14.0f, &s_OffsetDesc, false, CUI::CORNER_ALL);
+				UIEx()->DoEditBox(&s_aVoteDescription, &QuickSearchButton, s_aVoteDescription, sizeof(s_aVoteDescription), 14.0f, &s_OffsetDesc, false, CUI::CORNER_ALL);
 
-				Bottom.VMargin(20.0f, &Button);
+				Bottom.VMargin(20.0f, &QuickSearchButton);
 				static float s_OffsetCmd = 0.0f;
-				UIEx()->DoEditBox(&s_aVoteCommand, &Button, s_aVoteCommand, sizeof(s_aVoteCommand), 14.0f, &s_OffsetCmd, false, CUI::CORNER_ALL);
+				UIEx()->DoEditBox(&s_aVoteCommand, &QuickSearchButton, s_aVoteCommand, sizeof(s_aVoteCommand), 14.0f, &s_OffsetCmd, false, CUI::CORNER_ALL);
 			}
 		}
 	}

@@ -430,27 +430,27 @@ void CPlayers::RenderPlayer(
 				}
 				if(g_pData->m_Weapons.m_aId[iw].m_aSpriteMuzzles[IteX])
 				{
-					vec2 Dir;
+					vec2 SwizzleDir;
 					if(PredictLocalWeapons)
-						Dir = vec2(pPlayerChar->m_X, pPlayerChar->m_Y) - vec2(pPrevChar->m_X, pPrevChar->m_Y);
+						SwizzleDir = vec2(pPlayerChar->m_X, pPlayerChar->m_Y) - vec2(pPrevChar->m_X, pPrevChar->m_Y);
 					else
-						Dir = vec2(m_pClient->m_Snap.m_aCharacters[ClientID].m_Cur.m_X, m_pClient->m_Snap.m_aCharacters[ClientID].m_Cur.m_Y) - vec2(m_pClient->m_Snap.m_aCharacters[ClientID].m_Prev.m_X, m_pClient->m_Snap.m_aCharacters[ClientID].m_Prev.m_Y);
+						SwizzleDir = vec2(m_pClient->m_Snap.m_aCharacters[ClientID].m_Cur.m_X, m_pClient->m_Snap.m_aCharacters[ClientID].m_Cur.m_Y) - vec2(m_pClient->m_Snap.m_aCharacters[ClientID].m_Prev.m_X, m_pClient->m_Snap.m_aCharacters[ClientID].m_Prev.m_Y);
 					float HadOkenAngle = 0;
-					if(absolute(Dir.x) > 0.0001f || absolute(Dir.y) > 0.0001f)
+					if(absolute(SwizzleDir.x) > 0.0001f || absolute(SwizzleDir.y) > 0.0001f)
 					{
-						Dir = normalize(Dir);
-						HadOkenAngle = angle(Dir);
+						SwizzleDir = normalize(SwizzleDir);
+						HadOkenAngle = angle(SwizzleDir);
 					}
 					else
 					{
-						Dir = vec2(1, 0);
+						SwizzleDir = vec2(1, 0);
 					}
 					Graphics()->QuadsSetRotation(HadOkenAngle);
-					int QuadOffset = IteX * 2;
-					vec2 DirY(-Dir.y, Dir.x);
+					QuadOffset = IteX * 2;
+					vec2 DirY(-SwizzleDir.y, SwizzleDir.x);
 					p = Position;
 					float OffsetX = g_pData->m_Weapons.m_aId[iw].m_Muzzleoffsetx;
-					p -= Dir * OffsetX;
+					p -= SwizzleDir * OffsetX;
 					Graphics()->TextureSet(GameClient()->m_GameSkin.m_SpriteWeaponsMuzzles[iw][IteX]);
 					Graphics()->RenderQuadContainerAsSprite(m_WeaponSpriteMuzzleQuadContainerIndex[iw], QuadOffset, p.x, p.y);
 				}
@@ -514,7 +514,7 @@ void CPlayers::RenderPlayer(
 				if(AlphaMuzzle > 0.0f && g_pData->m_Weapons.m_aId[iw].m_aSpriteMuzzles[IteX])
 				{
 					float OffsetY = -g_pData->m_Weapons.m_aId[iw].m_Muzzleoffsety;
-					int QuadOffset = IteX * 2 + (Direction.x < 0 ? 1 : 0);
+					QuadOffset = IteX * 2 + (Direction.x < 0 ? 1 : 0);
 					if(Direction.x < 0)
 						OffsetY = -OffsetY;
 

@@ -678,7 +678,7 @@ void CServerBrowser::Set(const NETADDR &Addr, int Type, int Token, const CServer
 			NETADDR Broadcast;
 			mem_zero(&Broadcast, sizeof(Broadcast));
 			Broadcast.type = m_pNetClient->NetType() | NETTYPE_LINK_BROADCAST;
-			int Token = GenerateToken(Broadcast);
+			Token = GenerateToken(Broadcast);
 			bool Drop = false;
 			Drop = Drop || BasicToken != GetBasicToken(Token);
 			Drop = Drop || (pInfo->m_Type == SERVERINFO_EXTENDED && ExtraToken != GetExtraToken(Token));
@@ -696,7 +696,7 @@ void CServerBrowser::Set(const NETADDR &Addr, int Type, int Token, const CServer
 			{
 				return;
 			}
-			int Token = GenerateToken(Addr);
+			Token = GenerateToken(Addr);
 			bool Drop = false;
 			Drop = Drop || BasicToken != GetBasicToken(Token);
 			Drop = Drop || (pInfo->m_Type == SERVERINFO_EXTENDED && ExtraToken != GetExtraToken(Token));
@@ -1619,11 +1619,11 @@ void CServerBrowser::CountryFilterClean(int Network)
 	char aNewList[128];
 	aNewList[0] = '\0';
 
-	for(auto &Network : m_aNetworks)
+	for(auto &BrowserNetwork : m_aNetworks)
 	{
-		for(int i = 0; i < Network.m_NumCountries; i++)
+		for(int i = 0; i < BrowserNetwork.m_NumCountries; i++)
 		{
-			const char *pName = Network.m_aCountries[i].m_aName;
+			const char *pName = BrowserNetwork.m_aCountries[i].m_aName;
 			if(DDNetFiltered(pExcludeCountries, pName))
 			{
 				char aBuf[128];

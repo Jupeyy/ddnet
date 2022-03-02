@@ -208,15 +208,17 @@ void CEffects::Explosion(vec2 Pos)
 		}
 
 	// add the explosion
-	CParticle p;
-	p.SetDefault();
-	p.m_Spr = SPRITE_PART_EXPL01;
-	p.m_Pos = Pos;
-	p.m_LifeSpan = 0.4f;
-	p.m_StartSize = 150.0f;
-	p.m_EndSize = 0;
-	p.m_Rot = random_float() * pi * 2;
-	m_pClient->m_Particles.Add(CParticles::GROUP_EXPLOSIONS, &p);
+	{
+		CParticle p;
+		p.SetDefault();
+		p.m_Spr = SPRITE_PART_EXPL01;
+		p.m_Pos = Pos;
+		p.m_LifeSpan = 0.4f;
+		p.m_StartSize = 150.0f;
+		p.m_EndSize = 0;
+		p.m_Rot = random_float() * pi * 2;
+		m_pClient->m_Particles.Add(CParticles::GROUP_EXPLOSIONS, &p);
+	}
 
 	// add the smoke
 	for(int i = 0; i < 24; i++)

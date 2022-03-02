@@ -392,21 +392,21 @@ void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const ch
 
 			if(NextDDTeam != DDTeam)
 			{
-				char aBuf[64];
+				char aTeamBuf[64];
 				if(m_pClient->m_Snap.m_aTeamSize[0] > 8)
 				{
-					str_format(aBuf, sizeof(aBuf), "%d", DDTeam);
+					str_format(aTeamBuf, sizeof(aTeamBuf), "%d", DDTeam);
 					TextRender()->SetCursor(&Cursor, x - 10.0f, y + Spacing + FontSize - (FontSize / 1.5f), FontSize / 1.5f, TEXTFLAG_RENDER | TEXTFLAG_STOP_AT_END);
 					Cursor.m_LineWidth = NameLength + 3;
 				}
 				else
 				{
-					str_format(aBuf, sizeof(aBuf), "Team %d", DDTeam);
-					tw = TextRender()->TextWidth(0, FontSize, aBuf, -1, -1.0f);
+					str_format(aTeamBuf, sizeof(aTeamBuf), "Team %d", DDTeam);
+					tw = TextRender()->TextWidth(0, FontSize, aTeamBuf, -1, -1.0f);
 					TextRender()->SetCursor(&Cursor, ScoreOffset + w / 2.0f - tw / 2.0f, y + LineHeight, FontSize / 1.5f, TEXTFLAG_RENDER | TEXTFLAG_STOP_AT_END);
 					Cursor.m_LineWidth = NameLength + 3;
 				}
-				TextRender()->TextEx(&Cursor, aBuf, -1);
+				TextRender()->TextEx(&Cursor, aTeamBuf, -1);
 			}
 		}
 
@@ -674,8 +674,8 @@ void CScoreboard::OnRender()
 						str_copy(aText, Localize("Blue team wins!"), sizeof(aText));
 				}
 
-				float w = TextRender()->TextWidth(0, 86.0f, aText, -1, -1.0f);
-				TextRender()->Text(0, Width / 2 - w / 2, 39, 86.0f, aText, -1.0f);
+				float ClanTextW = TextRender()->TextWidth(0, 86.0f, aText, -1, -1.0f);
+				TextRender()->Text(0, Width / 2 - ClanTextW / 2, 39, 86.0f, aText, -1.0f);
 			}
 
 			//decrease width, because team games use additional offsets
