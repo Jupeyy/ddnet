@@ -2138,22 +2138,64 @@ void CMenus::RenderSettingsHUD(CUIRect MainView)
 		MainView.VSplitLeft(5.0f, 0x0, &MainView);
 		MainView.HSplitTop(5.0f, 0x0, &MainView);
 
-		MainView.HSplitTop(50.0f, &Section, &MainView);
-		Section.VSplitLeft(260.0f, &Section, 0x0);
-		MainView.HSplitTop(25.0f, &SectionTwo, &MainView);
+		{
+			MainView.HSplitTop(50.0f, &Section, &MainView);
+			Section.VSplitLeft(260.0f, &Section, 0x0);
+			MainView.HSplitTop(25.0f, &SectionTwo, &MainView);
 
-		static int LasterOutResetID, LaserInResetID;
+			static int LasterOutResetID, LaserInResetID;
 
-		ColorHSLA LaserOutlineColor = DoLine_ColorPicker(&LasterOutResetID, 25.0f, 180.0f, 13.0f, 5.0f, &SectionTwo, Localize("Laser Outline Color"), &g_Config.m_ClLaserOutlineColor, ColorRGBA(0.074402f, 0.074402f, 0.247166f, 1.0f), false);
+			ColorHSLA LaserOutlineColor = DoLine_ColorPicker(&LasterOutResetID, 25.0f, 180.0f, 13.0f, 5.0f, &SectionTwo, Localize("Laser Outline Color"), &g_Config.m_ClLaserOutlineColor, ColorRGBA(0.074402f, 0.074402f, 0.247166f, 1.0f), false);
 
-		MainView.HSplitTop(5.0f, 0x0, &MainView);
-		MainView.HSplitTop(25.0f, &SectionTwo, &MainView);
+			MainView.HSplitTop(5.0f, 0x0, &MainView);
+			MainView.HSplitTop(25.0f, &SectionTwo, &MainView);
 
-		ColorHSLA LaserInnerColor = DoLine_ColorPicker(&LaserInResetID, 25.0f, 180.0f, 13.0f, 5.0f, &SectionTwo, Localize("Laser Inner Color"), &g_Config.m_ClLaserInnerColor, ColorRGBA(0.498039f, 0.498039f, 1.0f, 1.0f), false);
+			ColorHSLA LaserInnerColor = DoLine_ColorPicker(&LaserInResetID, 25.0f, 180.0f, 13.0f, 5.0f, &SectionTwo, Localize("Laser Inner Color"), &g_Config.m_ClLaserInnerColor, ColorRGBA(0.498039f, 0.498039f, 1.0f, 1.0f), false);
 
-		Section.VSplitLeft(30.0f, 0, &Section);
+			Section.VSplitLeft(30.0f, 0, &Section);
 
-		DoLaserPreview(&Section, LaserOutlineColor, LaserInnerColor);
+			DoLaserPreview(&Section, LaserOutlineColor, LaserInnerColor);
+		}
+
+		// red
+		{
+			MainView.HSplitTop(50.0f, &Section, &MainView);
+			Section.VSplitLeft(260.0f, &Section, 0x0);
+			MainView.HSplitTop(25.0f, &SectionTwo, &MainView);
+
+			static int LasterOutResetID, LaserInResetID;
+
+			ColorHSLA LaserOutlineColor = DoLine_ColorPicker(&LasterOutResetID, 25.0f, 180.0f, 13.0f, 5.0f, &SectionTwo, Localize("Team Red Laser Outline Color"), &g_Config.m_ClLaserRedOutlineColor, ColorRGBA(0.074402f, 0.074402f, 0.247166f, 1.0f), false);
+
+			MainView.HSplitTop(5.0f, 0x0, &MainView);
+			MainView.HSplitTop(25.0f, &SectionTwo, &MainView);
+
+			ColorHSLA LaserInnerColor = DoLine_ColorPicker(&LaserInResetID, 25.0f, 180.0f, 13.0f, 5.0f, &SectionTwo, Localize("Team Red Laser Inner Color"), &g_Config.m_ClLaserRedInnerColor, ColorRGBA(0.498039f, 0.498039f, 1.0f, 1.0f), false);
+
+			Section.VSplitLeft(30.0f, 0, &Section);
+
+			DoLaserPreview(&Section, LaserOutlineColor, LaserInnerColor);
+		}
+
+		// blue
+		{
+			MainView.HSplitTop(50.0f, &Section, &MainView);
+			Section.VSplitLeft(260.0f, &Section, 0x0);
+			MainView.HSplitTop(25.0f, &SectionTwo, &MainView);
+
+			static int LasterOutResetID, LaserInResetID;
+
+			ColorHSLA LaserOutlineColor = DoLine_ColorPicker(&LasterOutResetID, 25.0f, 180.0f, 13.0f, 5.0f, &SectionTwo, Localize("Team Blue Laser Outline Color"), &g_Config.m_ClLaserBlueOutlineColor, ColorRGBA(0.074402f, 0.074402f, 0.247166f, 1.0f), false);
+
+			MainView.HSplitTop(5.0f, 0x0, &MainView);
+			MainView.HSplitTop(25.0f, &SectionTwo, &MainView);
+
+			ColorHSLA LaserInnerColor = DoLine_ColorPicker(&LaserInResetID, 25.0f, 180.0f, 13.0f, 5.0f, &SectionTwo, Localize("Team Blue Laser Inner Color"), &g_Config.m_ClLaserBlueInnerColor, ColorRGBA(0.498039f, 0.498039f, 1.0f, 1.0f), false);
+
+			Section.VSplitLeft(30.0f, 0, &Section);
+
+			DoLaserPreview(&Section, LaserOutlineColor, LaserInnerColor);
+		}
 
 		MainView.HSplitTop(25.0f, 0x0, &MainView);
 		MainView.HSplitTop(20.0f, &SectionTwo, &MainView);

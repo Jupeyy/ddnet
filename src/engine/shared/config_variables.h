@@ -283,6 +283,11 @@ MACRO_CONFIG_COL(ClLaserOutlineColor, cl_laser_outline_color, 11176233, CFGFLAG_
 MACRO_CONFIG_COL(ClKillMessageNormalColor, cl_kill_message_normal_color, 255, CFGFLAG_CLIENT | CFGFLAG_SAVE | CFGFLAG_COLALPHA, "Kill message normal color")
 MACRO_CONFIG_COL(ClKillMessageHighlightColor, cl_kill_message_highlight_color, 255, CFGFLAG_CLIENT | CFGFLAG_SAVE | CFGFLAG_COLALPHA, "Kill message highlight color")
 
+MACRO_CONFIG_COL(ClLaserRedInnerColor, cl_laser_red_inner_color, 11206591, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Team Red laser inner color")
+MACRO_CONFIG_COL(ClLaserRedOutlineColor, cl_laser_red_outline_color, 11176233, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Team Red laser outline color")
+MACRO_CONFIG_COL(ClLaserBlueInnerColor, cl_laser_blue_inner_color, 11206591, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Team Blue laser inner color")
+MACRO_CONFIG_COL(ClLaserBlueOutlineColor, cl_laser_blue_outline_color, 11176233, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Team Blue laser outline color")
+
 MACRO_CONFIG_INT(ClMessageFriend, cl_message_friend, 1, 0, 1, CFGFLAG_SAVE | CFGFLAG_CLIENT, "Enable coloring and the heart for friends")
 MACRO_CONFIG_COL(ClMessageFriendColor, cl_message_friend_color, 65425, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Friend message color")
 

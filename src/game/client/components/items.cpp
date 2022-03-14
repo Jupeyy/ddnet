@@ -14,6 +14,7 @@
 
 #include <game/client/components/effects.h>
 #include <game/client/components/flow.h>
+#include <limits>
 
 #include "items.h"
 
@@ -240,7 +241,16 @@ void CItems::RenderFlag(const CNetObj_Flag *pPrev, const CNetObj_Flag *pCurrent,
 	Graphics()->RenderQuadContainerAsSprite(m_ItemsQuadContainerIndex, QuadOffset, Pos.x, Pos.y - Size * 0.75f);
 }
 
-void CItems::RenderLaser(const struct CNetObj_Laser *pCurrent, bool IsPredicted)
+struct SLaserInfo
+{
+	int m_Tick = -1;
+	int m_Owner = -1;
+	vec2 m_Pos = {0, 0};
+};
+
+static SLaserInfo gs_LaserInfos[16 * 1024];
+
+void CItems::RenderLaser(int LaserOwner, int ID, const struct CNetObj_Laser *pCurrent, bool IsPredicted)
 {
 	ColorRGBA RGB;
 	vec2 Pos = vec2(pCurrent->m_X, pCurrent->m_Y);
@@ -250,6 +260,71 @@ void CItems::RenderLaser(const struct CNetObj_Laser *pCurrent, bool IsPredicted)
 	ColorRGBA OuterColor(RGB.r, RGB.g, RGB.b, 1.0f);
 	RGB = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClLaserInnerColor));
 	ColorRGBA InnerColor(RGB.r, RGB.g, RGB.b, 1.0f);
+
+	if(GameClient()->IsTeamPlay())
+	{
+		if(LaserOwner == -1)
+		{
+			if(ID >= 0 && (size_t)ID < std::size(gs_LaserInfos))
+			{
+				if(gs_LaserInfos[ID].m_Tick == pCurrent->m_StartTick)
+				{
+					LaserOwner = gs_LaserInfos[ID].m_Owner;
+				}
+				else
+				{
+					int OldTick = gs_LaserInfos[ID].m_Tick;
+					gs_LaserInfos[ID].m_Tick = pCurrent->m_StartTick;
+					bool IsWS = false;
+					if(gs_LaserInfos[ID].m_Owner != -1 && OldTick != -1 && absolute(pCurrent->m_StartTick - OldTick) < SERVER_TICK_SPEED * 2)
+					{
+						if(distance(gs_LaserInfos[ID].m_Pos, From) < 0.001f)
+						{
+							IsWS = true;
+						}
+					}
+					gs_LaserInfos[ID].m_Pos = Pos;
+					if(!IsWS)
+					{
+						gs_LaserInfos[ID].m_Owner = -1;
+						float MinDist = std::numeric_limits<float>::max();
+						for(size_t i = 0; i < MAX_CLIENTS; ++i)
+						{
+							auto &Char = GameClient()->m_Snap.m_aCharacters[i];
+							if(Char.m_Active)
+							{
+								float Dist = distance(Char.m_Position, From);
+								if(Dist < MinDist && Dist < 48)
+								{
+									MinDist = Dist;
+									gs_LaserInfos[ID].m_Owner = i;
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+
+		if(LaserOwner != -1)
+		{
+			auto PlayerTeam = GameClient()->m_aClients[LaserOwner].m_Team;
+			if(PlayerTeam == TEAM_RED)
+			{
+				RGB = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClLaserRedOutlineColor));
+				OuterColor = ColorRGBA(RGB.r, RGB.g, RGB.b, 1.0f);
+				RGB = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClLaserRedInnerColor));
+				InnerColor = ColorRGBA(RGB.r, RGB.g, RGB.b, 1.0f);
+			}
+			else if(PlayerTeam == TEAM_BLUE)
+			{
+				RGB = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClLaserBlueOutlineColor));
+				OuterColor = ColorRGBA(RGB.r, RGB.g, RGB.b, 1.0f);
+				RGB = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClLaserBlueInnerColor));
+				InnerColor = ColorRGBA(RGB.r, RGB.g, RGB.b, 1.0f);
+			}
+		}
+	}
 
 	int TuneZone = GameClient()->m_GameWorld.m_WorldConfig.m_UseTuneZones ? Collision()->IsTune(Collision()->GetMapIndex(From)) : 0;
 
@@ -347,7 +422,7 @@ void CItems::OnRender()
 				continue;
 			CNetObj_Laser Data;
 			pLaser->FillInfo(&Data);
-			RenderLaser(&Data, true);
+			RenderLaser(pLaser->GetOwner(), -1, &Data, true);
 		}
 		for(auto *pPickup = (CPickup *)GameClient()->m_PredictedWorld.FindFirst(CGameWorld::ENTTYPE_PICKUP); pPickup; pPickup = (CPickup *)pPickup->NextEntity())
 		{
@@ -463,7 +538,7 @@ void CItems::OnRender()
 					Laser.m_StartTick = Client()->GameTick(g_Config.m_ClDummy);
 				}
 			}
-			RenderLaser(&Laser);
+			RenderLaser(-1, Item.m_ID, &Laser);
 		}
 	}
 
