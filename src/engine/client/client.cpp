@@ -2749,6 +2749,8 @@ void CClient::Update()
 	}
 
 	// update the server browser
+	m_ServerBrowser.SetSearchRegex(m_ServerBrowserSearchRegex);
+	m_ServerBrowser.SetExcludeRegex(m_ServerBrowserExcludeRegex);
 	m_ServerBrowser.Update(m_ResortServerBrowser);
 	m_ResortServerBrowser = false;
 
@@ -3830,6 +3832,24 @@ void CClient::BenchmarkQuit(int Seconds, const char *pFilename)
 void CClient::ServerBrowserUpdate()
 {
 	m_ResortServerBrowser = true;
+}
+
+void CClient::SetServerBrowserSearchRegex(bool ServerBrowserRegex)
+{
+	if((!m_ServerBrowserSearchRegex && ServerBrowserRegex) || (m_ServerBrowserSearchRegex && !ServerBrowserRegex))
+	{
+		ServerBrowserUpdate();
+	}
+	m_ServerBrowserSearchRegex = ServerBrowserRegex;
+}
+
+void CClient::SetServerBrowserExcludeRegex(bool ServerBrowserRegex)
+{
+	if((!m_ServerBrowserExcludeRegex && ServerBrowserRegex) || (m_ServerBrowserExcludeRegex && !ServerBrowserRegex))
+	{
+		ServerBrowserUpdate();
+	}
+	m_ServerBrowserExcludeRegex = ServerBrowserRegex;
 }
 
 void CClient::ConchainServerBrowserUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData)

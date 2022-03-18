@@ -625,19 +625,40 @@ bool CUIEx::DoEditBox(const void *pID, const CUIRect *pRect, char *pStr, unsigne
 	return ReturnValue;
 }
 
-bool CUIEx::DoClearableEditBox(const void *pID, const void *pClearID, const CUIRect *pRect, char *pStr, unsigned StrSize, float FontSize, float *pOffset, bool Hidden, int Corners, const SUIExEditBoxProperties &Properties)
+bool CUIEx::DoClearableEditBox(const void *pID, const void *pClearID, const CUIRect *pRect, char *pStr, unsigned StrSize, float FontSize, float *pOffset, bool Hidden, int Corners, const SUIExEditBoxProperties &Properties, SUIExRegexState *pRegexState)
 {
 	CUIRect EditBox;
 	CUIRect ClearButton;
+	CUIRect RegexButton;
+
+	bool Regex = pRegexState != nullptr;
+
 	pRect->VSplitRight(15.0f, &EditBox, &ClearButton);
+	if(Regex)
+		EditBox.VSplitRight(15.0f, &EditBox, &RegexButton);
 	bool ReturnValue = DoEditBox(pID, &EditBox, pStr, StrSize, FontSize, pOffset, Hidden, Corners & ~CUI::CORNER_R, Properties);
 
 	TextRender()->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_ONLY_ADVANCE_WIDTH | ETextRenderFlags::TEXT_RENDER_FLAG_NO_X_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_Y_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_PIXEL_ALIGMENT);
 	RenderTools()->DrawUIRect(&ClearButton, ColorRGBA(1, 1, 1, 0.33f * UI()->ButtonColorMul(pClearID)), Corners & ~CUI::CORNER_L, 3.0f);
+	if(Regex)
+	{
+		if(UI()->DoButtonLogic(pRegexState->m_pRegexUIID, "\xEE\x9D\x83", 0, &RegexButton))
+		{
+			UI()->SetActiveItem(pID);
+			pRegexState->m_IsActive = !pRegexState->m_IsActive;
+		}
+		RenderTools()->DrawUIRect(&RegexButton, ColorRGBA(1, 1, 1, 0.33f * UI()->ButtonColorMul(pRegexState->m_pRegexUIID)).v4() * ((pRegexState->m_IsActive) ? 0.5f : 1.f), 0, 0);
+	}
 
 	SLabelProperties Props;
 	Props.m_AlignVertically = 0;
 	UI()->DoLabel(&ClearButton, "×", ClearButton.h * CUI::ms_FontmodHeight, TEXTALIGN_CENTER, Props);
+	if(Regex)
+	{
+		TextRender()->SetCurFont(TextRender()->GetFont(TEXT_FONT_ICON_FONT));
+		UI()->DoLabel(&RegexButton, "\xEE\x9D\x83", RegexButton.h * CUI::ms_FontmodHeight, TEXTALIGN_CENTER, Props);
+		TextRender()->SetCurFont(nullptr);
+	}
 	TextRender()->SetRenderFlags(0);
 	if(UI()->DoButtonLogic(pClearID, "×", 0, &ClearButton))
 	{

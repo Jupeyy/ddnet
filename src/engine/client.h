@@ -135,6 +135,9 @@ public:
 	virtual void AutoCSV_Start() = 0;
 	virtual void ServerBrowserUpdate() = 0;
 
+	virtual void SetServerBrowserSearchRegex(bool ServerBrowserRegex) = 0;
+	virtual void SetServerBrowserExcludeRegex(bool ServerBrowserRegex) = 0;
+
 	// gfx
 	virtual void SwitchWindowScreen(int Index) = 0;
 	virtual void SetWindowParams(int FullscreenMode, bool IsBorderless, bool AllowResizing) = 0;

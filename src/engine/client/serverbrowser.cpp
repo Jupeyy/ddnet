@@ -30,6 +30,9 @@
 
 #include <engine/external/json-parser/json.h>
 
+#include <regex>
+#include <string>
+
 class SortWrap
 {
 	typedef bool (CServerBrowser::*SortFunc)(int, int) const;
@@ -266,6 +269,16 @@ void CServerBrowser::Filter()
 	}
 
 	// filter the servers
+
+	std::regex TmpRegex;
+
+	auto &&ServerBrowserFilterStringFind = [&TmpRegex](bool DoRegex, const char *pSearchStr, const char *pFilterStr) -> bool {
+		if(DoRegex)
+			return std::regex_search(pSearchStr, TmpRegex);
+		else
+			return str_utf8_find_nocase(pSearchStr, pFilterStr);
+	};
+
 	for(i = 0; i < m_NumServers; i++)
 	{
 		int Filtered = 0;
@@ -307,7 +320,10 @@ void CServerBrowser::Filter()
 				m_ppServerlist[i]->m_Info.m_QuickSearchHit = 0;
 
 				// match against server name
-				if(str_utf8_find_nocase(m_ppServerlist[i]->m_Info.m_aName, g_Config.m_BrFilterString))
+				if(m_SearchRegex)
+					TmpRegex = std::regex(g_Config.m_BrFilterString, std::regex::extended | std::regex_constants::icase);
+
+				if(ServerBrowserFilterStringFind(m_SearchRegex, m_ppServerlist[i]->m_Info.m_aName, g_Config.m_BrFilterString))
 				{
 					MatchFound = 1;
 					m_ppServerlist[i]->m_Info.m_QuickSearchHit |= IServerBrowser::QUICK_SERVERNAME;
@@ -316,8 +332,8 @@ void CServerBrowser::Filter()
 				// match against players
 				for(p = 0; p < minimum(m_ppServerlist[i]->m_Info.m_NumClients, (int)MAX_CLIENTS); p++)
 				{
-					if(str_utf8_find_nocase(m_ppServerlist[i]->m_Info.m_aClients[p].m_aName, g_Config.m_BrFilterString) ||
-						str_utf8_find_nocase(m_ppServerlist[i]->m_Info.m_aClients[p].m_aClan, g_Config.m_BrFilterString))
+					if(ServerBrowserFilterStringFind(m_SearchRegex, m_ppServerlist[i]->m_Info.m_aClients[p].m_aName, g_Config.m_BrFilterString) ||
+						ServerBrowserFilterStringFind(m_SearchRegex, m_ppServerlist[i]->m_Info.m_aClients[p].m_aClan, g_Config.m_BrFilterString))
 					{
 						MatchFound = 1;
 						m_ppServerlist[i]->m_Info.m_QuickSearchHit |= IServerBrowser::QUICK_PLAYER;
@@ -326,7 +342,7 @@ void CServerBrowser::Filter()
 				}
 
 				// match against map
-				if(str_utf8_find_nocase(m_ppServerlist[i]->m_Info.m_aMap, g_Config.m_BrFilterString))
+				if(ServerBrowserFilterStringFind(m_SearchRegex, m_ppServerlist[i]->m_Info.m_aMap, g_Config.m_BrFilterString))
 				{
 					MatchFound = 1;
 					m_ppServerlist[i]->m_Info.m_QuickSearchHit |= IServerBrowser::QUICK_MAPNAME;
@@ -338,22 +354,25 @@ void CServerBrowser::Filter()
 
 			if(!Filtered && g_Config.m_BrExcludeString[0] != 0)
 			{
+				if(m_ExcludeRegex)
+					TmpRegex = std::regex(g_Config.m_BrExcludeString, std::regex::extended | std::regex_constants::icase);
+
 				int MatchFound = 0;
 
 				// match against server name
-				if(str_utf8_find_nocase(m_ppServerlist[i]->m_Info.m_aName, g_Config.m_BrExcludeString))
+				if(ServerBrowserFilterStringFind(m_ExcludeRegex, m_ppServerlist[i]->m_Info.m_aName, g_Config.m_BrExcludeString))
 				{
 					MatchFound = 1;
 				}
 
 				// match against map
-				if(str_utf8_find_nocase(m_ppServerlist[i]->m_Info.m_aMap, g_Config.m_BrExcludeString))
+				if(ServerBrowserFilterStringFind(m_ExcludeRegex, m_ppServerlist[i]->m_Info.m_aMap, g_Config.m_BrExcludeString))
 				{
 					MatchFound = 1;
 				}
 
 				// match against gametype
-				if(str_utf8_find_nocase(m_ppServerlist[i]->m_Info.m_aGameType, g_Config.m_BrExcludeString))
+				if(ServerBrowserFilterStringFind(m_ExcludeRegex, m_ppServerlist[i]->m_Info.m_aGameType, g_Config.m_BrExcludeString))
 				{
 					MatchFound = 1;
 				}

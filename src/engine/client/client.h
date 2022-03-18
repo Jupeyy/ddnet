@@ -152,6 +152,9 @@ class CClient : public IClient, public CDemoPlayer::IListener
 	bool m_SoundInitFailed;
 	bool m_ResortServerBrowser;
 
+	bool m_ServerBrowserSearchRegex = false;
+	bool m_ServerBrowserExcludeRegex = false;
+
 	int m_AckGameTick[NUM_DUMMIES];
 	int m_CurrentRecvTick[NUM_DUMMIES];
 	int m_RconAuthed[NUM_DUMMIES];
@@ -477,6 +480,9 @@ public:
 	void AutoCSV_Cleanup();
 
 	void ServerBrowserUpdate();
+
+	void SetServerBrowserSearchRegex(bool ServerBrowserRegex);
+	void SetServerBrowserExcludeRegex(bool ServerBrowserRegex);
 
 	void HandleConnectAddress(const NETADDR *pAddr);
 	void HandleConnectLink(const char *pLink);

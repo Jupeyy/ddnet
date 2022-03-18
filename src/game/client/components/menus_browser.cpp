@@ -540,9 +540,14 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 			EditProps.m_SelectText = true;
 		}
 		static int s_ClearButton = 0;
+		static int s_RegexButton = 0;
+		static SUIExRegexState s_RegexState;
+		s_RegexState.m_pRegexUIID = &s_RegexButton;
 		static float s_Offset = 0.0f;
-		if(UIEx()->DoClearableEditBox(&g_Config.m_BrFilterString, &s_ClearButton, &QuickSearch, g_Config.m_BrFilterString, sizeof(g_Config.m_BrFilterString), 12.0f, &s_Offset, false, CUI::CORNER_ALL, EditProps))
+		if(UIEx()->DoClearableEditBox(&g_Config.m_BrFilterString, &s_ClearButton, &QuickSearch, g_Config.m_BrFilterString, sizeof(g_Config.m_BrFilterString), 12.0f, &s_Offset, false, CUI::CORNER_ALL, EditProps, &s_RegexState))
 			Client()->ServerBrowserUpdate();
+
+		Client()->SetServerBrowserSearchRegex(s_RegexState.m_IsActive);
 	}
 
 	// render quick exclude
@@ -566,10 +571,15 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 
 		static int s_ClearButton = 0;
 		static float s_Offset = 0.0f;
+		static int s_RegexButton = 0;
+		static SUIExRegexState s_RegexState;
+		s_RegexState.m_pRegexUIID = &s_RegexButton;
 		if(Input()->KeyPress(KEY_X) && (Input()->KeyIsPressed(KEY_LSHIFT) || Input()->KeyIsPressed(KEY_RSHIFT)) && Input()->ModifierIsPressed())
 			UI()->SetActiveItem(&g_Config.m_BrExcludeString);
-		if(UIEx()->DoClearableEditBox(&g_Config.m_BrExcludeString, &s_ClearButton, &QuickExclude, g_Config.m_BrExcludeString, sizeof(g_Config.m_BrExcludeString), 12.0f, &s_Offset, false, CUI::CORNER_ALL))
+		if(UIEx()->DoClearableEditBox(&g_Config.m_BrExcludeString, &s_ClearButton, &QuickExclude, g_Config.m_BrExcludeString, sizeof(g_Config.m_BrExcludeString), 12.0f, &s_Offset, false, CUI::CORNER_ALL, {}, &s_RegexState))
 			Client()->ServerBrowserUpdate();
+
+		Client()->SetServerBrowserExcludeRegex(s_RegexState.m_IsActive);
 	}
 
 	// render status

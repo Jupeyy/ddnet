@@ -144,6 +144,9 @@ public:
 	CServerEntry *Find(const NETADDR &Addr);
 	int GetCurrentType() { return m_ServerlistType; }
 
+	void SetSearchRegex(bool DoRegex) { m_SearchRegex = DoRegex; };
+	void SetExcludeRegex(bool DoRegex) { m_ExcludeRegex = DoRegex; };
+
 private:
 	CNetClient *m_pNetClient;
 	class IConsole *m_pConsole;
@@ -195,6 +198,9 @@ private:
 	unsigned char m_aTokenSeed[16];
 
 	bool m_SortOnNextUpdate;
+
+	bool m_SearchRegex = false;
+	bool m_ExcludeRegex = false;
 
 	int FindFavorite(const NETADDR &Addr) const;
 

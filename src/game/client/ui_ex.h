@@ -19,6 +19,12 @@ struct SUIExEditBoxProperties
 	const char *m_pEmptyText = "";
 };
 
+struct SUIExRegexState
+{
+	const void *m_pRegexUIID = nullptr;
+	bool m_IsActive = false;
+};
+
 class CUIEx
 {
 	CUI *m_pUI;
@@ -65,7 +71,7 @@ public:
 	float DoScrollbarH(const void *pID, const CUIRect *pRect, float Current, const ColorRGBA *pColorInner = NULL);
 
 	bool DoEditBox(const void *pID, const CUIRect *pRect, char *pStr, unsigned StrSize, float FontSize, float *pOffset, bool Hidden = false, int Corners = CUI::CORNER_ALL, const SUIExEditBoxProperties &Properties = {});
-	bool DoClearableEditBox(const void *pID, const void *pClearID, const CUIRect *pRect, char *pStr, unsigned StrSize, float FontSize, float *pOffset, bool Hidden = false, int Corners = CUI::CORNER_ALL, const SUIExEditBoxProperties &Properties = {});
+	bool DoClearableEditBox(const void *pID, const void *pClearID, const CUIRect *pRect, char *pStr, unsigned StrSize, float FontSize, float *pOffset, bool Hidden = false, int Corners = CUI::CORNER_ALL, const SUIExEditBoxProperties &Properties = {}, SUIExRegexState *pRegexState = nullptr);
 };
 
 #endif
