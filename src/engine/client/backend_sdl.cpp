@@ -71,7 +71,7 @@ void CGraphicsBackend_Threaded::ThreadFunc(void *pUser)
 	pSelf->m_BufferDoneCond.notify_all();
 	while(!pSelf->m_Shutdown)
 	{
-		pSelf->m_BufferSwapCond.wait(Lock);
+		pSelf->m_BufferSwapCond.wait(Lock, [&pSelf] { return pSelf->m_pBuffer != nullptr || pSelf->m_Shutdown; });
 		if(pSelf->m_pBuffer)
 		{
 #ifdef CONF_PLATFORM_MACOS
@@ -140,8 +140,7 @@ bool CGraphicsBackend_Threaded::IsIdle() const
 void CGraphicsBackend_Threaded::WaitForIdle()
 {
 	std::unique_lock<std::mutex> Lock(m_BufferSwapMutex);
-	while(m_pBuffer != nullptr)
-		m_BufferDoneCond.wait(Lock);
+	m_BufferDoneCond.wait(Lock, [this]() { return m_pBuffer == nullptr; });
 }
 
 // ------------ CCommandProcessorFragment_General
@@ -236,7 +235,7 @@ bool CCommandProcessorFragment_SDL::RunCommand(const CCommandBuffer::SCommand *p
 
 void CCommandProcessor_SDL_GL::RunBuffer(CCommandBuffer *pBuffer)
 {
-	m_pGLBackend->StartCommands(pBuffer->m_CommandCount);
+	m_pGLBackend->StartCommands(pBuffer->m_CommandCount, pBuffer->m_RenderCallCount);
 
 	for(CCommandBuffer::SCommand *pCommand = pBuffer->Head(); pCommand; pCommand = pCommand->m_pNext)
 	{
@@ -560,10 +559,8 @@ static int IsVersionSupportedGlew(EBackendType BackendType, int VersionMajor, in
 
 EBackendType CGraphicsBackend_SDL_GL::DetectBackend()
 {
-	// TODO
-	return BACKEND_TYPE_VULKAN;
 	EBackendType RetBackendType = BACKEND_TYPE_OPENGL;
-	const char *pEnvDriver = getenv("DDNET_DRIVER");
+	const char *pEnvDriver = SDL_getenv("DDNET_DRIVER");
 	if(pEnvDriver && str_comp_nocase(pEnvDriver, "GLES") == 0)
 		RetBackendType = BACKEND_TYPE_OPENGL_ES;
 	else if(pEnvDriver && str_comp_nocase(pEnvDriver, "Vulkan") == 0)
@@ -581,9 +578,15 @@ EBackendType CGraphicsBackend_SDL_GL::DetectBackend()
 		else if(str_comp_nocase(pConfBackend, "OpenGL") == 0)
 			RetBackendType = BACKEND_TYPE_OPENGL;
 	}
+#if !defined(CONF_BACKEND_VULKAN)
+	RetBackendType = BACKEND_TYPE_OPENGL;
+#endif
 #if !defined(CONF_BACKEND_OPENGL_ES) && !defined(CONF_BACKEND_OPENGL_ES3)
 	if(RetBackendType == BACKEND_TYPE_OPENGL_ES)
 		RetBackendType = BACKEND_TYPE_OPENGL;
+#elif defined(CONF_BACKEND_OPENGL_ES)
+	if(RetBackendType == BACKEND_TYPE_OPENGL)
+		RetBackendType = BACKEND_TYPE_OPENGL_ES;
 #endif
 	return RetBackendType;
 }
@@ -635,9 +638,11 @@ void CGraphicsBackend_SDL_GL::ClampDriverVersion(EBackendType BackendType)
 	}
 	else if(BackendType == BACKEND_TYPE_VULKAN)
 	{
-		g_Config.m_GfxGLMajor = 1;
-		g_Config.m_GfxGLMinor = 1;
+#if defined(CONF_BACKEND_VULKAN)
+		g_Config.m_GfxGLMajor = gs_BackendVulkanMajor;
+		g_Config.m_GfxGLMinor = gs_BackendVulkanMinor;
 		g_Config.m_GfxGLPatch = 0;
+#endif
 	}
 }
 
@@ -653,50 +658,81 @@ bool CGraphicsBackend_SDL_GL::IsModernAPI(EBackendType BackendType)
 	return false;
 }
 
-void CGraphicsBackend_SDL_GL::GetDriverVersion(EGraphicsDriverAgeType DriverAgeType, int &Major, int &Minor, int &Patch)
+bool CGraphicsBackend_SDL_GL::GetDriverVersion(EGraphicsDriverAgeType DriverAgeType, int &Major, int &Minor, int &Patch, const char *&pName, EBackendType BackendType)
 {
-	if(m_BackendType == BACKEND_TYPE_OPENGL)
+	if(BackendType == BACKEND_TYPE_AUTO)
+		BackendType = m_BackendType;
+	if(BackendType == BACKEND_TYPE_OPENGL)
 	{
+		pName = "OpenGL";
 		if(DriverAgeType == GRAPHICS_DRIVER_AGE_TYPE_LEGACY)
 		{
 			Major = 1;
 			Minor = 4;
 			Patch = 0;
+			return true;
 		}
 		else if(DriverAgeType == GRAPHICS_DRIVER_AGE_TYPE_DEFAULT)
 		{
 			Major = 3;
 			Minor = 0;
 			Patch = 0;
+			return true;
 		}
 		else if(DriverAgeType == GRAPHICS_DRIVER_AGE_TYPE_MODERN)
 		{
 			Major = 3;
 			Minor = 3;
 			Patch = 0;
+			return true;
 		}
 	}
-	else if(m_BackendType == BACKEND_TYPE_OPENGL_ES)
+	else if(BackendType == BACKEND_TYPE_OPENGL_ES)
 	{
+		pName = "GLES";
+#ifdef CONF_BACKEND_OPENGL_ES
 		if(DriverAgeType == GRAPHICS_DRIVER_AGE_TYPE_LEGACY)
 		{
 			Major = 1;
 			Minor = 0;
 			Patch = 0;
+			return true;
 		}
 		else if(DriverAgeType == GRAPHICS_DRIVER_AGE_TYPE_DEFAULT)
 		{
 			Major = 3;
 			Minor = 0;
 			Patch = 0;
+			// there isn't really a default one
+			return false;
 		}
-		else if(DriverAgeType == GRAPHICS_DRIVER_AGE_TYPE_MODERN)
+#endif
+#ifdef CONF_BACKEND_OPENGL_ES3
+		if(DriverAgeType == GRAPHICS_DRIVER_AGE_TYPE_MODERN)
 		{
 			Major = 3;
 			Minor = 0;
 			Patch = 0;
+			return true;
 		}
+#endif
 	}
+	else if(BackendType == BACKEND_TYPE_VULKAN)
+	{
+		pName = "Vulkan";
+#ifdef CONF_BACKEND_VULKAN
+		if(DriverAgeType == GRAPHICS_DRIVER_AGE_TYPE_DEFAULT)
+		{
+			Major = gs_BackendVulkanMajor;
+			Minor = gs_BackendVulkanMinor;
+			Patch = 0;
+			return true;
+		}
+#else
+		return false;
+#endif
+	}
+	return false;
 }
 
 static void DisplayToVideoMode(CVideoMode *pVMode, SDL_DisplayMode *pMode, int HiDPIScale, int RefreshRate)
@@ -830,12 +866,19 @@ int CGraphicsBackend_SDL_GL::Init(const char *pName, int *pScreen, int *pWidth, 
 			dbg_msg("gfx", "unable to init SDL video: %s", SDL_GetError());
 			return EGraphicsBackendErrorCodes::GRAPHICS_BACKEND_ERROR_CODE_SDL_INIT_FAILED;
 		}
-#if defined(CONF_FAMILY_WINDOWS) && defined(CONF_BACKEND_VULKAN)
-		SDL_Vulkan_LoadLibrary("libvulkan-1.dll");
-#endif
 	}
 
+	EBackendType OldBackendType = m_BackendType;
 	m_BackendType = DetectBackend();
+	// little fallback for Vulkan
+	if(OldBackendType != BACKEND_TYPE_AUTO)
+	{
+		if(m_BackendType == BACKEND_TYPE_VULKAN)
+		{
+			SDL_setenv("DDNET_DRIVER", "OpenGL", 1);
+			m_BackendType = DetectBackend();
+		}
+	}
 
 	ClampDriverVersion(m_BackendType);
 
@@ -918,7 +961,7 @@ int CGraphicsBackend_SDL_GL::Init(const char *pName, int *pScreen, int *pWidth, 
 
 	// set flags
 	int SdlFlags = SDL_WINDOW_INPUT_GRABBED | SDL_WINDOW_INPUT_FOCUS | SDL_WINDOW_MOUSE_FOCUS;
-	SdlFlags |= (m_BackendType == BACKEND_TYPE_OPENGL || m_BackendType == BACKEND_TYPE_OPENGL_ES) ? SDL_WINDOW_OPENGL : SDL_WINDOW_VULKAN;
+	SdlFlags |= (IsOpenGLFamilyBackend) ? SDL_WINDOW_OPENGL : SDL_WINDOW_VULKAN;
 	if(Flags & IGraphicsBackend::INITFLAG_HIGHDPI)
 		SdlFlags |= SDL_WINDOW_ALLOW_HIGHDPI;
 	if(Flags & IGraphicsBackend::INITFLAG_RESIZABLE)
@@ -981,7 +1024,10 @@ int CGraphicsBackend_SDL_GL::Init(const char *pName, int *pScreen, int *pWidth, 
 	if(m_pWindow == NULL)
 	{
 		dbg_msg("gfx", "unable to create window: %s", SDL_GetError());
-		return EGraphicsBackendErrorCodes::GRAPHICS_BACKEND_ERROR_CODE_SDL_WINDOW_CREATE_FAILED;
+		if(m_BackendType == BACKEND_TYPE_VULKAN)
+			return EGraphicsBackendErrorCodes::GRAPHICS_BACKEND_ERROR_CODE_GL_CONTEXT_FAILED;
+		else
+			return EGraphicsBackendErrorCodes::GRAPHICS_BACKEND_ERROR_CODE_SDL_WINDOW_CREATE_FAILED;
 	}
 
 	int GlewMajor = 0;
@@ -1013,7 +1059,7 @@ int CGraphicsBackend_SDL_GL::Init(const char *pName, int *pScreen, int *pWidth, 
 	InitError = IsVersionSupportedGlew(m_BackendType, g_Config.m_GfxGLMajor, g_Config.m_GfxGLMinor, g_Config.m_GfxGLPatch, GlewMajor, GlewMinor, GlewPatch);
 
 	// SDL_GL_GetDrawableSize reports HiDPI resolution even with SDL_WINDOW_ALLOW_HIGHDPI not set, which is wrong
-	if(SdlFlags & SDL_WINDOW_ALLOW_HIGHDPI)
+	if(SdlFlags & SDL_WINDOW_ALLOW_HIGHDPI && IsOpenGLFamilyBackend)
 		SDL_GL_GetDrawableSize(m_pWindow, pCurrentWidth, pCurrentHeight);
 	else
 		SDL_GetWindowSize(m_pWindow, pCurrentWidth, pCurrentHeight);
