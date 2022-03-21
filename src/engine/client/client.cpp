@@ -3163,12 +3163,39 @@ void CClient::Run()
 				else
 #endif
 				{
+					static bool WasClickedM1 = false;
+					bool IsSpace = Input()->KeyIsPressed(KEY_SPACE);
+					bool IsM1 = Input()->KeyIsPressed(KEY_MOUSE_1);
+
+					bool Tmp = WasClickedM1;
+					WasClickedM1 = IsM1;
+					if(Tmp)
+					{
+						IsM1 = false;
+					}
+					else
+					{
+						IsM1 = IsM1;
+					}
+
 					if(!m_EditorActive)
 						Render();
 					else
 					{
 						m_pEditor->UpdateAndRender();
 						DebugRender();
+					}
+					static bool SIsPressed = false;
+					if(SIsPressed || IsSpace)
+					{
+						SIsPressed = true;
+						static bool IsPressed = false;
+						if(IsM1)
+							IsPressed = !IsPressed;
+						if(IsPressed)
+							m_pGraphics->Clear(0, 0, 0);
+						else
+							m_pGraphics->Clear(1, 1, 1);
 					}
 					m_pGraphics->Swap();
 				}
