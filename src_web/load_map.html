@@ -1,0 +1,35 @@
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<style>
+		.game {
+			position: absolute;
+			top: 500px;
+			left: 0px;
+			margin: 0px;
+			border: 0;
+			width: 100%;
+			height: 100%;
+			overflow: hidden;
+			display: block;
+		}
+		</style>
+	</head>
+	<body onload="OnLoad();">
+		<canvas class="game" id="canvas" oncontextmenu="event.preventDefault()"></canvas>
+
+		<h1 id="renderdemos">Render demos</h1>
+		<form position="absolute" action='#' onsubmit="() => { return false; }">
+			<input type='file' id='DemoFileInput'>
+			<input type='button' id='DemoFileLoad' value='Load' onclick='LoadDemoFile();'>
+		</form>
+
+		<h1 id="rendermap">Render map</h1>
+		<form position="absolute" action='#' onsubmit="() => { return false; }">
+			<input type='file' id='MapFileInput'>
+			<input type='button' id='MapFileLoad' value='Load' onclick='LoadMapFile();'>
+		</form>
+		<script src="load_map.js"></script>
+	</body>
+</html> 

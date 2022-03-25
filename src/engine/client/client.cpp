@@ -4268,6 +4268,11 @@ void CClient::HandleMapPath(const char *pPath)
 		Upstream latency
 */
 
+#ifdef CONF_WEBASM
+#include <emscripten.h>
+#endif
+#include <vector>
+
 #if defined(CONF_PLATFORM_MACOS)
 extern "C" int TWMain(int argc, const char **argv)
 #elif defined(CONF_PLATFORM_ANDROID)
@@ -4286,6 +4291,13 @@ int main(int argc, const char **argv)
 	bool Silent = false;
 	bool RandInitFailed = false;
 
+	bool NextArgIsJSFileName = false;
+	bool NextArgIsJSFileBase64 = false;
+	std::string JSFileName;
+	int JSFileFileLen = 0;
+	std::vector<uint8_t> JSFileData;
+	size_t JSFileDataSize = 0;
+	bool IsJSDemoFile = false;
 	for(int i = 1; i < argc; i++)
 	{
 		if(str_comp("-s", argv[i]) == 0 || str_comp("--silent", argv[i]) == 0)
@@ -4297,6 +4309,49 @@ int main(int argc, const char **argv)
 #if defined(CONF_FAMILY_WINDOWS)
 			AllocConsole();
 #endif
+		}
+		else if(str_comp("-d", argv[i]) == 0)
+		{
+			NextArgIsJSFileName = true;
+			IsJSDemoFile = true;
+		}
+		else if(str_comp("-m", argv[i]) == 0)
+		{
+			NextArgIsJSFileName = true;
+			IsJSDemoFile = false;
+		}
+		else if(NextArgIsJSFileName)
+		{
+			NextArgIsJSFileName = false;
+			NextArgIsJSFileBase64 = true;
+			JSFileName = argv[i];
+		}
+		else if(NextArgIsJSFileBase64)
+		{
+			JSFileFileLen = str_toint(argv[i]);
+			for(int i = 0; i < JSFileFileLen; ++i)
+			{
+				int x = 0;
+#ifdef CONF_WEBASM
+				if(IsJSDemoFile)
+				{
+					x = EM_ASM_INT({
+						return g_DemoFile[$0];
+					},
+						i);
+				}
+				else
+				{
+					x = EM_ASM_INT({
+						return g_MapFile[$0];
+					},
+						i);
+				}
+#endif
+				JSFileData.push_back((uint8_t)x);
+			}
+			NextArgIsJSFileBase64 = false;
+			JSFileDataSize = JSFileData.size();
 		}
 	}
 
@@ -4382,6 +4437,24 @@ int main(int argc, const char **argv)
 		}
 	}
 
+	if(JSFileDataSize != 0)
+	{
+		IOHANDLE JSFileFile = 0;
+		if(IsJSDemoFile)
+		{
+			pStorage->CreateFolder("demos", IStorage::TYPE_SAVE);
+			JSFileFile = pStorage->OpenFile((std::string("demos/") + JSFileName).c_str(), IOFLAG_WRITE, IStorage::TYPE_SAVE);
+		}
+		else
+		{
+			pStorage->CreateFolder("maps", IStorage::TYPE_SAVE);
+			JSFileFile = pStorage->OpenFile((std::string("maps/") + JSFileName).c_str(), IOFLAG_WRITE, IStorage::TYPE_SAVE);
+		}
+		dbg_msg("webasm", "writing file %s of size %zu", JSFileName.c_str(), JSFileDataSize);
+		io_write(JSFileFile, JSFileData.data(), JSFileDataSize);
+		io_close(JSFileFile);
+	}
+
 	pEngine->Init();
 	pConfigManager->Init();
 	pConsole->Init();
@@ -4426,6 +4499,9 @@ int main(int argc, const char **argv)
 		pConsole->ExecuteFile(AUTOEXEC_FILE);
 	}
 
+	g_Config.m_ClShowWelcome = 0;
+	str_copy(g_Config.m_ClMenuMap, "", std::size(g_Config.m_ClMenuMap));
+
 	if(g_Config.m_ClConfigVersion < 1)
 	{
 		if(g_Config.m_ClAntiPing == 0)
@@ -4436,6 +4512,9 @@ int main(int argc, const char **argv)
 		}
 	}
 	g_Config.m_ClConfigVersion = 1;
+	g_Config.m_GfxVsync = 1;
+	g_Config.m_GfxAsyncRenderOld = 1;
+	g_Config.m_GfxRefreshRate = 120;
 
 	// parse the command line arguments
 	if(argc == 2 && str_startswith(argv[1], CONNECTLINK))
@@ -4446,6 +4525,22 @@ int main(int argc, const char **argv)
 		pClient->HandleMapPath(argv[1]);
 	else if(argc > 1)
 		pConsole->ParseArguments(argc - 1, (const char **)&argv[1]);
+
+	if(JSFileDataSize != 0)
+	{
+		char aPath[IO_MAX_PATH_LENGTH];
+		if(IsJSDemoFile)
+			pStorage->GetCompletePath(IStorage::TYPE_SAVE, "demos", aPath, std::size(aPath));
+		else
+			pStorage->GetCompletePath(IStorage::TYPE_SAVE, "maps", aPath, std::size(aPath));
+		std::string FullPath = (std::string(aPath) + "/") + JSFileName;
+		if(!IsJSDemoFile)
+			FullPath = JSFileName;
+		if(IsJSDemoFile)
+			pClient->HandleDemoPath(FullPath.c_str());
+		else
+			pClient->HandleMapPath(FullPath.c_str());
+	}
 
 	if(pSteam->GetConnectAddress())
 	{

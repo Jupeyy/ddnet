@@ -6416,7 +6416,7 @@ void CEditor::LoadCurrentMap()
 	m_WorldOffsetY = Center.y;
 }
 
-IEditor *CreateEditor() { return new CEditor; }
+/*IEditor *CreateEditor() { return new CEditor; }*/
 
 // DDRace
 

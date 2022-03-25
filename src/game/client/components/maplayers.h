@@ -25,6 +25,7 @@ class CMapLayers : public CComponent
 {
 	friend class CBackground;
 	friend class CMenuBackground;
+	friend class CMapRender;
 
 	CLayers *m_pLayers;
 	class CMapImages *m_pImages;
@@ -34,6 +35,10 @@ class CMapLayers : public CComponent
 	bool m_EnvelopeUpdate;
 
 	bool m_OnlineOnly;
+
+	bool m_DrawBorders = true;
+	bool m_DoAnims = true;
+	bool m_DoEntities = false;
 
 	void MapScreenToGroup(float CenterX, float CenterY, CMapItemGroup *pGroup, float Zoom = 1.0f);
 

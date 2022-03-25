@@ -964,7 +964,7 @@ void CMenus::RenderLoading()
 	RenderTools()->DrawRoundRect(x, y, w, h, 40.0f);
 	Graphics()->QuadsEnd();
 
-	const char *pCaption = Localize("Loading DDNet Client");
+	const char *pCaption = Localize("Loading...");
 
 	CUIRect r;
 	r.x = x;

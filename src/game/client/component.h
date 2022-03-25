@@ -27,6 +27,7 @@ class CComponent
 {
 protected:
 	friend class CGameClient;
+	friend class CEditor2;
 
 	CGameClient *m_pClient;
 

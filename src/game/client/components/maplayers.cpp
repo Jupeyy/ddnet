@@ -88,6 +88,8 @@ void CMapLayers::EnvelopeEval(int TimeOffsetMillis, int Env, float *pChannels, v
 
 	static int64_t s_Time = 0;
 	static int64_t s_LastLocalTime = time_get_microseconds();
+	if(!pThis->m_DoAnims)
+		s_LastLocalTime = time_get_microseconds();
 	if(pThis->Client()->State() == IClient::STATE_DEMOPLAYBACK)
 	{
 		const IDemoPlayer::CInfo *pInfo = pThis->DemoPlayer()->BaseInfo();
@@ -1082,7 +1084,7 @@ void CMapLayers::RenderTileLayer(int LayerIndex, ColorRGBA *pColor, CMapItemLaye
 		}
 	}
 
-	if(DrawBorder)
+	if(DrawBorder && m_DrawBorders)
 		RenderTileBorder(LayerIndex, pColor, pTileLayer, pGroup, BorderX0, BorderY0, BorderX1, BorderY1, (int)(-floorf((-ScreenX1) / 32.f)) - BorderX0, (int)(-floorf((-ScreenY1) / 32.f)) - BorderY0);
 }
 
@@ -1638,7 +1640,7 @@ void CMapLayers::OnRender()
 			}
 			else if(m_Type == TYPE_FULL_DESIGN)
 			{
-				if(!IsGameLayer)
+				if(!IsGameLayer || m_DoEntities)
 					Render = true;
 			}
 
@@ -1718,12 +1720,14 @@ void CMapLayers::OnRender()
 			}
 
 			// skip rendering if detail layers if not wanted, or is entity layer and we are a background map
-			if((pLayer->m_Flags & LAYERFLAG_DETAIL && (!g_Config.m_GfxHighDetail && !(m_Type == TYPE_FULL_DESIGN)) && !IsGameLayer) || (m_Type == TYPE_BACKGROUND_FORCE && IsEntityLayer) || (m_Type == TYPE_FULL_DESIGN && IsEntityLayer))
+			if((pLayer->m_Flags & LAYERFLAG_DETAIL && (!g_Config.m_GfxHighDetail && !(m_Type == TYPE_FULL_DESIGN)) && !IsGameLayer) || (m_Type == TYPE_BACKGROUND_FORCE && IsEntityLayer) || (m_Type == TYPE_FULL_DESIGN && IsEntityLayer && !m_DoEntities))
 				continue;
 
 			int EntityOverlayVal = g_Config.m_ClOverlayEntities;
-			if(m_Type == TYPE_FULL_DESIGN)
+			if(m_Type == TYPE_FULL_DESIGN && !m_DoEntities)
 				EntityOverlayVal = 0;
+			else if(m_DoEntities)
+				EntityOverlayVal = 100;
 
 			if((Render && EntityOverlayVal < 100 && !IsGameLayer && !IsFrontLayer && !IsSwitchLayer && !IsTeleLayer && !IsSpeedupLayer && !IsTuneLayer) || (EntityOverlayVal && IsGameLayer) || (m_Type == TYPE_BACKGROUND_FORCE))
 			{

@@ -127,6 +127,9 @@ option(VULKAN "Enable the vulkan backend" ${AUTO_VULKAN_BACKEND})
 
 option(EXCEPTION_HANDLING "Enable exception handling (only works with Windows as of now)" OFF)
 
+option(DEMO_RENDERER "Optimized for demo rendering" OFF)
+option(MAP_RENDERER "Optimized for map rendering" OFF)
+
 if(CMAKE_SYSTEM_NAME STREQUAL "Emscripten")
   include(${PROJECT_SOURCE_DIR}/cmake/toolchains/Emscripten.toolchain)
 endif()
@@ -166,7 +169,13 @@ else()
 endif()
 
 set(SERVER_EXECUTABLE DDNet-Server CACHE STRING "Name of the built server executable")
-set(CLIENT_EXECUTABLE DDNet CACHE STRING "Name of the build client executable")
+if(DEMO_RENDERER)
+  set(CLIENT_EXECUTABLE DDNet_demo CACHE STRING "Name of the build client executable")
+elseif(MAP_RENDERER)
+  set(CLIENT_EXECUTABLE DDNet_map CACHE STRING "Name of the build client executable")
+else()
+  set(CLIENT_EXECUTABLE DDNet CACHE STRING "Name of the build client executable")
+endif()
 
 ########################################################################
 # Compiler flags
@@ -671,7 +680,6 @@ endif()
 if(CMAKE_SYSTEM_NAME STREQUAL "Emscripten")
   set(PLATFORM_CLIENT_LIBS GL)
   set(PLATFORM_CLIENT_INCLUDE_DIRS "")
-  set(CMAKE_EXECUTABLE_SUFFIX ".html")
 endif()
 
 ########################################################################
@@ -746,6 +754,7 @@ endif()
 # DATA
 ########################################################################
 
+if(NOT MAP_RENDERER)
 set(EXPECTED_DATA
   arrow.png
   assets/entities/comfort/ddnet.png
@@ -1456,6 +1465,55 @@ set(EXPECTED_DATA
   themes/winter_night.map
   wordlist.txt
 )
+else()
+set(EXPECTED_DATA
+  editor/entities_clear/ddnet.png
+  debug_font.png
+  fonts/DejaVuSans.ttf
+  shader/pipeline.frag
+  shader/pipeline.vert
+  shader/prim.frag
+  shader/prim.vert
+  shader/primex.frag
+  shader/primex.vert
+  shader/quad.frag
+  shader/quad.vert
+  shader/spritemulti.frag
+  shader/spritemulti.vert
+  shader/text.frag
+  shader/text.vert
+  shader/tile.frag
+  shader/tile.vert
+  mapres/bg_cloud1.png
+  mapres/bg_cloud2.png
+  mapres/bg_cloud3.png
+  mapres/desert_doodads.png
+  mapres/desert_main.png
+  mapres/desert_mountains.png
+  mapres/desert_mountains2.png
+  mapres/desert_sun.png
+  mapres/generic_deathtiles.png
+  mapres/generic_unhookable.png
+  mapres/grass_doodads.png
+  mapres/grass_main.png
+  mapres/jungle_background.png
+  mapres/jungle_deathtiles.png
+  mapres/jungle_doodads.png
+  mapres/jungle_main.png
+  mapres/jungle_midground.png
+  mapres/jungle_unhookables.png
+  mapres/moon.png
+  mapres/mountains.png
+  mapres/snow.png
+  mapres/stars.png
+  mapres/sun.png
+  mapres/winter_doodads.png
+  mapres/winter_main.png
+  mapres/winter_mountains.png
+  mapres/winter_mountains2.png
+  mapres/winter_mountains3.png
+)
+endif()
 
 set_glob(DATA GLOB_RECURSE "frag;json;map;otf;png;rules;ttf;txt;vert;wv" data ${EXPECTED_DATA})
 
@@ -1986,6 +2044,8 @@ if(CLIENT)
     auto_map.h
     editor.cpp
     editor.h
+    editor2.cpp
+    editor2.h
     explanations.cpp
     io.cpp
     layer_game.cpp
@@ -2130,6 +2190,14 @@ if(CLIENT)
 
   if(VULKAN)
 	  target_compile_definitions(${TARGET_CLIENT} PRIVATE CONF_BACKEND_VULKAN)
+  endif()
+
+  if(DEMO_RENDERER)
+	  target_compile_definitions(${TARGET_CLIENT} PRIVATE CONF_DEMO_RENDERER)
+  endif()
+
+  if(MAP_RENDERER)
+	  target_compile_definitions(${TARGET_CLIENT} PRIVATE CONF_MAP_RENDERER)
   endif()
 
   list(APPEND TARGETS_OWN ${TARGET_CLIENT})

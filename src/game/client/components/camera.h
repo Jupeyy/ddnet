@@ -9,6 +9,8 @@
 class CCamera : public CComponent
 {
 	friend class CMenuBackground;
+	friend class CMapRender;
+	friend class CEditor2;
 
 	enum
 	{

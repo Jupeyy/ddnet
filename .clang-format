@@ -51,3 +51,8 @@ SpaceAfterTemplateKeyword: false
 TabWidth: 8
 UseTab: ForContinuationAndIndentation
 ...
+Language: JavaScript
+TabWidth: 8
+UseTab: Always
+IndentWidth: 8
+...

@@ -35,7 +35,9 @@ CMapImages::CMapImages(int TextureSize)
 
 void CMapImages::OnInit()
 {
+#if !defined(CONF_MAP_RENDERER)
 	InitOverlayTextures();
+#endif
 
 	if(str_comp(g_Config.m_ClAssetsEntites, "default") == 0)
 		str_copy(m_aEntitiesPath, "editor/entities_clear", sizeof(m_aEntitiesPath));

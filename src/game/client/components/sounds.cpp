@@ -73,7 +73,8 @@ void CSounds::OnInit()
 
 	ClearQueue();
 
-	// load sounds
+// load sounds
+#ifndef CONF_MAP_RENDERER
 	if(g_Config.m_ClThreadsoundloading)
 	{
 		m_pSoundJob = std::make_shared<CSoundLoading>(m_pClient, false);
@@ -85,6 +86,7 @@ void CSounds::OnInit()
 		CSoundLoading(m_pClient, true).Run();
 		m_WaitForSoundJob = false;
 	}
+#endif
 }
 
 void CSounds::OnReset()

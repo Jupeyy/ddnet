@@ -342,7 +342,7 @@ void CItems::OnRender()
 		}
 		for(CEntity *pEnt = GameClient()->m_PredictedWorld.FindFirst(CGameWorld::ENTTYPE_LASER); pEnt; pEnt = pEnt->NextEntity())
 		{
-			auto *const pLaser = dynamic_cast<CLaser *>(pEnt);
+			auto *const pLaser = (CLaser *)(pEnt);
 			if(!pLaser || pLaser->GetOwner() < 0 || !GameClient()->m_aClients[pLaser->GetOwner()].m_IsPredictedLocal)
 				continue;
 			CNetObj_Laser Data;
@@ -427,7 +427,7 @@ void CItems::OnRender()
 		{
 			if(UsePredicted)
 			{
-				auto *pLaser = dynamic_cast<CLaser *>(GameClient()->m_GameWorld.FindMatch(Item.m_ID, Item.m_Type, pData));
+				auto *pLaser = (CLaser *)(GameClient()->m_GameWorld.FindMatch(Item.m_ID, Item.m_Type, pData));
 				if(pLaser && pLaser->GetOwner() >= 0 && GameClient()->m_aClients[pLaser->GetOwner()].m_IsPredictedLocal)
 					continue;
 			}

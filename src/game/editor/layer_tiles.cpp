@@ -82,6 +82,9 @@ void CLayerTiles::MakePalette()
 
 void CLayerTiles::Render(bool Tileset)
 {
+	if(m_Game || m_Tele || m_Speedup || m_Switch || m_Tune)
+		return;
+
 	if(m_Image >= 0 && m_Image < m_pEditor->m_Map.m_lImages.size())
 		m_Texture = m_pEditor->m_Map.m_lImages[m_Image]->m_Texture;
 	Graphics()->TextureSet(m_Texture);

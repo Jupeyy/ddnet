@@ -725,12 +725,12 @@ public:
 		m_MouseDeltaWx = 0;
 		m_MouseDeltaWy = 0;
 
-		m_GuiActive = true;
+		m_GuiActive = false;
 		m_ProofBorders = false;
 
 		m_ShowTileInfo = false;
 		m_ShowDetail = true;
-		m_Animate = false;
+		m_Animate = true;
 		m_AnimateStart = 0;
 		m_AnimateTime = 0;
 		m_AnimateSpeed = 1;

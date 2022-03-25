@@ -44,7 +44,7 @@ static void CurlUnlock(CURL *pHandle, curl_lock_data Data, void *pUser) RELEASE(
 }
 
 bool HttpInit(IStorage *pStorage)
-{
+{ /*
 	if(curl_global_init(CURL_GLOBAL_DEFAULT))
 	{
 		return true;
@@ -75,15 +75,15 @@ bool HttpInit(IStorage *pStorage)
 	// handlers and instead ignore SIGPIPE from OpenSSL ourselves.
 	signal(SIGPIPE, SIG_IGN);
 #endif
-
+*/
 	return false;
 }
 
 void EscapeUrl(char *pBuf, int Size, const char *pStr)
-{
+{ /*
 	char *pEsc = curl_easy_escape(0, pStr, 0);
 	str_copy(pBuf, pEsc, Size);
-	curl_free(pEsc);
+	curl_free(pEsc);*/
 }
 
 CRequest::CRequest(const char *pUrl, CTimeout Timeout, HTTPLOG LogProgress, IPRESOLVE IpResolve) :
@@ -106,10 +106,10 @@ void CRequest::Run()
 		FinalState = HTTP_ERROR;
 	}
 	else
-	{
+	{ /*
 		CURL *pHandle = curl_easy_init();
 		FinalState = RunImpl(pHandle);
-		curl_easy_cleanup(pHandle);
+		curl_easy_cleanup(pHandle);*/
 	}
 
 	m_State = OnCompletion(FinalState);
@@ -117,11 +117,11 @@ void CRequest::Run()
 
 int CRequest::RunImpl(CURL *pHandle)
 {
-	if(!pHandle)
+	//if(!pHandle)
 	{
 		return HTTP_ERROR;
 	}
-
+	/*
 	if(g_Config.m_DbgCurl)
 	{
 		curl_easy_setopt(pHandle, CURLOPT_VERBOSE, 1L);
@@ -180,7 +180,7 @@ int CRequest::RunImpl(CURL *pHandle)
 		if(g_Config.m_DbgCurl || m_LogProgress >= HTTPLOG::ALL)
 			dbg_msg("http", "task done %s", m_aUrl);
 		return HTTP_DONE;
-	}
+	}*/
 }
 
 size_t CRequest::WriteCallback(char *pData, size_t Size, size_t Number, void *pUser)
@@ -206,9 +206,9 @@ CHead::CHead(const char *pUrl, CTimeout Timeout, HTTPLOG LogProgress) :
 CHead::~CHead() = default;
 
 bool CHead::AfterInit(void *pCurl)
-{
+{ /*
 	CURL *pHandle = pCurl;
-	curl_easy_setopt(pHandle, CURLOPT_NOBODY, 1L);
+	curl_easy_setopt(pHandle, CURLOPT_NOBODY, 1L);*/
 	return true;
 }
 
@@ -345,12 +345,12 @@ CPostJson::CPostJson(const char *pUrl, CTimeout Timeout, const char *pJson) :
 
 bool CPostJson::AfterInit(void *pCurl)
 {
-	CURL *pHandle = pCurl;
+	/*	CURL *pHandle = pCurl;
 
 	curl_slist *pHeaders = NULL;
 	pHeaders = curl_slist_append(pHeaders, "Content-Type: application/json");
 	curl_easy_setopt(pHandle, CURLOPT_HTTPHEADER, pHeaders);
-	curl_easy_setopt(pHandle, CURLOPT_POSTFIELDS, m_aJson);
+	curl_easy_setopt(pHandle, CURLOPT_POSTFIELDS, m_aJson);*/
 
 	return true;
 }
