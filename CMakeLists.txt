@@ -1920,6 +1920,8 @@ if(CLIENT)
     components/maplayers.h
     components/mapsounds.cpp
     components/mapsounds.h
+    components/matecam.cpp
+    components/matecam.h
     components/menu_background.cpp
     components/menu_background.h
     components/menus.cpp

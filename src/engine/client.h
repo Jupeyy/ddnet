@@ -6,6 +6,7 @@
 
 #include "graphics.h"
 #include "message.h"
+#include <base/color.h>
 #include <base/hash.h>
 #include <engine/friends.h>
 
@@ -235,6 +236,8 @@ public:
 	virtual SWarning *GetCurWarning() = 0;
 	virtual CChecksumData *ChecksumData() = 0;
 	virtual bool InfoTaskRunning() = 0;
+
+	virtual ColorRGBA GetClearColor() = 0;
 };
 
 class IGameClient : public IInterface

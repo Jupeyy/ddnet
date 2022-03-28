@@ -1168,16 +1168,8 @@ const char *CClient::ErrorString() const
 
 void CClient::Render()
 {
-	if(g_Config.m_ClOverlayEntities)
-	{
-		ColorRGBA bg = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClBackgroundEntitiesColor));
-		Graphics()->Clear(bg.r, bg.g, bg.b);
-	}
-	else
-	{
-		ColorRGBA bg = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClBackgroundColor));
-		Graphics()->Clear(bg.r, bg.g, bg.b);
-	}
+	ColorRGBA bg = GetClearColor();
+	Graphics()->Clear(bg.r, bg.g, bg.b);
 
 	GameClient()->OnRender();
 	DebugRender();
@@ -4576,6 +4568,18 @@ SWarning *CClient::GetCurWarning()
 	else
 	{
 		return &m_Warnings[0];
+	}
+}
+
+ColorRGBA CClient::GetClearColor()
+{
+	if(g_Config.m_ClOverlayEntities)
+	{
+		return color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClBackgroundEntitiesColor));
+	}
+	else
+	{
+		return color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClBackgroundColor));
 	}
 }
 

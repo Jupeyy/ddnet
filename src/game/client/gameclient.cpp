@@ -142,6 +142,8 @@ void CGameClient::OnConsoleInit()
 
 	m_All.Add(&m_MenuBackground);
 
+	m_All.Add(&m_MateCam);
+
 	// build the input stack
 	m_Input.Add(&CMenus::m_Binder); // this will take over all input when we want to bind a key
 	m_Input.Add(&m_Binds.m_SpecialBinds);
