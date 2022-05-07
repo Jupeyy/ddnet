@@ -101,6 +101,11 @@ class CDataFileWriter
 
 	int GetExtendedItemTypeIndex(int Type);
 
+	static int GetTypeFromIndex(int Index)
+	{
+		return ITEMTYPE_EX - Index - 1;
+	}
+
 public:
 	CDataFileWriter();
 	~CDataFileWriter();

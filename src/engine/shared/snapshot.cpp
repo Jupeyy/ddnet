@@ -573,11 +573,6 @@ int CSnapshotBuilder::Finish(void *pSnapData)
 	return sizeof(CSnapshot) + OffsetSize + m_DataSize;
 }
 
-static int GetTypeFromIndex(int Index)
-{
-	return CSnapshot::MAX_TYPE - Index;
-}
-
 void CSnapshotBuilder::AddExtendedItemType(int Index)
 {
 	dbg_assert(0 <= Index && Index < m_NumExtendedItemTypes, "index out of range");

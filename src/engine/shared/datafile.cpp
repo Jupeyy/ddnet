@@ -38,11 +38,6 @@ struct CItemEx
 	}
 };
 
-static int GetTypeFromIndex(int Index)
-{
-	return ITEMTYPE_EX - Index - 1;
-}
-
 struct CDatafileItemType
 {
 	int m_Type;

@@ -14,7 +14,6 @@
 
 #include "SDL.h"
 
-#include "SDL_syswm.h"
 #include <base/detect.h>
 #include <base/math.h>
 #include <cmath>

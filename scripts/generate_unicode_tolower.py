@@ -29,7 +29,7 @@ enum
 \tNUM_TOLOWER={},
 }};
 
-static const struct UPPER_LOWER tolower[NUM_TOLOWER] = {{""".format(len(cases)))
+static const struct UPPER_LOWER tolowermap[NUM_TOLOWER] = {{""".format(len(cases)))
 	for upper_code, lower_code in cases:
 		print("\t{{{}, {}}},".format(upper_code, lower_code))
 	print("};")

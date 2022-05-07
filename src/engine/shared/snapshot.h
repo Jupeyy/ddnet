@@ -144,6 +144,11 @@ class CSnapshotBuilder
 
 	bool m_Sixup;
 
+	static int GetTypeFromIndex(int Index)
+	{
+		return CSnapshot::MAX_TYPE - Index;
+	}
+
 public:
 	CSnapshotBuilder();
 
