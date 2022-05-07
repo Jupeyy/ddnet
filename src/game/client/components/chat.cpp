@@ -21,6 +21,7 @@
 #include <game/client/components/sounds.h>
 #include <game/localization.h>
 
+#include "base/color.h"
 #include "chat.h"
 
 CChat::CChat()
@@ -169,6 +170,54 @@ void CChat::OnConsoleInit()
 	Console()->Register("+show_chat", "", CFGFLAG_CLIENT, ConShowChat, this, "Show chat");
 	Console()->Register("echo", "r[message]", CFGFLAG_CLIENT, ConEcho, this, "Echo the text in chat window");
 	Console()->Chain("cl_chat_old", ConchainChatOld, this);
+}
+
+ColorRGBA CChat::GetNameColor(CLine &Line)
+{
+	ColorRGBA NameColor;
+	if(Line.m_ClientID == -1) // system
+	{
+		NameColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClMessageSystemColor));
+	}
+	else if(Line.m_ClientID == -2) // client
+	{
+		NameColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClMessageClientColor));
+	}
+	else if(Line.m_Team)
+	{
+		NameColor = CalculateNameColor(ColorHSLA(g_Config.m_ClMessageTeamColor));
+	}
+	else if(Line.m_NameColor == TEAM_RED)
+		NameColor = ColorRGBA(1.0f, 0.5f, 0.5f, 1.f); // red
+	else if(Line.m_NameColor == TEAM_BLUE)
+		NameColor = ColorRGBA(0.7f, 0.7f, 1.0f, 1.f); // blue
+	else if(Line.m_NameColor == TEAM_SPECTATORS)
+		NameColor = ColorRGBA(0.75f, 0.5f, 0.75f, 1.f); // spectator
+	else if(Line.m_ClientID >= 0 && g_Config.m_ClChatTeamColors && m_pClient->m_Teams.Team(Line.m_ClientID))
+	{
+		NameColor = color_cast<ColorRGBA>(ColorHSLA(m_pClient->m_Teams.Team(Line.m_ClientID) / 64.0f, 1.0f, 0.75f));
+	}
+	else
+		NameColor = ColorRGBA(0.8f, 0.8f, 0.8f, 1.f);
+
+	return NameColor;
+}
+
+ColorRGBA CChat::GetTextColor(CLine &Line)
+{
+	ColorRGBA Color;
+	if(Line.m_ClientID == -1) // system
+		Color = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClMessageSystemColor));
+	else if(Line.m_ClientID == -2) // client
+		Color = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClMessageClientColor));
+	else if(Line.m_Highlighted) // highlighted
+		Color = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClMessageHighlightColor));
+	else if(Line.m_Team) // team message
+		Color = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClMessageTeamColor));
+	else // regular message
+		Color = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClMessageColor));
+
+	return Color;
 }
 
 bool CChat::OnInput(IInput::CEvent Event)
@@ -695,29 +744,24 @@ void CChat::AddLine(int ClientID, int Team, const char *pLine)
 				StoreSave(pLine_->m_aText);
 		}
 
-		char aBuf[1024];
-		str_format(aBuf, sizeof(aBuf), "%s%s%s", pLine_->m_aName, pLine_->m_ClientID >= 0 ? ": " : "", pLine_->m_aText);
-
 		ColorRGBA ChatLogColor{1, 1, 1, 1};
-		if(pLine_->m_Highlighted)
-		{
-			ChatLogColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClMessageHighlightColor));
-		}
+		if(pLine_->m_Friend && g_Config.m_ClMessageFriend)
+			ChatLogColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClMessageFriendColor));
 		else
-		{
-			if(pLine_->m_Friend && g_Config.m_ClMessageFriend)
-				ChatLogColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClMessageFriendColor));
-			else if(pLine_->m_Team)
-				ChatLogColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClMessageTeamColor));
-			else if(pLine_->m_ClientID == -1) // system
-				ChatLogColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClMessageSystemColor));
-			else if(pLine_->m_ClientID == -2) // client
-				ChatLogColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClMessageClientColor));
-			else // regular message
-				ChatLogColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClMessageColor));
-		}
+			ChatLogColor = GetTextColor(*pLine_);
 
-		Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, pLine_->m_Whisper ? "whisper" : (pLine_->m_Team ? "teamchat" : "chat"), aBuf, ChatLogColor);
+		ColorRGBA ChatLogNameColor = GetNameColor(*pLine_);
+
+		const char *pFrom = pLine_->m_Whisper ? "whisper" : (pLine_->m_Team ? "teamchat" : "chat");
+
+		IConsole::SPrintLineItem aItems[10];
+		size_t ItemCount = 0;
+
+		aItems[ItemCount++] = IConsole::SPrintLineItem{pLine_->m_aName, ChatLogNameColor};
+		aItems[ItemCount++] = IConsole::SPrintLineItem{pLine_->m_ClientID >= 0 ? ": " : "", ChatLogColor};
+		aItems[ItemCount++] = IConsole::SPrintLineItem{pLine_->m_aText, ChatLogColor};
+
+		Console()->PrintMulti(IConsole::OUTPUT_LEVEL_STANDARD, ChatLogColor, pFrom, ChatLogNameColor, aItems, ItemCount);
 	};
 
 	while(*p)
@@ -1093,31 +1137,7 @@ void CChat::OnPrepareLines()
 		}
 
 		// render name
-		ColorRGBA NameColor;
-		if(m_aLines[r].m_ClientID == -1) // system
-		{
-			NameColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClMessageSystemColor));
-		}
-		else if(m_aLines[r].m_ClientID == -2) // client
-		{
-			NameColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClMessageClientColor));
-		}
-		else if(m_aLines[r].m_Team)
-		{
-			NameColor = CalculateNameColor(ColorHSLA(g_Config.m_ClMessageTeamColor));
-		}
-		else if(m_aLines[r].m_NameColor == TEAM_RED)
-			NameColor = ColorRGBA(1.0f, 0.5f, 0.5f, 1.f); // red
-		else if(m_aLines[r].m_NameColor == TEAM_BLUE)
-			NameColor = ColorRGBA(0.7f, 0.7f, 1.0f, 1.f); // blue
-		else if(m_aLines[r].m_NameColor == TEAM_SPECTATORS)
-			NameColor = ColorRGBA(0.75f, 0.5f, 0.75f, 1.f); // spectator
-		else if(m_aLines[r].m_ClientID >= 0 && g_Config.m_ClChatTeamColors && m_pClient->m_Teams.Team(m_aLines[r].m_ClientID))
-		{
-			NameColor = color_cast<ColorRGBA>(ColorHSLA(m_pClient->m_Teams.Team(m_aLines[r].m_ClientID) / 64.0f, 1.0f, 0.75f));
-		}
-		else
-			NameColor = ColorRGBA(0.8f, 0.8f, 0.8f, 1.f);
+		ColorRGBA NameColor = GetNameColor(m_aLines[r]);
 
 		TextRender()->TextColor(NameColor);
 
@@ -1145,17 +1165,7 @@ void CChat::OnPrepareLines()
 		}
 
 		// render line
-		ColorRGBA Color;
-		if(m_aLines[r].m_ClientID == -1) // system
-			Color = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClMessageSystemColor));
-		else if(m_aLines[r].m_ClientID == -2) // client
-			Color = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClMessageClientColor));
-		else if(m_aLines[r].m_Highlighted) // highlighted
-			Color = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClMessageHighlightColor));
-		else if(m_aLines[r].m_Team) // team message
-			Color = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClMessageTeamColor));
-		else // regular message
-			Color = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClMessageColor));
+		ColorRGBA Color = GetTextColor(m_aLines[r]);
 
 		TextRender()->TextColor(Color);
 

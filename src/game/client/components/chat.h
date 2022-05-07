@@ -2,6 +2,7 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #ifndef GAME_CLIENT_COMPONENTS_CHAT_H
 #define GAME_CLIENT_COMPONENTS_CHAT_H
+#include "base/color.h"
 #include <engine/shared/config.h>
 #include <engine/shared/ringbuffer.h>
 
@@ -124,6 +125,9 @@ class CChat : public CComponent
 	bool LineShouldHighlight(const char *pLine, const char *pName);
 	void StoreSave(const char *pText);
 	void Reset();
+
+	ColorRGBA GetNameColor(CLine &Line);
+	ColorRGBA GetTextColor(CLine &Line);
 
 public:
 	CChat();

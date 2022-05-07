@@ -80,8 +80,15 @@ public:
 		int GetAccessLevel() const { return m_AccessLevel; }
 	};
 
+	struct SPrintLineItem
+	{
+		const char *m_pStr = "";
+		ColorRGBA m_PrintColor = gs_ConsoleDefaultColor;
+	};
+
 	typedef void (*FTeeHistorianCommandCallback)(int ClientID, int FlagMask, const char *pCmd, IResult *pResult, void *pUser);
 	typedef void (*FPrintCallback)(const char *pStr, void *pUser, ColorRGBA PrintColor);
+	typedef void (*FPrintMultiCallback)(void *pUser, const ColorRGBA &DefaultColor, const char *pDate, const char *pFrom, const ColorRGBA &FromColor, SPrintLineItem *pPrintArray, size_t ArraySize);
 	typedef void (*FPossibleCallback)(const char *pCmd, void *pUser);
 	typedef void (*FCommandCallback)(IResult *pResult, void *pUserData);
 	typedef void (*FChainCommandCallback)(IResult *pResult, void *pUserData, FCommandCallback pfnCallback, void *pCallbackUserData);
@@ -105,6 +112,10 @@ public:
 	virtual void ExecuteLineStroked(int Stroke, const char *pStr, int ClientID = -1, bool InterpretSemicolons = true) = 0;
 	virtual void ExecuteFile(const char *pFilename, int ClientID = -1, bool LogFailure = false, int StorageType = IStorage::TYPE_ALL) = 0;
 
+	virtual int RegisterPrintCallback(int OutputLevel, FPrintCallback pfnPrintCallback, void *pUserData) = 0;
+	virtual int RegisterPrintMultiCallback(int OutputLevel, FPrintMultiCallback pfnMultiPrintCallback, void *pUserData) = 0;
+	virtual void SetPrintOutputLevel(int Index, int OutputLevel) = 0;
+	virtual void SetPrintMultiOutputLevel(int Index, int OutputLevel) = 0;
 	virtual char *Format(char *pBuf, int Size, const char *pFrom, const char *pStr) = 0;
 	virtual void Print(int Level, const char *pFrom, const char *pStr, ColorRGBA PrintColor = gs_ConsoleDefaultColor) = 0;
 	virtual void SetTeeHistorianCommandCallback(FTeeHistorianCommandCallback pfnCallback, void *pUser) = 0;
@@ -115,6 +126,7 @@ public:
 	virtual void ResetServerGameSettings() = 0;
 
 	static LEVEL ToLogLevel(int ConsoleLevel);
+	virtual void PrintMulti(int Level, const ColorRGBA &DefaultColor, const char *pFrom, const ColorRGBA &FromColor, SPrintLineItem *pPrintArray, size_t ArraySize) = 0;
 
 	// DDRace
 

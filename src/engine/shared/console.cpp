@@ -16,6 +16,7 @@
 #include "console.h"
 #include "linereader.h"
 
+#include <algorithm>
 #include <array> // std::size
 
 // todo: rework this
@@ -291,6 +292,40 @@ char CConsole::NextParam(const char *&pFormat)
 	return *pFormat;
 }
 
+int CConsole::RegisterPrintCallback(int OutputLevel, FPrintCallback pfnPrintCallback, void *pUserData)
+{
+	if(m_NumPrintCB == MAX_PRINT_CB)
+		return -1;
+
+	m_aPrintCB[m_NumPrintCB].m_OutputLevel = clamp(OutputLevel, (int)(OUTPUT_LEVEL_STANDARD), (int)(OUTPUT_LEVEL_DEBUG));
+	m_aPrintCB[m_NumPrintCB].m_pfnPrintCallback = pfnPrintCallback;
+	m_aPrintCB[m_NumPrintCB].m_pPrintCallbackUserdata = pUserData;
+	return m_NumPrintCB++;
+}
+
+int CConsole::RegisterPrintMultiCallback(int OutputLevel, FPrintMultiCallback pfnPrintMultiCallback, void *pUserData)
+{
+	if(m_NumPrintMultiCB == MAX_PRINT_CB)
+		return -1;
+
+	m_aPrintMultiCB[m_NumPrintMultiCB].m_OutputLevel = clamp(OutputLevel, (int)(OUTPUT_LEVEL_STANDARD), (int)(OUTPUT_LEVEL_DEBUG));
+	m_aPrintMultiCB[m_NumPrintMultiCB].m_pfnPrintCallback = pfnPrintMultiCallback;
+	m_aPrintMultiCB[m_NumPrintMultiCB].m_pPrintCallbackUserdata = pUserData;
+	return m_NumPrintMultiCB++;
+}
+
+void CConsole::SetPrintOutputLevel(int Index, int OutputLevel)
+{
+	if(Index >= 0 && Index < MAX_PRINT_CB)
+		m_aPrintCB[Index].m_OutputLevel = clamp(OutputLevel, (int)(OUTPUT_LEVEL_STANDARD), (int)(OUTPUT_LEVEL_DEBUG));
+}
+
+void CConsole::SetPrintMultiOutputLevel(int Index, int OutputLevel)
+{
+	if(Index >= 0 && Index < MAX_PRINT_CB)
+		m_aPrintMultiCB[Index].m_OutputLevel = clamp(OutputLevel, (int)(OUTPUT_LEVEL_STANDARD), (int)(OUTPUT_LEVEL_DEBUG));
+}
+
 char *CConsole::Format(char *pBuf, int Size, const char *pFrom, const char *pStr)
 {
 	char aTimeBuf[80];
@@ -334,6 +369,32 @@ void CConsole::Print(int Level, const char *pFrom, const char *pStr, ColorRGBA P
 	else
 	{
 		log_log(LogLevel, pFrom, "%s", pStr);
+	}
+}
+
+void CConsole::PrintMulti(int Level, const ColorRGBA &DefaultColor, const char *pFrom, const ColorRGBA &FromColor, SPrintLineItem *pPrintArray, size_t ArraySize)
+{
+	// if the color is pure white, use default terminal color
+	/*if(mem_comp(&DefaultColor, &gs_ConsoleDefaultColor, sizeof(ColorRGBA)) == 0)
+		set_console_msg_color(NULL);
+	else
+		set_console_msg_color(&DefaultColor);*/
+	char aBuff[2048];
+	aBuff[0] = 0;
+	for(size_t i = 0; i < ArraySize; ++i)
+		str_append(aBuff, pPrintArray->m_pStr, 2048);
+	dbg_msg(pFrom, "%s", aBuff);
+	//set_console_msg_color(NULL);
+
+	char aTimeBuf[80];
+	str_timestamp_format(aTimeBuf, sizeof(aTimeBuf), FORMAT_TIME);
+
+	for(int i = 0; i < m_NumPrintMultiCB; ++i)
+	{
+		if(Level <= m_aPrintMultiCB[i].m_OutputLevel && m_aPrintMultiCB[i].m_pfnPrintCallback)
+		{
+			m_aPrintMultiCB[i].m_pfnPrintCallback(m_aPrintMultiCB[i].m_pPrintCallbackUserdata, DefaultColor, aTimeBuf, pFrom, FromColor, pPrintArray, ArraySize);
+		}
 	}
 }
 

@@ -29,8 +29,17 @@ class CGameConsole : public CComponent
 		struct CBacklogEntry
 		{
 			float m_YOffset;
-			ColorRGBA m_PrintColor;
-			char m_aText[1];
+			ColorRGBA m_DefaultColor;
+			char m_aDate[128];
+
+			char m_aFrom[128];
+			ColorRGBA m_FromColor;
+			struct SItems
+			{
+				char m_aStr[1024];
+				ColorRGBA m_PrintColor = gs_ConsoleDefaultColor;
+			} m_aItems[10];
+			size_t m_ItemCount = 0;
 		};
 		std::mutex m_BacklogLock;
 		CStaticRingBuffer<CBacklogEntry, 1024 * 1024, CRingBufferBase::FLAG_RECYCLE> m_Backlog;
@@ -71,6 +80,8 @@ class CGameConsole : public CComponent
 
 		void OnInput(IInput::CEvent Event);
 		void PrintLine(const char *pLine, int Len, ColorRGBA PrintColor);
+		//void PrintLine(const char *pLine, ColorRGBA PrintColor = {1, 1, 1, 1});
+		void PrintMultiLine(const ColorRGBA &DefaultColor, const char *pDate, const char *pFrom, const ColorRGBA &FromColor, IConsole::SPrintLineItem *pPrintArray, size_t ArraySize);
 
 		const char *GetString() const { return m_Input.GetString(); }
 		static void PossibleCommandsCompleteCallback(const char *pStr, void *pUser);
@@ -84,6 +95,8 @@ class CGameConsole : public CComponent
 
 	CInstance *CurrentConsole();
 	float TimeNow();
+	int m_PrintCBIndex;
+	int m_PrintMultiCBIndex;
 
 	int m_ConsoleType;
 	int m_ConsoleState;
@@ -106,6 +119,8 @@ class CGameConsole : public CComponent
 	void Dump(int Type);
 
 	static void PossibleCommandsRenderCallback(const char *pStr, void *pUser);
+	static void ClientConsolePrintCallback(const char *pStr, void *pUserData, ColorRGBA PrintColor = {1, 1, 1, 1});
+	static void ClientConsolePrintMultiCallback(void *pUser, const ColorRGBA &DefaultColor, const char *pDate, const char *pFrom, const ColorRGBA &FromColor, IConsole::SPrintLineItem *pPrintArray, size_t ArraySize);
 	static void ConToggleLocalConsole(IConsole::IResult *pResult, void *pUserData);
 	static void ConToggleRemoteConsole(IConsole::IResult *pResult, void *pUserData);
 	static void ConClearLocalConsole(IConsole::IResult *pResult, void *pUserData);

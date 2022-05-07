@@ -430,9 +430,34 @@ void CGameConsole::CInstance::PrintLine(const char *pLine, int Len, ColorRGBA Pr
 	m_BacklogLock.lock();
 	CBacklogEntry *pEntry = m_Backlog.Allocate(sizeof(CBacklogEntry) + Len);
 	pEntry->m_YOffset = -1.0f;
-	pEntry->m_PrintColor = PrintColor;
-	mem_copy(pEntry->m_aText, pLine, Len);
-	pEntry->m_aText[Len] = 0;
+
+	str_format(pEntry->m_aFrom, std::size(pEntry->m_aFrom), "%s", pLine);
+
+	pEntry->m_FromColor = PrintColor;
+	pEntry->m_DefaultColor = PrintColor;
+	pEntry->m_ItemCount = 0;
+	if(m_pGameConsole->m_ConsoleType == m_Type)
+		m_pGameConsole->m_NewLineCounter++;
+}
+
+void CGameConsole::CInstance::PrintMultiLine(const ColorRGBA &DefaultColor, const char *pDate, const char *pFrom, const ColorRGBA &FromColor, IConsole::SPrintLineItem *pPrintArray, size_t ArraySize)
+{
+	CBacklogEntry *pEntry = m_Backlog.Allocate(sizeof(CBacklogEntry));
+	pEntry->m_YOffset = -1.0f;
+
+	str_format(pEntry->m_aDate, std::size(pEntry->m_aDate), "%s", pDate);
+	str_format(pEntry->m_aFrom, std::size(pEntry->m_aFrom), "%s", pFrom);
+
+	pEntry->m_DefaultColor = DefaultColor;
+	pEntry->m_FromColor = FromColor;
+	pEntry->m_ItemCount = clamp<size_t>(ArraySize, 0, std::size(pEntry->m_aItems));
+
+	for(size_t i = 0; i < pEntry->m_ItemCount; ++i)
+	{
+		str_format(pEntry->m_aItems[i].m_aStr, std::size(pEntry->m_aItems[i].m_aStr), "%s", pPrintArray[i].m_pStr);
+		pEntry->m_aItems[i].m_PrintColor = pPrintArray[i].m_PrintColor;
+	}
+
 	if(m_pGameConsole->m_ConsoleType == m_Type)
 		m_pGameConsole->m_NewLineCounter++;
 	m_BacklogLock.unlock();
@@ -775,14 +800,30 @@ void CGameConsole::OnRender()
 		{
 			while(pEntry)
 			{
-				TextRender()->TextColor(pEntry->m_PrintColor);
+				TextRender()->TextColor(pEntry->m_DefaultColor);
 
 				// get y offset (calculate it if we haven't yet)
 				if(pEntry->m_YOffset < 0.0f)
 				{
 					TextRender()->SetCursor(&Cursor, 0.0f, 0.0f, FontSize, 0);
 					Cursor.m_LineWidth = Screen.w - 10;
-					TextRender()->TextEx(&Cursor, pEntry->m_aText, -1);
+					if(pEntry->m_ItemCount == 0)
+					{
+						TextRender()->TextEx(&Cursor, pEntry->m_aFrom, -1);
+					}
+					else
+					{
+						TextRender()->TextEx(&Cursor, "[", -1);
+						TextRender()->TextEx(&Cursor, pEntry->m_aDate, -1);
+						TextRender()->TextEx(&Cursor, "]", -1);
+						TextRender()->TextEx(&Cursor, "[", -1);
+						TextRender()->TextEx(&Cursor, pEntry->m_aFrom, -1);
+						TextRender()->TextEx(&Cursor, "]: ", -1);
+						for(size_t lc = 0; lc < pEntry->m_ItemCount; ++lc)
+						{
+							TextRender()->TextEx(&Cursor, pEntry->m_aItems[lc].m_aStr, -1);
+						}
+					}
 					pEntry->m_YOffset = Cursor.m_Y + Cursor.m_AlignedFontSize + LineOffset;
 				}
 				OffsetY += pEntry->m_YOffset;
@@ -803,34 +844,62 @@ void CGameConsole::OnRender()
 				if(Page == s_LastActivePage)
 				{
 					TextRender()->SetCursor(&Cursor, 0.0f, y - OffsetY, FontSize, TEXTFLAG_RENDER);
-					Cursor.m_LineWidth = Screen.w - 10.0f;
-					Cursor.m_CalculateSelectionMode = (m_MouseIsPress || (m_CurSelStart != m_CurSelEnd) || m_HasSelection) ? TEXT_CURSOR_SELECTION_MODE_CALCULATE : TEXT_CURSOR_SELECTION_MODE_NONE;
-					Cursor.m_PressMouseX = m_MousePressX;
-					Cursor.m_PressMouseY = m_MousePressY;
-					Cursor.m_ReleaseMouseX = m_MouseCurX;
-					Cursor.m_ReleaseMouseY = m_MouseCurY;
-					TextRender()->TextEx(&Cursor, pEntry->m_aText, -1);
-					if(Cursor.m_CalculateSelectionMode == TEXT_CURSOR_SELECTION_MODE_CALCULATE)
-					{
-						m_CurSelStart = minimum(Cursor.m_SelectionStart, Cursor.m_SelectionEnd);
-						m_CurSelEnd = maximum(Cursor.m_SelectionStart, Cursor.m_SelectionEnd);
-					}
-					if(m_CurSelStart != m_CurSelEnd)
-					{
-						if(WantsSelectionCopy)
+					auto &&PrintLineImpl = [&](const char *pPrintText, std::string &CopyStr) {
+						Cursor.m_LineWidth = Screen.w - 10.0f;
+						Cursor.m_CalculateSelectionMode = (m_MouseIsPress || (m_CurSelStart != m_CurSelEnd) || m_HasSelection) ? TEXT_CURSOR_SELECTION_MODE_CALCULATE : TEXT_CURSOR_SELECTION_MODE_NONE;
+						Cursor.m_PressMouseX = m_MousePressX;
+						Cursor.m_PressMouseY = m_MousePressY;
+						Cursor.m_ReleaseMouseX = m_MouseCurX;
+						Cursor.m_ReleaseMouseY = m_MouseCurY;
+						TextRender()->TextEx(&Cursor, pPrintText, -1);
+						if(Cursor.m_CalculateSelectionMode == TEXT_CURSOR_SELECTION_MODE_CALCULATE)
 						{
-							bool HasNewLine = false;
-							if(!SelectionString.empty())
-								HasNewLine = true;
-							int OffUTF8Start = 0;
-							int OffUTF8End = 0;
-							if(TextRender()->SelectionToUTF8OffSets(pEntry->m_aText, m_CurSelStart, m_CurSelEnd, OffUTF8Start, OffUTF8End))
-							{
-								SelectionString.insert(0, (std::string(&pEntry->m_aText[OffUTF8Start], OffUTF8End - OffUTF8Start) + (HasNewLine ? "\n" : "")));
-							}
+							m_CurSelStart = minimum(Cursor.m_SelectionStart, Cursor.m_SelectionEnd);
+							m_CurSelEnd = maximum(Cursor.m_SelectionStart, Cursor.m_SelectionEnd);
 						}
-						m_HasSelection = true;
+
+						if(m_CurSelStart != m_CurSelEnd)
+						{
+							if(WantsSelectionCopy)
+							{
+								int OffUTF8Start = 0;
+								int OffUTF8End = 0;
+								if(TextRender()->SelectionToUTF8OffSets(pPrintText, m_CurSelStart, m_CurSelEnd, OffUTF8Start, OffUTF8End))
+								{
+									CopyStr.append(std::string(&pPrintText[OffUTF8Start], OffUTF8End - OffUTF8Start));
+								}
+							}
+							m_HasSelection = true;
+						}
+					};
+					bool HasNewLine = false;
+					if(!SelectionString.empty())
+						HasNewLine = true;
+					std::string CopyStr;
+					if(pEntry->m_ItemCount == 0)
+					{
+						PrintLineImpl(pEntry->m_aFrom, CopyStr);
 					}
+					else
+					{
+						TextRender()->TextColor(pEntry->m_DefaultColor);
+						PrintLineImpl("[", CopyStr);
+						PrintLineImpl(pEntry->m_aDate, CopyStr);
+						PrintLineImpl("]", CopyStr);
+						TextRender()->TextColor(pEntry->m_DefaultColor);
+						PrintLineImpl("[", CopyStr);
+						TextRender()->TextColor(pEntry->m_FromColor);
+						PrintLineImpl(pEntry->m_aFrom, CopyStr);
+						TextRender()->TextColor(pEntry->m_DefaultColor);
+						PrintLineImpl("]: ", CopyStr);
+						for(size_t lc = 0; lc < pEntry->m_ItemCount; ++lc)
+						{
+							TextRender()->TextColor(pEntry->m_aItems[lc].m_PrintColor);
+							PrintLineImpl(pEntry->m_aItems[lc].m_aStr, CopyStr);
+						}
+					}
+					if(!CopyStr.empty())
+						SelectionString.insert(0, (CopyStr + (HasNewLine ? "\n" : "")));
 				}
 				pEntry = pConsole->m_Backlog.Prev(pEntry);
 
@@ -845,8 +914,35 @@ void CGameConsole::OnRender()
 				Input()->SetClipboardText(SelectionString.c_str());
 			}
 
+			//	actual backlog page number is too high, render last available page (current checked one, render top down)
 			if(!pEntry)
-				break;
+			{
+				pEntry = pConsole->m_Backlog.First();
+				while(OffsetY > 0.0f && pEntry)
+				{
+					TextRender()->SetCursor(&Cursor, 0.0f, y - OffsetY, FontSize, TEXTFLAG_RENDER);
+					Cursor.m_LineWidth = Screen.w - 10.0f;
+					if(pEntry->m_ItemCount == 0)
+					{
+						TextRender()->TextEx(&Cursor, pEntry->m_aFrom, -1);
+					}
+					else
+					{
+						TextRender()->TextEx(&Cursor, "[", -1);
+						TextRender()->TextEx(&Cursor, pEntry->m_aDate, -1);
+						TextRender()->TextEx(&Cursor, "]", -1);
+						TextRender()->TextEx(&Cursor, "[", -1);
+						TextRender()->TextEx(&Cursor, pEntry->m_aFrom, -1);
+						TextRender()->TextEx(&Cursor, "]: ", -1);
+						for(size_t lc = 0; lc < pEntry->m_ItemCount; ++lc)
+						{
+							TextRender()->TextEx(&Cursor, pEntry->m_aItems[lc].m_aStr, -1);
+						}
+					}
+					OffsetY -= pEntry->m_YOffset;
+					pEntry = pConsole->m_Backlog.Next(pEntry);
+				}
+			}
 			TotalPages++;
 		}
 		pConsole->m_BacklogCurPage = clamp(pConsole->m_BacklogCurPage, 0, TotalPages - 1);
@@ -934,7 +1030,7 @@ void CGameConsole::Toggle(int Type)
 
 void CGameConsole::Dump(int Type)
 {
-	CInstance *pConsole = Type == CONSOLETYPE_REMOTE ? &m_RemoteConsole : &m_LocalConsole;
+	/*CInstance *pConsole = Type == CONSOLETYPE_REMOTE ? &m_RemoteConsole : &m_LocalConsole;
 	char aFilename[IO_MAX_PATH_LENGTH];
 	char aDate[20];
 
@@ -951,7 +1047,7 @@ void CGameConsole::Dump(int Type)
 		}
 		pConsole->m_BacklogLock.unlock();
 		io_close(io);
-	}
+	}*/
 }
 
 void CGameConsole::ConToggleLocalConsole(IConsole::IResult *pResult, void *pUserData)
@@ -982,6 +1078,16 @@ void CGameConsole::ConDumpLocalConsole(IConsole::IResult *pResult, void *pUserDa
 void CGameConsole::ConDumpRemoteConsole(IConsole::IResult *pResult, void *pUserData)
 {
 	((CGameConsole *)pUserData)->Dump(CONSOLETYPE_REMOTE);
+}
+
+void CGameConsole::ClientConsolePrintCallback(const char *pStr, void *pUserData, ColorRGBA PrintColor)
+{
+	((CGameConsole *)pUserData)->m_LocalConsole.PrintLine(pStr, str_length(pStr), PrintColor);
+}
+
+void CGameConsole::ClientConsolePrintMultiCallback(void *pUser, const ColorRGBA &DefaultColor, const char *pDate, const char *pFrom, const ColorRGBA &FromColor, IConsole::SPrintLineItem *pPrintArray, size_t ArraySize)
+{
+	((CGameConsole *)pUser)->m_LocalConsole.PrintMultiLine(DefaultColor, pDate, pFrom, FromColor, pPrintArray, ArraySize);
 }
 
 void CGameConsole::ConConsolePageUp(IConsole::IResult *pResult, void *pUserData)
@@ -1022,6 +1128,10 @@ void CGameConsole::OnConsoleInit()
 	m_RemoteConsole.Init(this);
 
 	m_pConsole = Kernel()->RequestInterface<IConsole>();
+
+	//
+	m_PrintCBIndex = Console()->RegisterPrintCallback(g_Config.m_ConsoleOutputLevel, ClientConsolePrintCallback, this);
+	m_PrintMultiCBIndex = Console()->RegisterPrintMultiCallback(g_Config.m_ConsoleOutputLevel, ClientConsolePrintMultiCallback, this);
 
 	Console()->Register("toggle_local_console", "", CFGFLAG_CLIENT, ConToggleLocalConsole, this, "Toggle local console");
 	Console()->Register("toggle_remote_console", "", CFGFLAG_CLIENT, ConToggleRemoteConsole, this, "Toggle remote console");
