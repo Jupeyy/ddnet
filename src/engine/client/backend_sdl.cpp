@@ -686,7 +686,7 @@ static int IsVersionSupportedGlew(EBackendType BackendType, int VersionMajor, in
 
 EBackendType CGraphicsBackend_SDL_GL::DetectBackend()
 {
-	EBackendType RetBackendType = BACKEND_TYPE_OPENGL;
+	EBackendType RetBackendType = BACKEND_TYPE_VULKAN;
 #if defined(CONF_BACKEND_VULKAN)
 	const char *pEnvDriver = SDL_getenv("DDNET_DRIVER");
 	if(pEnvDriver && str_comp_nocase(pEnvDriver, "GLES") == 0)
@@ -723,27 +723,9 @@ void CGraphicsBackend_SDL_GL::ClampDriverVersion(EBackendType BackendType)
 {
 	if(BackendType == BACKEND_TYPE_OPENGL)
 	{
-		// clamp the versions to existing versions(only for OpenGL major <= 3)
-		if(g_Config.m_GfxGLMajor == 1)
-		{
-			g_Config.m_GfxGLMinor = clamp(g_Config.m_GfxGLMinor, 1, 5);
-			if(g_Config.m_GfxGLMinor == 2)
-				g_Config.m_GfxGLPatch = clamp(g_Config.m_GfxGLPatch, 0, 1);
-			else
-				g_Config.m_GfxGLPatch = 0;
-		}
-		else if(g_Config.m_GfxGLMajor == 2)
-		{
-			g_Config.m_GfxGLMinor = clamp(g_Config.m_GfxGLMinor, 0, 1);
-			g_Config.m_GfxGLPatch = 0;
-		}
-		else if(g_Config.m_GfxGLMajor == 3)
-		{
-			g_Config.m_GfxGLMinor = clamp(g_Config.m_GfxGLMinor, 0, 3);
-			if(g_Config.m_GfxGLMinor < 3)
-				g_Config.m_GfxGLMinor = 0;
-			g_Config.m_GfxGLPatch = 0;
-		}
+		g_Config.m_GfxGLMajor = 3;
+		g_Config.m_GfxGLMinor = 3;
+		g_Config.m_GfxGLPatch = 0;
 	}
 	else if(BackendType == BACKEND_TYPE_OPENGL_ES)
 	{
