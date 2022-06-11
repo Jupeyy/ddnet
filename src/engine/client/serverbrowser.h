@@ -149,6 +149,7 @@ private:
 	IServerBrowserHttp *m_pHttp = nullptr;
 	IServerBrowserPingCache *m_pPingCache = nullptr;
 	const char *m_pHttpPrevBestUrl = nullptr;
+	const char *m_pHttpPrevSecondBestUrl = nullptr;
 
 	CHeap m_ServerlistHeap;
 	CServerEntry **m_ppServerlist;

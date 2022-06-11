@@ -101,7 +101,7 @@ void CServerBrowser::SetBaseInfo(class CNetClient *pClient, const char *pNetVers
 
 void CServerBrowser::OnInit()
 {
-	m_pHttp = CreateServerBrowserHttp(m_pEngine, m_pConsole, m_pStorage, g_Config.m_BrCachedBestServerinfoUrl);
+	m_pHttp = CreateServerBrowserHttp(m_pEngine, m_pConsole, m_pStorage, g_Config.m_BrCachedBestServerinfoUrl, g_Config.m_BrCachedSecondBestServerinfoUrl);
 }
 
 void CServerBrowser::RegisterCommands()
@@ -1079,6 +1079,12 @@ void CServerBrowser::Update(bool ForceResort)
 	{
 		str_copy(g_Config.m_BrCachedBestServerinfoUrl, pHttpBestUrl);
 		m_pHttpPrevBestUrl = pHttpBestUrl;
+	}
+
+	if(!m_pHttp->GetSecondBestUrl(&pHttpBestUrl) && pHttpBestUrl != m_pHttpPrevSecondBestUrl)
+	{
+		str_copy(g_Config.m_BrCachedSecondBestServerinfoUrl, pHttpBestUrl, sizeof(g_Config.m_BrCachedSecondBestServerinfoUrl));
+		m_pHttpPrevSecondBestUrl = pHttpBestUrl;
 	}
 
 	m_pHttp->Update();

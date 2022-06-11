@@ -13,6 +13,7 @@
 #include <base/lock_scope.h>
 #include <base/system.h>
 
+#include <array>
 #include <memory>
 #include <vector>
 
@@ -29,21 +30,24 @@ public:
 	{
 		MAX_URLS = 16,
 	};
-	CChooseMaster(IEngine *pEngine, VALIDATOR pfnValidator, const char **ppUrls, int NumUrls, int PreviousBestIndex);
+	CChooseMaster(IEngine *pEngine, VALIDATOR pfnValidator, const char **ppUrls, int NumUrls, int PreviousBestIndex, int PreviousSecondBestIndex);
 	virtual ~CChooseMaster();
 
 	bool GetBestUrl(const char **pBestUrl) const;
+	bool GetSecondBestUrl(const char **pSecondBestUrl) const;
 	void Reset();
 	bool IsRefreshing() const { return m_pJob && m_pJob->Status() != IJob::STATE_DONE; }
 	void Refresh();
 
 private:
 	int GetBestIndex() const;
+	int GetSecondBestIndex() const;
 
 	class CData
 	{
 	public:
 		std::atomic_int m_BestIndex{-1};
+		std::atomic_int m_SecondBestIndex{-1};
 		// Constant after construction.
 		VALIDATOR m_pfnValidator;
 		int m_NumUrls;
@@ -66,13 +70,15 @@ private:
 
 	IEngine *m_pEngine;
 	int m_PreviousBestIndex;
+	int m_PreviousSecondBestIndex;
 	std::shared_ptr<CData> m_pData;
 	std::shared_ptr<CJob> m_pJob;
 };
 
-CChooseMaster::CChooseMaster(IEngine *pEngine, VALIDATOR pfnValidator, const char **ppUrls, int NumUrls, int PreviousBestIndex) :
+CChooseMaster::CChooseMaster(IEngine *pEngine, VALIDATOR pfnValidator, const char **ppUrls, int NumUrls, int PreviousBestIndex, int PreviousSecondBestIndex) :
 	m_pEngine(pEngine),
-	m_PreviousBestIndex(PreviousBestIndex)
+	m_PreviousBestIndex(PreviousBestIndex),
+	m_PreviousSecondBestIndex(PreviousSecondBestIndex)
 {
 	dbg_assert(NumUrls >= 0, "no master URLs");
 	dbg_assert(NumUrls <= MAX_URLS, "too many master URLs");
@@ -108,6 +114,19 @@ int CChooseMaster::GetBestIndex() const
 	}
 }
 
+int CChooseMaster::GetSecondBestIndex() const
+{
+	int BestIndex = m_pData->m_SecondBestIndex.load();
+	if(BestIndex >= 0)
+	{
+		return BestIndex;
+	}
+	else
+	{
+		return m_PreviousSecondBestIndex;
+	}
+}
+
 bool CChooseMaster::GetBestUrl(const char **ppBestUrl) const
 {
 	int Index = GetBestIndex();
@@ -120,10 +139,24 @@ bool CChooseMaster::GetBestUrl(const char **ppBestUrl) const
 	return false;
 }
 
+bool CChooseMaster::GetSecondBestUrl(const char **ppSecondBestUrl) const
+{
+	int Index = GetSecondBestIndex();
+	if(Index < 0)
+	{
+		*ppSecondBestUrl = nullptr;
+		return true;
+	}
+	*ppSecondBestUrl = m_pData->m_aaUrls[Index];
+	return false;
+}
+
 void CChooseMaster::Reset()
 {
 	m_PreviousBestIndex = -1;
+	m_PreviousSecondBestIndex = -1;
 	m_pData->m_BestIndex.store(-1);
+	m_pData->m_SecondBestIndex.store(-1);
 }
 
 void CChooseMaster::Refresh()
@@ -224,7 +257,9 @@ void CChooseMaster::CJob::Run()
 	}
 	// Determine index of the minimum time.
 	int BestIndex = -1;
+	int SecondBestIndex = -1;
 	int BestTime = 0;
+	int SecondBestTime = 0;
 	for(int i = 0; i < m_pData->m_NumUrls; i++)
 	{
 		if(aTimeMs[i] < 0)
@@ -237,24 +272,41 @@ void CChooseMaster::CJob::Run()
 			BestIndex = aRandomized[i];
 		}
 	}
+	for(int i = 0; i < m_pData->m_NumUrls; i++)
+	{
+		if(aTimeMs[i] < 0 || BestIndex == aRandomized[i])
+		{
+			continue;
+		}
+		if(SecondBestIndex == -1 || aTimeMs[i] < SecondBestTime)
+		{
+			SecondBestTime = aTimeMs[i];
+			SecondBestIndex = aRandomized[i];
+		}
+	}
 	if(BestIndex == -1)
 	{
 		dbg_msg("serverbrowse_http", "WARNING: no usable masters found");
 		return;
 	}
+
 	dbg_msg("serverbrowse_http", "determined best master, url='%s' time=%dms", m_pData->m_aaUrls[BestIndex], BestTime);
+	if(SecondBestIndex != -1)
+		dbg_msg("serverbrowse_http", "determined second best master, url='%s' time=%dms", m_pData->m_aaUrls[SecondBestIndex], SecondBestTime);
 	m_pData->m_BestIndex.store(BestIndex);
+	m_pData->m_SecondBestIndex.store(SecondBestIndex);
 }
 
 class CServerBrowserHttp : public IServerBrowserHttp
 {
 public:
-	CServerBrowserHttp(IEngine *pEngine, IConsole *pConsole, const char **ppUrls, int NumUrls, int PreviousBestIndex);
+	CServerBrowserHttp(IEngine *pEngine, IConsole *pConsole, const char **ppUrls, int NumUrls, int PreviousBestIndex, int PreviousSecondBestIndex);
 	virtual ~CServerBrowserHttp();
 	void Update() override;
 	bool IsRefreshing() override { return m_State != STATE_DONE; }
 	void Refresh() override;
 	bool GetBestUrl(const char **pBestUrl) const override { return m_pChooseMaster->GetBestUrl(pBestUrl); }
+	bool GetSecondBestUrl(const char **pSecondBestUrl) const override { return m_pChooseMaster->GetSecondBestUrl(pSecondBestUrl); }
 
 	int NumServers() const override
 	{
@@ -289,26 +341,29 @@ private:
 	IConsole *m_pConsole;
 
 	int m_State = STATE_DONE;
-	std::shared_ptr<CHttpRequest> m_pGetServers;
+	std::array<std::shared_ptr<CHttpRequest>, 2> m_apGetServers;
 	std::unique_ptr<CChooseMaster> m_pChooseMaster;
 
 	std::vector<CServerInfo> m_vServers;
 	std::vector<NETADDR> m_vLegacyServers;
 };
 
-CServerBrowserHttp::CServerBrowserHttp(IEngine *pEngine, IConsole *pConsole, const char **ppUrls, int NumUrls, int PreviousBestIndex) :
+CServerBrowserHttp::CServerBrowserHttp(IEngine *pEngine, IConsole *pConsole, const char **ppUrls, int NumUrls, int PreviousBestIndex, int PreviousSecondBestIndex) :
 	m_pEngine(pEngine),
 	m_pConsole(pConsole),
-	m_pChooseMaster(new CChooseMaster(pEngine, Validate, ppUrls, NumUrls, PreviousBestIndex))
+	m_pChooseMaster(new CChooseMaster(pEngine, Validate, ppUrls, NumUrls, PreviousBestIndex, PreviousSecondBestIndex))
 {
 	m_pChooseMaster->Refresh();
 }
 
 CServerBrowserHttp::~CServerBrowserHttp()
 {
-	if(m_pGetServers != nullptr)
+	for(auto &pGetServer : m_apGetServers)
 	{
-		m_pGetServers->Abort();
+		if(pGetServer != nullptr)
+		{
+			pGetServer->Abort();
+		}
 	}
 }
 
@@ -316,31 +371,47 @@ void CServerBrowserHttp::Update()
 {
 	if(m_State == STATE_WANTREFRESH)
 	{
-		const char *pBestUrl;
-		if(m_pChooseMaster->GetBestUrl(&pBestUrl))
+		const char *pBestUrl, *pSecondBestUrl;
+		bool FoundBestServer1 = !m_pChooseMaster->GetBestUrl(&pBestUrl);
+		bool FoundBestServer2 = !m_pChooseMaster->GetSecondBestUrl(&pSecondBestUrl);
+		for(int i = 0; i < 2; ++i)
 		{
-			if(!m_pChooseMaster->IsRefreshing())
+			bool FoundBestServer = false;
+			if(i == 0)
+				FoundBestServer = FoundBestServer1;
+			else
+				FoundBestServer = FoundBestServer2;
+			if(!FoundBestServer || !FoundBestServer1)
 			{
-				m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "serverbrowse_http", "no working serverlist URL found");
-				m_State = STATE_NO_MASTER;
+				if(!m_pChooseMaster->IsRefreshing() && i == 0)
+				{
+					m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "serverbrowse_http", "no working serverlist URL found");
+					m_State = STATE_NO_MASTER;
+				}
+				return;
 			}
-			return;
+			m_pEngine->AddJob(m_apGetServers[i] = HttpGet(i == 0 ? pBestUrl : pSecondBestUrl));
+			// 10 seconds connection timeout, lower than 8KB/s for 10 seconds to fail.
+			m_apGetServers[i]->Timeout(CTimeout{10000, 0, 8000, 10});
+			m_State = STATE_REFRESHING;
 		}
-		m_pGetServers = HttpGet(pBestUrl);
-		// 10 seconds connection timeout, lower than 8KB/s for 10 seconds to fail.
-		m_pGetServers->Timeout(CTimeout{10000, 0, 8000, 10});
-		m_pEngine->AddJob(m_pGetServers);
-		m_State = STATE_REFRESHING;
 	}
 	else if(m_State == STATE_REFRESHING)
 	{
-		if(m_pGetServers->State() == HTTP_QUEUED || m_pGetServers->State() == HTTP_RUNNING)
+		bool Server1GetNotFinished = m_apGetServers[0]->State() == HTTP_QUEUED || m_apGetServers[0]->State() == HTTP_RUNNING;
+		bool Server2GetNotFinished = m_apGetServers[1] == nullptr || m_apGetServers[1]->State() == HTTP_QUEUED || m_apGetServers[1]->State() == HTTP_RUNNING;
+		if(Server1GetNotFinished && Server2GetNotFinished)
 		{
 			return;
 		}
+		int FinishedIndex = 0;
+		if(Server1GetNotFinished)
+			FinishedIndex = 1;
+
 		m_State = STATE_DONE;
 		std::shared_ptr<CHttpRequest> pGetServers = nullptr;
-		std::swap(m_pGetServers, pGetServers);
+		std::swap(m_apGetServers[FinishedIndex], pGetServers);
+		m_apGetServers[(FinishedIndex ^ 1)] = nullptr;
 
 		bool Success = true;
 		json_value *pJson = pGetServers->ResultJson();
@@ -497,7 +568,7 @@ static const char *DEFAULT_SERVERLIST_URLS[] = {
 	"https://master4.ddnet.tw/ddnet/15/servers.json",
 };
 
-IServerBrowserHttp *CreateServerBrowserHttp(IEngine *pEngine, IConsole *pConsole, IStorage *pStorage, const char *pPreviousBestUrl)
+IServerBrowserHttp *CreateServerBrowserHttp(IEngine *pEngine, IConsole *pConsole, IStorage *pStorage, const char *pPreviousBestUrl, const char *pPreviousSecondBestUrl)
 {
 	char aaUrls[CChooseMaster::MAX_URLS][256];
 	const char *apUrls[CChooseMaster::MAX_URLS] = {0};
@@ -534,5 +605,14 @@ IServerBrowserHttp *CreateServerBrowserHttp(IEngine *pEngine, IConsole *pConsole
 			break;
 		}
 	}
-	return new CServerBrowserHttp(pEngine, pConsole, ppUrls, NumUrls, PreviousBestIndex);
+	int PreviousSecondBestIndex = -1;
+	for(int i = 0; i < NumUrls; i++)
+	{
+		if(str_comp(ppUrls[i], pPreviousSecondBestUrl) == 0)
+		{
+			PreviousSecondBestIndex = i;
+			break;
+		}
+	}
+	return new CServerBrowserHttp(pEngine, pConsole, ppUrls, NumUrls, PreviousBestIndex, PreviousSecondBestIndex);
 }

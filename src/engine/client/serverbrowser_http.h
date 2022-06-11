@@ -18,6 +18,7 @@ public:
 	virtual void Refresh() = 0;
 
 	virtual bool GetBestUrl(const char **pBestUrl) const = 0;
+	virtual bool GetSecondBestUrl(const char **pSecondBestUrl) const = 0;
 
 	virtual int NumServers() const = 0;
 	virtual const CServerInfo &Server(int Index) const = 0;
@@ -25,5 +26,5 @@ public:
 	virtual const NETADDR &LegacyServer(int Index) const = 0;
 };
 
-IServerBrowserHttp *CreateServerBrowserHttp(IEngine *pEngine, IConsole *pConsole, IStorage *pStorage, const char *pPreviousBestUrl);
+IServerBrowserHttp *CreateServerBrowserHttp(IEngine *pEngine, IConsole *pConsole, IStorage *pStorage, const char *pPreviousBestUrl, const char *pPreviousSecondBestUrl);
 #endif // ENGINE_CLIENT_SERVERBROWSER_HTTP_H
