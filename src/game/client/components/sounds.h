@@ -18,6 +18,21 @@ public:
 	void Run() override;
 };
 
+enum EQuakeSounds
+{
+	QUAKE_SOUND_DOMINATING,
+	QUAKE_SOUND_GODLIKE,
+	QUAKE_SOUND_HOLYSHIT,
+	QUAKE_SOUND_KILLINGSPREE,
+	QUAKE_SOUND_RAMPAGE,
+	QUAKE_SOUND_UNSTOPPABLE,
+	QUAKE_SOUND_WHICKEDSICK,
+
+	QUAKE_SOUND_COUNT,
+};
+
+extern int g_aQuakeSounds[QUAKE_SOUND_COUNT];
+
 class CSounds : public CComponent
 {
 	enum
@@ -41,6 +56,8 @@ class CSounds : public CComponent
 	float m_MapSoundVolume;
 	float m_BackgroundMusicVolume;
 
+	float m_QuakeSoundVolume;
+
 public:
 	// sound channels
 	enum
@@ -50,6 +67,8 @@ public:
 		CHN_WORLD,
 		CHN_GLOBAL,
 		CHN_MAPSOUND,
+
+		CHN_QUAKE,
 	};
 
 	virtual int Sizeof() const override { return sizeof(*this); }

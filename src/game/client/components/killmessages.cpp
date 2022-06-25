@@ -6,10 +6,14 @@
 #include <game/generated/client_data.h>
 #include <game/generated/protocol.h>
 
+#include "base/color.h"
 #include "engine/shared/protocol.h"
+#include "game/client/components/players.h"
 #include "killmessages.h"
 #include <game/client/animstate.h>
 #include <game/client/gameclient.h>
+
+#include <game/client/components/sounds.h>
 
 void CKillMessages::OnWindowResize()
 {
@@ -17,6 +21,16 @@ void CKillMessages::OnWindowResize()
 	{
 		TextRender()->DeleteTextContainer(Killmsg.m_VictimTextContainerIndex);
 		TextRender()->DeleteTextContainer(Killmsg.m_KillerTextContainerIndex);
+	}
+
+	for(auto &KillTracker : m_CurKillTrackers)
+	{
+		if(KillTracker.m_TextContainer != -1)
+		{
+			TextRender()->DeleteTextContainer(KillTracker.m_TextContainer);
+			KillTracker.m_TextContainer = -1;
+			KillTracker.m_LastKills = 0;
+		}
 	}
 }
 
@@ -55,6 +69,12 @@ void CKillMessages::OnInit()
 		RenderTools()->QuadContainerAddSprite(m_SpriteQuadContainerIndex, 96.f * ScaleX, 96.f * ScaleY);
 	}
 	Graphics()->QuadContainerUpload(m_SpriteQuadContainerIndex);
+}
+
+void CKillMessages::OnMapLoad()
+{
+	mem_zero(m_aClients, sizeof(m_aClients));
+	m_CurKillTrackers.clear();
 }
 
 void CKillMessages::CreateKillmessageNamesIfNotCreated(CKillMsg &Kill)
@@ -161,6 +181,45 @@ void CKillMessages::OnMessage(int MsgType, void *pRawMsg)
 		}
 
 		Graphics()->MapScreen(ScreenX0, ScreenY0, ScreenX1, ScreenY1);
+
+		if(Kill.m_KillerID >= 0 && Kill.m_Weapon == WEAPON_LASER)
+		{
+			if(str_comp(m_aClients[Kill.m_KillerID].m_aLastPlayerName, Kill.m_aKillerName) != 0)
+			{
+				str_copy(m_aClients[Kill.m_KillerID].m_aLastPlayerName, Kill.m_aKillerName, sizeof(m_aClients[Kill.m_KillerID].m_aLastPlayerName));
+				m_aClients[Kill.m_KillerID].m_Kills = 0;
+			}
+
+			++m_aClients[Kill.m_KillerID].m_Kills;
+
+			if(m_aClients[Kill.m_KillerID].m_Kills == 5)
+			{
+				CKillTracker KillTrack{};
+				KillTrack.m_ClientID = Kill.m_KillerID;
+				KillTrack.m_TextContainer = -1;
+				m_CurKillTrackers.push_back(KillTrack);
+			}
+
+			if(Kill.m_KillerID == GameClient()->m_Snap.m_LocalClientID)
+			{
+				if(m_aClients[Kill.m_KillerID].m_Kills == 5)
+					Sound()->Play(CSounds::CHN_QUAKE, g_aQuakeSounds[QUAKE_SOUND_RAMPAGE], 0);
+				else if(m_aClients[Kill.m_KillerID].m_Kills == 10)
+					Sound()->Play(CSounds::CHN_QUAKE, g_aQuakeSounds[QUAKE_SOUND_KILLINGSPREE], 0);
+				else if(m_aClients[Kill.m_KillerID].m_Kills == 15)
+					Sound()->Play(CSounds::CHN_QUAKE, g_aQuakeSounds[QUAKE_SOUND_UNSTOPPABLE], 0);
+				else if(m_aClients[Kill.m_KillerID].m_Kills == 20)
+					Sound()->Play(CSounds::CHN_QUAKE, g_aQuakeSounds[QUAKE_SOUND_DOMINATING], 0);
+				else if(m_aClients[Kill.m_KillerID].m_Kills == 25)
+					Sound()->Play(CSounds::CHN_QUAKE, g_aQuakeSounds[QUAKE_SOUND_WHICKEDSICK], 0);
+				else if(m_aClients[Kill.m_KillerID].m_Kills == 30)
+					Sound()->Play(CSounds::CHN_QUAKE, g_aQuakeSounds[QUAKE_SOUND_GODLIKE], 0);
+			}
+		}
+		if(Kill.m_VictimID >= 0 && Kill.m_Weapon == WEAPON_LASER)
+		{
+			m_aClients[Kill.m_VictimID].m_Kills = 0;
+		}
 	}
 }
 
@@ -289,6 +348,156 @@ void CKillMessages::OnRender()
 		}
 
 		y += 46.0f;
+	}
+
+	y += 20.0f;
+
+	auto &&CleanupKillTrack = [=](CKillTracker &KillTrack) -> void {
+		if(KillTrack.m_TextContainer != -1)
+		{
+			TextRender()->DeleteTextContainer(KillTrack.m_TextContainer);
+			KillTrack.m_TextContainer = -1;
+			KillTrack.m_LastKills = 0;
+		}
+	};
+
+	auto &&GetTrackName = [](int Kills) -> const char * {
+		if(Kills >= 30)
+			return "GODLIKE";
+		else if(Kills >= 25)
+			return "WHICKEDSICK";
+		else if(Kills >= 20)
+			return "DOMINATING";
+		else if(Kills >= 15)
+			return "UNSTOPPABLE";
+		else if(Kills >= 10)
+			return "KILLING SPREE";
+		else if(Kills >= 5)
+			return "RAMPAGE";
+
+		return "";
+	};
+
+	auto &&GetTrackNamePre = [](int Kills) -> const char * {
+		if(Kills >= 30)
+			return "is ";
+		else if(Kills >= 25)
+			return "is ";
+		else if(Kills >= 20)
+			return "is ";
+		else if(Kills >= 15)
+			return "is ";
+		else if(Kills >= 10)
+			return "has a ";
+		else if(Kills >= 5)
+			return "is on a ";
+
+		return "";
+	};
+
+	auto &&GetTrackColor = [](int Kills) -> ColorRGBA {
+		if(Kills >= 30)
+			return ColorRGBA{0.921, 0.847, 0, 1};
+		else if(Kills >= 25)
+			return ColorRGBA{0x51 / 255.f, 0x1d / 255.f, 0x87 / 255.f, 1};
+		else if(Kills >= 20)
+			return ColorRGBA{0.721, 0, 0.090, 1};
+		else if(Kills >= 15)
+			return ColorRGBA{0x32 / 255.f, 0x5e / 255.f, 0xdf / 255.f, 1};
+		else if(Kills >= 10)
+			return ColorRGBA{0.278, 0.721, 0, 1};
+		else if(Kills >= 5)
+			return ColorRGBA{0x74 / 255.f, 0xd1 / 255.f, 0xc4 / 255.f, 1};
+
+		return ColorRGBA{1, 0, 0, 1};
+	};
+
+	for(TTrackList::iterator it = m_CurKillTrackers.begin(); it != m_CurKillTrackers.end();)
+	{
+		if(it->m_ClientID >= 0 && it->m_ClientID < MAX_CLIENTS)
+		{
+			const CNetObj_PlayerInfo *pInfo = m_pClient->m_Snap.m_apPlayerInfos[it->m_ClientID];
+			SKillMessagesExtraInfo &Extra = m_aClients[it->m_ClientID];
+			if(!pInfo || Extra.m_Kills < 5)
+			{
+				CleanupKillTrack(*it);
+				it = m_CurKillTrackers.erase(it);
+				continue;
+			}
+
+			CGameClient::CClientData &ClientData = GameClient()->m_aClients[it->m_ClientID];
+
+			bool DoCreateText = false;
+			if(it->m_TextContainer == -1)
+			{
+				DoCreateText = true;
+				it->m_LastKills = Extra.m_Kills;
+			}
+
+			if(Extra.m_Kills != it->m_LastKills)
+			{
+				TextRender()->DeleteTextContainer(it->m_TextContainer);
+				DoCreateText = true;
+				it->m_LastKills = Extra.m_Kills;
+			}
+
+			if(DoCreateText)
+			{
+				char aTmpBuff[1024];
+				CTextCursor TmpCursor;
+				TextRender()->SetCursor(&TmpCursor, 0, 0, 36, TEXTFLAG_RENDER);
+				it->m_TextWidth = TextRender()->TextWidth(NULL, 36, ClientData.m_aName, -1, -1);
+				str_format(aTmpBuff, sizeof(aTmpBuff), " %s", GetTrackNamePre(it->m_LastKills));
+				it->m_TextWidth += TextRender()->TextWidth(NULL, 36, aTmpBuff, -1, -1);
+				str_format(aTmpBuff, sizeof(aTmpBuff), "%s", GetTrackName(it->m_LastKills));
+				it->m_TextWidth += TextRender()->TextWidth(NULL, 36, aTmpBuff, -1, -1);
+				str_format(aTmpBuff, sizeof(aTmpBuff), " with %d kills", it->m_LastKills);
+				it->m_TextWidth += TextRender()->TextWidth(NULL, 36, aTmpBuff, -1, -1);
+
+				int CurRenderFlags = TextRender()->GetRenderFlags();
+				TextRender()->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_NO_AUTOMATIC_QUAD_UPLOAD | ETextRenderFlags::TEXT_RENDER_FLAG_NO_FIRST_CHARACTER_X_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_LAST_CHARACTER_ADVANCE);
+				TextRender()->SetCursor(&TmpCursor, StartX - it->m_TextWidth, 0, 36, TEXTFLAG_RENDER);
+				TextRender()->CreateTextContainer(it->m_TextContainer, &TmpCursor, ClientData.m_aName);
+				ColorRGBA TColor = GetTrackColor(it->m_LastKills);
+				str_format(aTmpBuff, sizeof(aTmpBuff), " %s", GetTrackNamePre(it->m_LastKills));
+				TextRender()->AppendTextContainer(it->m_TextContainer, &TmpCursor, aTmpBuff);
+
+				TextRender()->TextColor(TColor.r, TColor.g, TColor.b, TColor.a);
+				str_format(aTmpBuff, sizeof(aTmpBuff), "%s", GetTrackName(it->m_LastKills));
+				TextRender()->AppendTextContainer(it->m_TextContainer, &TmpCursor, aTmpBuff);
+				TextRender()->TextColor(TextRender()->DefaultTextColor().r, TextRender()->DefaultTextColor().g, TextRender()->DefaultTextColor().b, TextRender()->DefaultTextColor().a);
+
+				str_format(aTmpBuff, sizeof(aTmpBuff), " with %d kills", it->m_LastKills);
+				TextRender()->AppendTextContainer(it->m_TextContainer, &TmpCursor, aTmpBuff);
+
+				TextRender()->UploadTextContainer(it->m_TextContainer);
+				TextRender()->SetRenderFlags(CurRenderFlags);
+			}
+
+			ColorRGBA TextColor = TextRender()->DefaultTextColor();
+			ColorRGBA TextOutlineColor = TextRender()->DefaultTextOutlineColor();
+			TextRender()->RenderTextContainer(it->m_TextContainer, TextColor, TextOutlineColor, 0, y);
+
+			if(GameClient()->m_aClients[it->m_ClientID].m_RenderInfo.m_OriginalRenderSkin.m_Body.IsValid())
+			{
+				CTeeRenderInfo TeeInfo = GameClient()->m_aClients[it->m_ClientID].m_RenderInfo;
+				CAnimState *pIdleState = CAnimState::GetIdle();
+				vec2 OffsetToMid;
+				RenderTools()->GetRenderTeeOffsetToRenderedTee(pIdleState, &TeeInfo, OffsetToMid);
+				vec2 TeeRenderPos(StartX - 32 - it->m_TextWidth, y + 46.0f / 2.0f + OffsetToMid.y);
+
+				RenderTools()->RenderTee(CAnimState::GetIdle(), &TeeInfo, EMOTE_ANGRY, vec2(1, 0), TeeRenderPos);
+			}
+
+			y += 36 + 15;
+		}
+		else
+		{
+			CleanupKillTrack(*it);
+			it = m_CurKillTrackers.erase(it);
+			continue;
+		}
+		++it;
 	}
 }
 

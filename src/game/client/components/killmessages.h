@@ -2,12 +2,22 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #ifndef GAME_CLIENT_COMPONENTS_KILLMESSAGES_H
 #define GAME_CLIENT_COMPONENTS_KILLMESSAGES_H
+#include <engine/shared/protocol.h>
 #include <game/client/component.h>
 
 #include <game/client/render.h>
+#include <list>
+
+struct SKillMessagesExtraInfo
+{
+	char m_aLastPlayerName[64];
+	int m_Kills;
+};
 
 class CKillMessages : public CComponent
 {
+	SKillMessagesExtraInfo m_aClients[MAX_CLIENTS];
+
 	int m_SpriteQuadContainerIndex;
 
 public:
@@ -41,6 +51,14 @@ public:
 		int m_FlagCarrierBlue;
 	};
 
+	struct CKillTracker
+	{
+		int m_ClientID;
+		int m_TextContainer;
+		int m_LastKills;
+		float m_TextWidth;
+	};
+
 	enum
 	{
 		MAX_KILLMSGS = 5,
@@ -53,12 +71,17 @@ public:
 	CKillMsg m_aKillmsgs[MAX_KILLMSGS];
 	int m_KillmsgCurrent;
 
+	typedef std::list<CKillTracker> TTrackList;
+	TTrackList m_CurKillTrackers;
+
 	virtual int Sizeof() const override { return sizeof(*this); }
 	virtual void OnWindowResize() override;
 	virtual void OnReset() override;
 	virtual void OnRender() override;
 	virtual void OnMessage(int MsgType, void *pRawMsg) override;
 	virtual void OnInit() override;
+
+	void OnMapLoad() override;
 
 	void RefindSkins();
 };
