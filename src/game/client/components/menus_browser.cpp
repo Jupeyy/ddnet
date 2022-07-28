@@ -29,6 +29,9 @@ static const int gs_OffsetColPlayers = gs_OffsetColMap + 3;
 static const int gs_OffsetColPing = gs_OffsetColPlayers + 3;
 static const int gs_OffsetColVersion = gs_OffsetColPing + 3;
 
+static const float gs_FontSize = 8.0f;
+static const float gs_FriendListheaderHeight = 14.0f;
+
 void FormatServerbrowserPing(char *pBuffer, int BufferLength, const CServerInfo *pInfo)
 {
 	if(!pInfo->m_LatencyIsEstimated)
@@ -116,7 +119,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 
 			if(i + 1 < NumCols)
 			{
-				//Cols[i].flags |= SPACER;
+				// Cols[i].flags |= SPACER;
 				Headers.VSplitLeft(2, &s_aCols[i].m_Spacer, &Headers);
 			}
 		}
@@ -243,13 +246,13 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 		CUIRect Row;
 
 		const int UIRectCount = 2 + (COL_VERSION + 1) * 3;
-		//initialize
+		// initialize
 		if(pItem->m_pUIElement == NULL)
 		{
 			pItem->m_pUIElement = UI()->GetNewUIElement(UIRectCount);
 		}
 
-		int Selected = str_comp(pItem->m_aAddress, g_Config.m_UiServerAddress) == 0; //selected_index==ItemIndex;
+		int Selected = str_comp(pItem->m_aAddress, g_Config.m_UiServerAddress) == 0; // selected_index==ItemIndex;
 
 		View.HSplitTop(ms_ListheaderHeight, &Row, &View);
 
@@ -286,13 +289,13 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 			{
 				CUIRect r = Row;
 				r.Margin(0.5f, &r);
-				RenderTools()->DrawUIElRect(*pItem->m_pUIElement->Get(0), &r, ColorRGBA(1, 1, 1, 0.5f), CUI::CORNER_ALL, 4.0f);
+				RenderTools()->DrawUIElRect(*pItem->m_pUIElement->Get(0), &r, ColorRGBA(1, 1, 1, 0.5f), 0, 4.0f);
 			}
 			else if(UI()->MouseHovered(&Row))
 			{
 				CUIRect r = Row;
 				r.Margin(0.5f, &r);
-				RenderTools()->DrawUIElRect(*pItem->m_pUIElement->Get(1), &r, ColorRGBA(1, 1, 1, 0.25f), CUI::CORNER_ALL, 4.0f);
+				RenderTools()->DrawUIElRect(*pItem->m_pUIElement->Get(1), &r, ColorRGBA(1, 1, 1, 0.25f), 0, 4.0f);
 			}
 
 			if(UI()->DoButtonLogic(pItem, Selected, &Row))
@@ -324,6 +327,8 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 
 			int ID = s_aCols[c].m_ID;
 
+			const float FontSize = gs_FontSize;
+
 			if(ID == COL_FLAG_LOCK)
 			{
 				if(pItem->m_Flags & SERVER_FLAG_PASSWORD)
@@ -348,8 +353,6 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 			}
 			else if(ID == COL_NAME)
 			{
-				float FontSize = 12.0f;
-
 				if(g_Config.m_BrFilterString[0] && (pItem->m_QuickSearchHit & IServerBrowser::QUICK_SERVERNAME))
 				{
 					// highlight the parts that matches
@@ -383,8 +386,6 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 					}
 				}
 
-				float FontSize = 12.0f;
-
 				if(g_Config.m_BrFilterString[0] && (pItem->m_QuickSearchHit & IServerBrowser::QUICK_MAPNAME))
 				{
 					// highlight the parts that matches
@@ -417,7 +418,6 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 				str_format(aTemp, sizeof(aTemp), "%i/%i", pItem->m_NumFilteredPlayers, ServerBrowser()->Max(*pItem));
 				if(g_Config.m_BrFilterString[0] && (pItem->m_QuickSearchHit & IServerBrowser::QUICK_PLAYER))
 					TextRender()->TextColor(0.4f, 0.4f, 1.0f, 1);
-				float FontSize = 12.0f;
 				UI()->DoLabelStreamed(*pItem->m_pUIElement->Get(gs_OffsetColPlayers), &Button, aTemp, FontSize, TEXTALIGN_RIGHT, -1, 1, false);
 				TextRender()->TextColor(1, 1, 1, 1);
 			}
@@ -431,20 +431,16 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 					TextRender()->TextColor(rgb);
 				}
 
-				float FontSize = 12.0f;
 				UI()->DoLabelStreamed(*pItem->m_pUIElement->Get(gs_OffsetColPing), &Button, aTemp, FontSize, TEXTALIGN_RIGHT, -1, 1, false);
 				TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
 			}
 			else if(ID == COL_VERSION)
 			{
 				const char *pVersion = pItem->m_aVersion;
-				float FontSize = 12.0f;
 				UI()->DoLabelStreamed(*pItem->m_pUIElement->Get(gs_OffsetColVersion), &Button, pVersion, FontSize, TEXTALIGN_RIGHT, -1, 1, false);
 			}
 			else if(ID == COL_GAMETYPE)
 			{
-				float FontSize = 12.0f;
-
 				if(g_Config.m_UiColorizeGametype)
 				{
 					ColorHSLA hsl = ColorHSLA(1.0f, 1.0f, 1.0f);
@@ -494,7 +490,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 		}
 	}
 
-	//RenderTools()->DrawUIRect(&Status, ms_ColorTabbarActive, CUI::CORNER_B, 5.0f);
+	// RenderTools()->DrawUIRect(&Status, ms_ColorTabbarActive, CUI::CORNER_B, 5.0f);
 	Status.Margin(5.0f, &Status);
 
 	CUIRect SearchInfoAndAddr, ServersAndConnect, Status3;
@@ -675,8 +671,9 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 void CMenus::RenderServerbrowserFilters(CUIRect View)
 {
 	CUIRect ServerFilter = View, FilterHeader;
-	const float FontSize = 12.0f;
 	ServerFilter.HSplitBottom(0.0f, &ServerFilter, 0);
+
+	const float FontSize = gs_FontSize;
 
 	// server filter
 	ServerFilter.HSplitTop(ms_ListheaderHeight, &FilterHeader, &ServerFilter);
@@ -762,7 +759,7 @@ void CMenus::RenderServerbrowserFilters(CUIRect View)
 
 	CUIRect ResetButton;
 
-	//ServerFilter.HSplitBottom(5.0f, &ServerFilter, 0);
+	// ServerFilter.HSplitBottom(5.0f, &ServerFilter, 0);
 	ServerFilter.HSplitBottom(ms_ButtonHeight - 5.0f, &ServerFilter, &ResetButton);
 
 	// ddnet country filters
@@ -1045,8 +1042,10 @@ void CMenus::RenderServerbrowserServerDetail(CUIRect View)
 
 	// server details
 	CTextCursor Cursor;
-	const float FontSize = 12.0f;
-	ServerDetails.HSplitTop(ms_ListheaderHeight, &ServerHeader, &ServerDetails);
+	const float FontSize = gs_FontSize;
+	const float RowHeight = gs_FriendListheaderHeight;
+
+	ServerDetails.HSplitTop(RowHeight, &ServerHeader, &ServerDetails);
 	RenderTools()->DrawUIRect(&ServerHeader, ColorRGBA(1, 1, 1, 0.25f), CUI::CORNER_T, 4.0f);
 	RenderTools()->DrawUIRect(&ServerDetails, ColorRGBA(0, 0, 0, 0.15f), CUI::CORNER_B, 4.0f);
 	UI()->DoLabel(&ServerHeader, Localize("Server details"), FontSize + 2.0f, TEXTALIGN_CENTER);
@@ -1068,7 +1067,7 @@ void CMenus::RenderServerbrowserServerDetail(CUIRect View)
 		//
 		{
 			CUIRect Button;
-			ServerDetails.HSplitBottom(20.0f, &ServerDetails, &Button);
+			ServerDetails.HSplitBottom(RowHeight, &ServerDetails, &Button);
 			CUIRect ButtonAddFav;
 			CUIRect ButtonLeakIp;
 			Button.VSplitMid(&ButtonAddFav, &ButtonLeakIp);
@@ -1106,36 +1105,36 @@ void CMenus::RenderServerbrowserServerDetail(CUIRect View)
 
 		for(auto &Label : s_aLabels)
 		{
-			LeftColumn.HSplitTop(15.0f, &Row, &LeftColumn);
+			LeftColumn.HSplitTop(RowHeight, &Row, &LeftColumn);
 			UI()->DoLabel(&Row, Localize(Label), FontSize, TEXTALIGN_LEFT);
 		}
 
-		RightColumn.HSplitTop(15.0f, &Row, &RightColumn);
+		RightColumn.HSplitTop(RowHeight, &Row, &RightColumn);
 		TextRender()->SetCursor(&Cursor, Row.x, Row.y + (15.f - FontSize) / 2.f, FontSize, TEXTFLAG_RENDER | TEXTFLAG_STOP_AT_END);
 		Cursor.m_LineWidth = Row.w;
 		TextRender()->TextEx(&Cursor, pSelectedServer->m_aVersion, -1);
 
-		RightColumn.HSplitTop(15.0f, &Row, &RightColumn);
+		RightColumn.HSplitTop(RowHeight, &Row, &RightColumn);
 		TextRender()->SetCursor(&Cursor, Row.x, Row.y + (15.f - FontSize) / 2.f, FontSize, TEXTFLAG_RENDER | TEXTFLAG_STOP_AT_END);
 		Cursor.m_LineWidth = Row.w;
 		TextRender()->TextEx(&Cursor, pSelectedServer->m_aGameType, -1);
 
 		char aTemp[16];
 		FormatServerbrowserPing(aTemp, sizeof(aTemp), pSelectedServer);
-		RightColumn.HSplitTop(15.0f, &Row, &RightColumn);
+		RightColumn.HSplitTop(RowHeight, &Row, &RightColumn);
 		TextRender()->SetCursor(&Cursor, Row.x, Row.y + (15.f - FontSize) / 2.f, FontSize, TEXTFLAG_RENDER | TEXTFLAG_STOP_AT_END);
 		Cursor.m_LineWidth = Row.w;
 		TextRender()->TextEx(&Cursor, aTemp, -1);
 	}
 
 	// server scoreboard
-	ServerScoreBoard.HSplitBottom(23.0f, &ServerScoreBoard, 0x0);
+	ServerScoreBoard.HSplitBottom(RowHeight, &ServerScoreBoard, 0x0);
 
 	if(pSelectedServer)
 	{
 		static int s_VoteList = 0;
 		static float s_ScrollValue = 0;
-		UiDoListboxStart(&s_VoteList, &ServerScoreBoard, 26.0f, Localize("Scoreboard"), "", pSelectedServer->m_NumReceivedClients, 1, -1, s_ScrollValue);
+		UiDoListboxStart(&s_VoteList, &ServerScoreBoard, RowHeight, Localize("Scoreboard"), "", pSelectedServer->m_NumReceivedClients, 1, -1, s_ScrollValue);
 
 		for(int i = 0; i < pSelectedServer->m_NumReceivedClients; i++)
 		{
@@ -1145,7 +1144,7 @@ void CMenus::RenderServerbrowserServerDetail(CUIRect View)
 				continue;
 
 			CUIRect Name, Clan, Score, Flag;
-			Item.m_Rect.HSplitTop(25.0f, &Name, &Item.m_Rect);
+			Item.m_Rect.HSplitTop(RowHeight, &Name, &Item.m_Rect);
 			if(UiLogicGetCurrentClickedItem() == i)
 			{
 				if(pSelectedServer->m_aClients[i].m_FriendState == IFriends::FRIEND_PLAYER)
@@ -1159,12 +1158,12 @@ void CMenus::RenderServerbrowserServerDetail(CUIRect View)
 			ColorRGBA Color = pSelectedServer->m_aClients[i].m_FriendState == IFriends::FRIEND_NO ?
 						  ColorRGBA(1.0f, 1.0f, 1.0f, (i % 2 + 1) * 0.05f) :
 						  ColorRGBA(0.5f, 1.0f, 0.5f, 0.15f + (i % 2 + 1) * 0.05f);
-			RenderTools()->DrawUIRect(&Name, Color, CUI::CORNER_ALL, 4.0f);
+			RenderTools()->DrawUIRect(&Name, Color, 0, 4.0f);
 			Name.VSplitLeft(5.0f, 0, &Name);
 			Name.VSplitLeft(34.0f, &Score, &Name);
 			Name.VSplitRight(34.0f, &Name, &Flag);
-			Flag.HMargin(4.0f, &Flag);
-			Name.HSplitTop(12.0f, &Name, &Clan);
+			Flag.HMargin(1.0f, &Flag);
+			Name.HSplitTop(Name.h / 2, &Name, &Clan);
 
 			// score
 			char aTemp[16];
@@ -1181,7 +1180,7 @@ void CMenus::RenderServerbrowserServerDetail(CUIRect View)
 			else
 				str_format(aTemp, sizeof(aTemp), "%d", pSelectedServer->m_aClients[i].m_Score);
 
-			float ScoreFontSize = 12.0f;
+			float ScoreFontSize = FontSize;
 			while(ScoreFontSize >= 4.0f && TextRender()->TextWidth(0, ScoreFontSize, aTemp, -1, -1.0f) > Score.w)
 				ScoreFontSize--;
 
@@ -1235,7 +1234,7 @@ void CMenus::RenderServerbrowserServerDetail(CUIRect View)
 
 			// flag
 			ColorRGBA FColor(1.0f, 1.0f, 1.0f, 0.5f);
-			m_pClient->m_CountryFlags.Render(pSelectedServer->m_aClients[i].m_Country, &FColor, Flag.x, Flag.y, Flag.w, Flag.h);
+			m_pClient->m_CountryFlags.Render(pSelectedServer->m_aClients[i].m_Country, &FColor, Flag.x, Flag.y, Flag.h * 2, Flag.h);
 		}
 
 		UiDoListboxEnd(&s_ScrollValue, 0);
@@ -1260,7 +1259,7 @@ void CMenus::RenderServerbrowserFriends(CUIRect View)
 	}
 
 	CUIRect ServerFriends = View, FilterHeader;
-	const float FontSize = 10.0f;
+	const float FontSize = gs_FontSize;
 
 	ServerFriends.HSplitBottom(18.0f, &ServerFriends, NULL);
 

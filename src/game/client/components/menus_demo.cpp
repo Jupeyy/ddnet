@@ -710,13 +710,12 @@ CMenus::CListboxItem CMenus::UiDoListboxNextItem(const void *pId, bool Selected,
 		//selected_index = i;
 		CUIRect r = Item.m_Rect;
 		r.Margin(1.5f, &r);
-		RenderTools()->DrawUIRect(&r, ColorRGBA(1, 1, 1, 0.5f), CUI::CORNER_ALL, 4.0f);
+		RenderTools()->DrawUIRect(&r, ColorRGBA(1, 1, 1, 0.5f), 0, 4.0f);
 	}
 	else if(UI()->MouseInside(&HitRect) && !NoHoverEffects)
 	{
 		CUIRect r = Item.m_Rect;
-		r.Margin(1.5f, &r);
-		RenderTools()->DrawUIRect(&r, ColorRGBA(1, 1, 1, 0.25f), CUI::CORNER_ALL, 4.0f);
+		RenderTools()->DrawUIRect(&r, ColorRGBA(1, 1, 1, 0.25f), 0, 4.0f);
 	}
 
 	return Item;

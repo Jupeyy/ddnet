@@ -52,7 +52,7 @@ SColorPicker CMenus::ms_ColorPicker;
 bool CMenus::ms_ValueSelectorTextMode;
 
 float CMenus::ms_ButtonHeight = 25.0f;
-float CMenus::ms_ListheaderHeight = 17.0f;
+float CMenus::ms_ListheaderHeight = 11.0f;
 
 IInput::CEvent CMenus::m_aInputEvents[MAX_INPUTEVENTS];
 int CMenus::m_NumInputEvents;
@@ -2573,7 +2573,7 @@ void CMenus::OnRender()
 	UI()->Update(mx, my, mx * 3.0f, my * 3.0f);
 
 	Render();
-	RenderTools()->RenderCursor(vec2(mx, my), 24.0f);
+	RenderTools()->RenderCursor(vec2(mx, my), 16.0f);
 
 	// render debug information
 	if(g_Config.m_Debug)
