@@ -10,6 +10,7 @@
 #include <game/client/gameclient.h>
 #include <game/client/prediction/entities/character.h>
 
+#include "base/color.h"
 #include "camera.h"
 #include "controls.h"
 #include "nameplates.h"
@@ -36,12 +37,49 @@ void CNamePlates::RenderNameplatePos(vec2 Position, const CNetObj_PlayerInfo *pP
 
 	bool OtherTeam = m_pClient->IsOtherTeam(ClientID);
 
+	ColorRGBA TColor;
+	ColorRGBA TOutlineColor;
+
+	float a = 1;
+	if(g_Config.m_ClNameplatesAlways == 0)
+		a = clamp(1 - powf(distance(m_pClient->m_Controls.m_aTargetPos[g_Config.m_ClDummy], Position) / 200.0f, 16.0f), 0.0f, 1.0f);
+
+	ColorRGBA rgb = ColorRGBA(1.0f, 1.0f, 1.0f);
+	if(g_Config.m_ClNameplatesTeamcolors && m_pClient->m_Teams.Team(ClientID))
+		rgb = color_cast<ColorRGBA>(ColorHSLA(m_pClient->m_Teams.Team(ClientID) / 64.0f, 1.0f, 0.75f));
+
+	if(OtherTeam && !ForceAlpha)
+	{
+		TOutlineColor = {0.0f, 0.0f, 0.0f, 0.2f * g_Config.m_ClShowOthersAlpha / 100.0f};
+		TColor = {rgb.r, rgb.g, rgb.b, g_Config.m_ClShowOthersAlpha / 100.0f};
+	}
+	else
+	{
+		TOutlineColor = {0.0f, 0.0f, 0.0f, 0.5f * a};
+		TColor = {rgb.r, rgb.g, rgb.b, a};
+	}
+	if(g_Config.m_ClNameplatesTeamcolors && m_pClient->m_Snap.m_pGameInfoObj && m_pClient->m_Snap.m_pGameInfoObj->m_GameFlags & GAMEFLAG_TEAMS)
+	{
+		if(m_pClient->m_aClients[ClientID].m_Team == TEAM_RED)
+			TColor = {1.0f, 0.5f, 0.5f, a};
+		else if(m_pClient->m_aClients[ClientID].m_Team == TEAM_BLUE)
+			TColor = {0.7f, 0.7f, 1.0f, a};
+	}
+
+	TOutlineColor.a *= Alpha;
+	TColor.a *= Alpha;
+
+	ColorRGBA TColorRGBA(TColor.r, TColor.g, TColor.b, TColor.a);
+
 	float FontSize = 18.0f + 20.0f * g_Config.m_ClNameplatesSize / 100.0f;
 	float FontSizeClan = 18.0f + 20.0f * g_Config.m_ClNameplatesClanSize / 100.0f;
 
 	TextRender()->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_NO_FIRST_CHARACTER_X_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_LAST_CHARACTER_ADVANCE);
 	float YOffset = Position.y - 38;
-	ColorRGBA rgb = ColorRGBA(1.0f, 1.0f, 1.0f);
+
+	auto &&CompColor = [](ColorRGBA &Comp1, ColorRGBA &Comp2) -> bool {
+		return Comp1.r == Comp2.r && Comp1.g == Comp2.g && Comp1.b == Comp2.b && Comp1.a == Comp2.a;
+	};
 
 	// render players' key presses
 	int ShowDirection = g_Config.m_ClShowDirection;
@@ -82,12 +120,8 @@ void CNamePlates::RenderNameplatePos(vec2 Position, const CNetObj_PlayerInfo *pP
 	// render name plate
 	if((!pPlayerInfo->m_Local || g_Config.m_ClNameplatesOwn) && g_Config.m_ClNameplates)
 	{
-		float a = 1;
-		if(g_Config.m_ClNameplatesAlways == 0)
-			a = clamp(1 - powf(distance(m_pClient->m_Controls.m_aTargetPos[g_Config.m_ClDummy], Position) / 200.0f, 16.0f), 0.0f, 1.0f);
-
 		const char *pName = m_pClient->m_aClients[pPlayerInfo->m_ClientID].m_aName;
-		if(str_comp(pName, m_aNamePlates[ClientID].m_aName) != 0 || FontSize != m_aNamePlates[ClientID].m_NameTextFontSize)
+		if(str_comp(pName, m_aNamePlates[ClientID].m_aName) != 0 || FontSize != m_aNamePlates[ClientID].m_NameTextFontSize || !CompColor(m_aNamePlates[ClientID].m_RenderColor, TColorRGBA))
 		{
 			mem_copy(m_aNamePlates[ClientID].m_aName, pName, sizeof(m_aNamePlates[ClientID].m_aName));
 			m_aNamePlates[ClientID].m_NameTextFontSize = FontSize;
@@ -104,15 +138,19 @@ void CNamePlates::RenderNameplatePos(vec2 Position, const CNetObj_PlayerInfo *pP
 			RenderTools()->MapScreenToInterface(m_pClient->m_Camera.m_Center.x, m_pClient->m_Camera.m_Center.y);
 
 			m_aNamePlates[ClientID].m_NameTextWidth = TextRender()->TextWidth(0, FontSize, pName, -1, -1.0f);
-
+			TextRender()->TextColor(TColorRGBA);
 			TextRender()->CreateTextContainer(m_aNamePlates[ClientID].m_NameTextContainerIndex, &Cursor, pName);
+			TextRender()->TextColor(ColorRGBA{1, 1, 1, 1});
+
+			m_aNamePlates[ClientID].m_RenderColor = TColorRGBA;
+
 			Graphics()->MapScreen(ScreenX0, ScreenY0, ScreenX1, ScreenY1);
 		}
 
 		if(g_Config.m_ClNameplatesClan)
 		{
 			const char *pClan = m_pClient->m_aClients[ClientID].m_aClan;
-			if(str_comp(pClan, m_aNamePlates[ClientID].m_aClanName) != 0 || FontSizeClan != m_aNamePlates[ClientID].m_ClanNameTextFontSize)
+			if(str_comp(pClan, m_aNamePlates[ClientID].m_aClanName) != 0 || FontSizeClan != m_aNamePlates[ClientID].m_ClanNameTextFontSize || !CompColor(m_aNamePlates[ClientID].m_RenderColorClan, TColorRGBA))
 			{
 				mem_copy(m_aNamePlates[ClientID].m_aClanName, pClan, sizeof(m_aNamePlates[ClientID].m_aClanName));
 				m_aNamePlates[ClientID].m_ClanNameTextFontSize = FontSizeClan;
@@ -130,50 +168,32 @@ void CNamePlates::RenderNameplatePos(vec2 Position, const CNetObj_PlayerInfo *pP
 
 				m_aNamePlates[ClientID].m_ClanNameTextWidth = TextRender()->TextWidth(0, FontSizeClan, pClan, -1, -1.0f);
 
+				TextRender()->TextColor(TColorRGBA);
 				TextRender()->CreateTextContainer(m_aNamePlates[ClientID].m_ClanNameTextContainerIndex, &Cursor, pClan);
+
+				TextRender()->TextColor(ColorRGBA{1, 1, 1, 1});
+
+				m_aNamePlates[ClientID].m_RenderColorClan = ColorRGBA(TColor.r, TColor.g, TColor.b, TColor.a);
+
 				Graphics()->MapScreen(ScreenX0, ScreenY0, ScreenX1, ScreenY1);
 			}
 		}
 
 		float tw = m_aNamePlates[ClientID].m_NameTextWidth;
-		if(g_Config.m_ClNameplatesTeamcolors && m_pClient->m_Teams.Team(ClientID))
-			rgb = color_cast<ColorRGBA>(ColorHSLA(m_pClient->m_Teams.Team(ClientID) / 64.0f, 1.0f, 0.75f));
 
-		ColorRGBA TColor;
-		ColorRGBA TOutlineColor;
-
-		if(OtherTeam && !ForceAlpha)
-		{
-			TOutlineColor = ColorRGBA(0.0f, 0.0f, 0.0f, 0.2f * g_Config.m_ClShowOthersAlpha / 100.0f);
-			TColor = ColorRGBA(rgb.r, rgb.g, rgb.b, g_Config.m_ClShowOthersAlpha / 100.0f);
-		}
-		else
-		{
-			TOutlineColor = ColorRGBA(0.0f, 0.0f, 0.0f, 0.5f * a);
-			TColor = ColorRGBA(rgb.r, rgb.g, rgb.b, a);
-		}
-		if(g_Config.m_ClNameplatesTeamcolors && m_pClient->m_Snap.m_pGameInfoObj && m_pClient->m_Snap.m_pGameInfoObj->m_GameFlags & GAMEFLAG_TEAMS)
-		{
-			if(m_pClient->m_aClients[ClientID].m_Team == TEAM_RED)
-				TColor = ColorRGBA(1.0f, 0.5f, 0.5f, a);
-			else if(m_pClient->m_aClients[ClientID].m_Team == TEAM_BLUE)
-				TColor = ColorRGBA(0.7f, 0.7f, 1.0f, a);
-		}
-
-		TOutlineColor.a *= Alpha;
-		TColor.a *= Alpha;
+		ColorRGBA RenderColorT = {1, 1, 1, 1};
 
 		if(m_aNamePlates[ClientID].m_NameTextContainerIndex != -1)
 		{
 			YOffset -= FontSize;
-			TextRender()->RenderTextContainer(m_aNamePlates[ClientID].m_NameTextContainerIndex, TColor, TOutlineColor, Position.x - tw / 2.0f, YOffset);
+			TextRender()->RenderTextContainer(m_aNamePlates[ClientID].m_NameTextContainerIndex, RenderColorT, TOutlineColor, Position.x - tw / 2.0f, YOffset);
 		}
 
 		if(g_Config.m_ClNameplatesClan)
 		{
 			YOffset -= FontSizeClan;
 			if(m_aNamePlates[ClientID].m_ClanNameTextContainerIndex != -1)
-				TextRender()->RenderTextContainer(m_aNamePlates[ClientID].m_ClanNameTextContainerIndex, TColor, TOutlineColor, Position.x - m_aNamePlates[ClientID].m_ClanNameTextWidth / 2.0f, YOffset);
+				TextRender()->RenderTextContainer(m_aNamePlates[ClientID].m_ClanNameTextContainerIndex, RenderColorT, TOutlineColor, Position.x - m_aNamePlates[ClientID].m_ClanNameTextWidth / 2.0f, YOffset);
 		}
 
 		if(g_Config.m_ClNameplatesFriendMark && m_pClient->m_aClients[ClientID].m_Friend)
@@ -271,7 +291,7 @@ void CNamePlates::OnRender()
 	// this may need to be changed or calculated differently in the future
 	ScreenX0 -= 400;
 	ScreenX1 += 400;
-	//ScreenY0 -= 0;
+	// ScreenY0 -= 0;
 	ScreenY1 += 800;
 
 	for(int i = 0; i < MAX_CLIENTS; i++)

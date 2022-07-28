@@ -1,5 +1,6 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
+#include "base/color.h"
 #include <base/math.h>
 #include <base/system.h>
 #include <cstddef>
@@ -902,6 +903,51 @@ public:
 	ColorRGBA GetTextOutlineColor() override { return m_OutlineColor; }
 	ColorRGBA GetTextSelectionColor() override { return m_SelectionColor; }
 
+	bool GetCharColorRGBA(int CharNext, ColorRGBA &NextColor)
+	{
+		switch(CharNext)
+		{
+		case 'r':
+			NextColor = ColorRGBA{0.9f, 0.1f, 0.1f, 1.0f};
+			break;
+		case 'b':
+			NextColor = ColorRGBA{0.45f, 0.45f, 1.0f, 1.0f};
+			break;
+		case 'y':
+			NextColor = ColorRGBA{0.95f, 0.9f, 0.25f, 1.0f};
+			break;
+		case 'p':
+			NextColor = ColorRGBA{0.35, 0, 1, 1};
+			break;
+		case 'k':
+			NextColor = ColorRGBA{1.0f, 0.5f, 0.9f, 1.0f};
+			break;
+		case 'g':
+			NextColor = ColorRGBA{0.55f, 0.95f, 0.4f, 1.0f};
+			break;
+		case 'h':
+			NextColor = ColorRGBA{1.0f, 0.6f, 0.05f, 1.0f};
+			break;
+		case 'd':
+			NextColor = ColorRGBA{0.15f, 0.15f, 0.15f, 1.0f};
+			break;
+		case 'w':
+			NextColor = ColorRGBA{1.0f, 1.0f, 1.0f, 1.0f};
+			break;
+		default:
+			NextColor = m_Color;
+			return false;
+		}
+
+		return true;
+	}
+
+	struct STextStack
+	{
+		ColorRGBA m_Color;
+		int m_CharType;
+	};
+
 	void TextEx(CTextCursor *pCursor, const char *pText, int Length) override
 	{
 		int OldRenderFlags = m_RenderFlags;
@@ -1017,6 +1063,10 @@ public:
 	void AppendTextContainer(int TextContainerIndex, CTextCursor *pCursor, const char *pText, int Length = -1) override
 	{
 		STextContainer &TextContainer = GetTextContainer(TextContainerIndex);
+
+		std::vector<STextStack> ColorStack;
+		ColorStack.push_back(STextStack{m_Color, -1});
+		bool SkipNextChar = false;
 
 		CFontSizeData *pSizeData = NULL;
 
@@ -1283,6 +1333,50 @@ public:
 						break;
 					}
 
+					if(Character == '"')
+					{
+						if(ColorStack.back().m_CharType == 2)
+						{
+							ColorStack.pop_back();
+						}
+						else
+						{
+							ColorStack.push_back(STextStack{ColorStack.back().m_Color, 2});
+						}
+					}
+					else if(Character == '\'')
+					{
+						if(ColorStack.back().m_CharType == 1)
+						{
+							ColorStack.pop_back();
+						}
+						else
+						{
+							ColorStack.push_back(STextStack{ColorStack.back().m_Color, 1});
+						}
+					}
+					else if(Character == ':' || Character == '&' || Character == ',' || Character == '(' || Character == ')' || Character == ';' || Character == '.' || Character == '-')
+					{
+						ColorStack.back().m_Color = m_Color;
+					}
+					else if(Character == '^')
+					{
+						ColorRGBA NextColor;
+
+						if(GetCharColorRGBA(NextCharacter, NextColor))
+						{
+							ColorStack.back().m_Color = NextColor;
+							SkipNextChar = true;
+							continue;
+						}
+					}
+
+					if(SkipNextChar)
+					{
+						SkipNextChar = false;
+						continue;
+					}
+
 					float BearingX = (!ApplyBearingX ? 0.f : pChr->m_OffsetX) * Scale * Size;
 					float CharWidth = pChr->m_Width * Scale * Size;
 
@@ -1305,7 +1399,7 @@ public:
 					float CharY = TmpY - BearingY;
 
 					// don't add text that isn't drawn, the color overwrite is used for that
-					if(m_Color.a != 0.f && IsRendered)
+					if(ColorStack.back().m_Color.a != 0.f && IsRendered)
 					{
 						TextContainer.m_StringInfo.m_vCharacterQuads.emplace_back();
 						STextCharQuad &TextCharQuad = TextContainer.m_StringInfo.m_vCharacterQuads.back();
@@ -1314,37 +1408,37 @@ public:
 						TextCharQuad.m_aVertices[0].m_Y = CharY;
 						TextCharQuad.m_aVertices[0].m_U = pChr->m_aUVs[0];
 						TextCharQuad.m_aVertices[0].m_V = pChr->m_aUVs[3];
-						TextCharQuad.m_aVertices[0].m_Color.r = (unsigned char)(m_Color.r * 255.f);
-						TextCharQuad.m_aVertices[0].m_Color.g = (unsigned char)(m_Color.g * 255.f);
-						TextCharQuad.m_aVertices[0].m_Color.b = (unsigned char)(m_Color.b * 255.f);
-						TextCharQuad.m_aVertices[0].m_Color.a = (unsigned char)(m_Color.a * 255.f);
+						TextCharQuad.m_aVertices[0].m_Color.r = (unsigned char)(ColorStack.back().m_Color.r * 255.f);
+						TextCharQuad.m_aVertices[0].m_Color.g = (unsigned char)(ColorStack.back().m_Color.g * 255.f);
+						TextCharQuad.m_aVertices[0].m_Color.b = (unsigned char)(ColorStack.back().m_Color.b * 255.f);
+						TextCharQuad.m_aVertices[0].m_Color.a = (unsigned char)(ColorStack.back().m_Color.a * 255.f);
 
 						TextCharQuad.m_aVertices[1].m_X = CharX + CharWidth;
 						TextCharQuad.m_aVertices[1].m_Y = CharY;
 						TextCharQuad.m_aVertices[1].m_U = pChr->m_aUVs[2];
 						TextCharQuad.m_aVertices[1].m_V = pChr->m_aUVs[3];
-						TextCharQuad.m_aVertices[1].m_Color.r = (unsigned char)(m_Color.r * 255.f);
-						TextCharQuad.m_aVertices[1].m_Color.g = (unsigned char)(m_Color.g * 255.f);
-						TextCharQuad.m_aVertices[1].m_Color.b = (unsigned char)(m_Color.b * 255.f);
-						TextCharQuad.m_aVertices[1].m_Color.a = (unsigned char)(m_Color.a * 255.f);
+						TextCharQuad.m_aVertices[1].m_Color.r = (unsigned char)(ColorStack.back().m_Color.r * 255.f);
+						TextCharQuad.m_aVertices[1].m_Color.g = (unsigned char)(ColorStack.back().m_Color.g * 255.f);
+						TextCharQuad.m_aVertices[1].m_Color.b = (unsigned char)(ColorStack.back().m_Color.b * 255.f);
+						TextCharQuad.m_aVertices[1].m_Color.a = (unsigned char)(ColorStack.back().m_Color.a * 255.f);
 
 						TextCharQuad.m_aVertices[2].m_X = CharX + CharWidth;
 						TextCharQuad.m_aVertices[2].m_Y = CharY - CharHeight;
 						TextCharQuad.m_aVertices[2].m_U = pChr->m_aUVs[2];
 						TextCharQuad.m_aVertices[2].m_V = pChr->m_aUVs[1];
-						TextCharQuad.m_aVertices[2].m_Color.r = (unsigned char)(m_Color.r * 255.f);
-						TextCharQuad.m_aVertices[2].m_Color.g = (unsigned char)(m_Color.g * 255.f);
-						TextCharQuad.m_aVertices[2].m_Color.b = (unsigned char)(m_Color.b * 255.f);
-						TextCharQuad.m_aVertices[2].m_Color.a = (unsigned char)(m_Color.a * 255.f);
+						TextCharQuad.m_aVertices[2].m_Color.r = (unsigned char)(ColorStack.back().m_Color.r * 255.f);
+						TextCharQuad.m_aVertices[2].m_Color.g = (unsigned char)(ColorStack.back().m_Color.g * 255.f);
+						TextCharQuad.m_aVertices[2].m_Color.b = (unsigned char)(ColorStack.back().m_Color.b * 255.f);
+						TextCharQuad.m_aVertices[2].m_Color.a = (unsigned char)(ColorStack.back().m_Color.a * 255.f);
 
 						TextCharQuad.m_aVertices[3].m_X = CharX;
 						TextCharQuad.m_aVertices[3].m_Y = CharY - CharHeight;
 						TextCharQuad.m_aVertices[3].m_U = pChr->m_aUVs[0];
 						TextCharQuad.m_aVertices[3].m_V = pChr->m_aUVs[1];
-						TextCharQuad.m_aVertices[3].m_Color.r = (unsigned char)(m_Color.r * 255.f);
-						TextCharQuad.m_aVertices[3].m_Color.g = (unsigned char)(m_Color.g * 255.f);
-						TextCharQuad.m_aVertices[3].m_Color.b = (unsigned char)(m_Color.b * 255.f);
-						TextCharQuad.m_aVertices[3].m_Color.a = (unsigned char)(m_Color.a * 255.f);
+						TextCharQuad.m_aVertices[3].m_Color.r = (unsigned char)(ColorStack.back().m_Color.r * 255.f);
+						TextCharQuad.m_aVertices[3].m_Color.g = (unsigned char)(ColorStack.back().m_Color.g * 255.f);
+						TextCharQuad.m_aVertices[3].m_Color.b = (unsigned char)(ColorStack.back().m_Color.b * 255.f);
+						TextCharQuad.m_aVertices[3].m_Color.a = (unsigned char)(ColorStack.back().m_Color.a * 255.f);
 					}
 
 					// calculate the full width from the last selection point to the end of this selection draw on screen
