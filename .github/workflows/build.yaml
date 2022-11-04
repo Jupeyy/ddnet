@@ -97,6 +97,7 @@ jobs:
         brew update || true
         brew install pkg-config sdl2 ffmpeg python3 ninja molten-vk vulkan-headers glslang spirv-tools
         brew upgrade freetype
+        pip3 install wheel
         pip3 install dmgbuild
         sudo rm -rf /Library/Developer/CommandLineTools
 
