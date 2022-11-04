@@ -95,10 +95,13 @@ jobs:
       if: contains(matrix.os, 'macOS')
       run: |
         brew update || true
-        brew install pkg-config sdl2 ffmpeg python3 ninja molten-vk vulkan-headers glslang spirv-tools
+        brew install pkg-config sdl2 python3 ninja
         brew upgrade freetype
         pip3 install wheel
         pip3 install dmgbuild
+        PATH=\"`python3 -m site --user-base`/bin:$PATH\"
+        echo "`python3 -m site --user-base`/bin:$PATH"
+        whereis dmgbuild
         sudo rm -rf /Library/Developer/CommandLineTools
 
     - name: Build in debug mode
