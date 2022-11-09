@@ -2,6 +2,7 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include "projectile.h"
 #include "character.h"
+#include "game/server/entity.h"
 
 #include <engine/shared/config.h>
 
@@ -169,11 +170,14 @@ void CProjectile::Tick()
 		}
 		else if(m_Freeze)
 		{
-			CCharacter *apEnts[MAX_CLIENTS];
-			int Num = GameWorld()->FindEntities(CurPos, 1.0f, (CEntity **)apEnts, MAX_CLIENTS, CGameWorld::ENTTYPE_CHARACTER);
+			CEntity *apEnts[MAX_CLIENTS];
+			int Num = GameWorld()->FindEntities(CurPos, 1.0f, apEnts, MAX_CLIENTS, CGameWorld::ENTTYPE_CHARACTER);
 			for(int i = 0; i < Num; ++i)
-				if(apEnts[i] && (m_Layer != LAYER_SWITCH || (m_Layer == LAYER_SWITCH && m_Number > 0 && Switchers()[m_Number].m_aStatus[apEnts[i]->Team()])))
-					apEnts[i]->Freeze();
+			{
+				auto *pchar = (CCharacter *)apEnts[i];
+				if(pchar && (m_Layer != LAYER_SWITCH || (m_Layer == LAYER_SWITCH && m_Number > 0 && Switchers()[m_Number].m_aStatus[pchar->Team()])))
+					pchar->Freeze();
+			}
 		}
 
 		if(pOwnerChar && !GameLayerClipped(ColPos) &&

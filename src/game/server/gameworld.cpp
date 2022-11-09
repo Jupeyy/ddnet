@@ -48,7 +48,7 @@ CEntity *CGameWorld::FindFirst(int Type)
 	return Type < 0 || Type >= NUM_ENTTYPES ? 0 : m_apFirstEntityTypes[Type];
 }
 
-int CGameWorld::FindEntities(vec2 Pos, float Radius, CEntity **ppEnts, int Max, int Type)
+int CGameWorld::FindEntities(vec2 Pos, float Radius, CEntity *(&ppEnts)[64], int Max, int Type)
 {
 	if(Type < 0 || Type >= NUM_ENTTYPES)
 		return 0;
