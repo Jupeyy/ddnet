@@ -2199,7 +2199,7 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket, int Conn, bool Dummy)
 					}
 
 					// ack snapshot
-					m_aAckGameTick[Conn] = GameTick;
+					m_aAckGameTick[Conn] = GameTick+ g_Config.m_ClTickMod;
 				}
 			}
 		}
