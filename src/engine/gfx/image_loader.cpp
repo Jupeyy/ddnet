@@ -196,7 +196,7 @@ bool LoadPNG(SImageByteBuffer &ByteLoader, const char *pFileName, int &PngliteIn
 	Height = png_get_image_height(pPNGStruct, pPNGInfo);
 	ColorType = png_get_color_type(pPNGStruct, pPNGInfo);
 	BitDepth = png_get_bit_depth(pPNGStruct, pPNGInfo);
-	PngliteIncompatible = PngliteIncompatibility(pPNGStruct, pPNGInfo);
+	PngliteIncompatible = 0; // PngliteIncompatibility(pPNGStruct, pPNGInfo);
 
 	if(BitDepth == 16)
 	{
