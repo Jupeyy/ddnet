@@ -22,6 +22,16 @@ CScoreboard::CScoreboard()
 	OnReset();
 }
 
+void CScoreboard::OnInit()
+{
+	m_ScoreboardImageFNGBG = Graphics()->LoadTexture("scoreboard/fngbg.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, 0);
+	m_ScoreboardImageFNG = Graphics()->LoadTexture("scoreboard/fng.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, 0);
+
+	m_ScoreboardGeneral.Init(UI(), ms_ScoreboardUIRects);
+	for(auto &m_ScoreboardPlayer : m_ScoreboardPlayers)
+		m_ScoreboardPlayer.Init(UI(), ms_ScoreboardUIRectsPerPlayer);
+}
+
 void CScoreboard::ConKeyScoreboard(IConsole::IResult *pResult, void *pUserData)
 {
 	CScoreboard *pSelf = (CScoreboard *)pUserData;
@@ -576,8 +586,8 @@ void CScoreboard::OnRender()
 	if(m_pClient->m_Motd.IsActive())
 		m_pClient->m_Motd.Clear();
 
-	float Width = 400 * 3.0f * Graphics()->ScreenAspect();
-	float Height = 400 * 3.0f;
+	float Width = ms_ScreenHeight * Graphics()->ScreenAspect();
+	float Height = ms_ScreenHeight;
 
 	Graphics()->MapScreen(0, 0, Width, Height);
 
@@ -590,23 +600,23 @@ void CScoreboard::OnRender()
 		{
 			if(m_pClient->m_Snap.m_aTeamSize[0] > 48)
 			{
-				RenderScoreboard(Width / 2, 150.0f, w, -5, "");
-				RenderScoreboard(Width / 2 - w, 150.0f, w, -4, 0);
+				RenderScoreboard(Width / 2, ms_ScoreboardYOffset, w, -5, "");
+				RenderScoreboard(Width / 2 - w, ms_ScoreboardYOffset, w, -4, 0);
 			}
 			else if(m_pClient->m_Snap.m_aTeamSize[0] > 32)
 			{
-				RenderScoreboard(Width / 2, 150.0f, w, -8, "");
-				RenderScoreboard(Width / 2 - w, 150.0f, w, -7, 0);
+				RenderScoreboard(Width / 2, ms_ScoreboardYOffset, w, -8, "");
+				RenderScoreboard(Width / 2 - w, ms_ScoreboardYOffset, w, -7, 0);
 			}
 			else if(m_pClient->m_Snap.m_aTeamSize[0] > 16)
 			{
-				RenderScoreboard(Width / 2, 150.0f, w, -3, "");
-				RenderScoreboard(Width / 2 - w, 150.0f, w, -6, 0);
+				RenderScoreboard(Width / 2, ms_ScoreboardYOffset, w, -3, "");
+				RenderScoreboard(Width / 2 - w, ms_ScoreboardYOffset, w, -6, 0);
 			}
 			else
 			{
 				w += ExtraWidthSingle;
-				RenderScoreboard(Width / 2 - w / 2, 150.0f, w, -2, 0);
+				RenderScoreboard(Width / 2 - w / 2, ms_ScoreboardYOffset, w, -2, 0);
 			}
 		}
 		else
@@ -634,22 +644,52 @@ void CScoreboard::OnRender()
 						str_copy(aText, Localize("Blue team wins!"));
 				}
 
-				float TextWidth = TextRender()->TextWidth(0, 86.0f, aText, -1, -1.0f);
-				TextRender()->Text(0, Width / 2 - TextWidth / 2, 39, 86.0f, aText, -1.0f);
+				if(GameClient()->m_GameInfo.m_EntitiesFNG)
+				{
+					float XText = Width / 2 - w;
+					float YText = 70;
+					float WidthText = w * 2.0f;
+					float HeightText = 80;
+					Graphics()->BlendNormal();
+					TextRender()->TextColor(TextRender()->DefaultTextColor());
+					TextRender()->TextOutlineColor(TextRender()->DefaultTextOutlineColor());
+					UI()->DoTextLabel(XText, YText, WidthText, HeightText, aText, HeightText - 8, TEXTALIGN_CENTER);
+				}
+				else
+				{
+					float TextW = TextRender()->TextWidth(0, 86.0f, aText, -1, -1.0f);
+					TextRender()->Text(0, Width / 2 - TextW / 2, 39, 86.0f, aText, -1.0f);
+				}
 			}
 
-			//decrease width, because team games use additional offsets
+			// decrease width, because team games use additional offsets
 			w -= 10.0f;
 
 			int NumPlayers = maximum(m_pClient->m_Snap.m_aTeamSize[TEAM_RED], m_pClient->m_Snap.m_aTeamSize[TEAM_BLUE]);
-			RenderScoreboard(Width / 2 - w - 5.0f, 150.0f, w, TEAM_RED, pRedClanName ? pRedClanName : Localize("Red team"), NumPlayers);
-			RenderScoreboard(Width / 2 + 5.0f, 150.0f, w, TEAM_BLUE, pBlueClanName ? pBlueClanName : Localize("Blue team"), NumPlayers);
+			if(GameClient()->m_GameInfo.m_EntitiesFNG)
+			{
+				RenderScoreboardFNG(Width / 2 - w - ms_TeamScoreboardEntitySpacing / 2.0f, ms_ScoreboardYOffset, w, TEAM_RED, pRedClanName ? pRedClanName : Localize("Red"));
+				RenderScoreboardFNG(Width / 2 + ms_TeamScoreboardEntitySpacing / 2.0f, ms_ScoreboardYOffset, w, TEAM_BLUE, pBlueClanName ? pBlueClanName : Localize("Blue"));
+				int PlayersOnScoreboardDummy = 0;
+				float ScoreboardEntitiesHeightDummy = 0;
+				float ScoreboardHeight = GetScoreboardHeight(PlayersOnScoreboardDummy, NumPlayers, TEAM_BLUE, ScoreboardEntitiesHeightDummy);
+				RenderScoreboardFNG(Width / 2 - w / 2, ms_ScoreboardYOffset + ScoreboardHeight + ms_TeamScoreboardGroupOffset, w, TEAM_SPECTATORS, Localize("Spectators"));
+			}
+			else
+			{
+				RenderScoreboard(Width / 2 - w - 5.0f, ms_ScoreboardYOffset, w, TEAM_RED, pRedClanName ? pRedClanName : Localize("Red team"), NumPlayers);
+				RenderScoreboard(Width / 2 + 5.0f, ms_ScoreboardYOffset, w, TEAM_BLUE, pBlueClanName ? pBlueClanName : Localize("Blue team"), NumPlayers);
+			}
 		}
 	}
 	if(m_pClient->m_Snap.m_pGameInfoObj && (m_pClient->m_Snap.m_pGameInfoObj->m_ScoreLimit || m_pClient->m_Snap.m_pGameInfoObj->m_TimeLimit || (m_pClient->m_Snap.m_pGameInfoObj->m_RoundNum && m_pClient->m_Snap.m_pGameInfoObj->m_RoundCurrent)))
 	{
-		RenderGoals(Width / 2 - w / 2, 150 + 760 + 10, w);
-		RenderSpectators(Width / 2 - w / 2, 150 + 760 + 10 + 50 + 10, w, 160.0f);
+		// fng renders this directly into the scoreboard
+		if(!GameClient()->m_GameInfo.m_EntitiesFNG || !GameClient()->IsTeamPlay())
+		{
+			RenderGoals(Width / 2 - w / 2, 150 + 760 + 10, w);
+			RenderSpectators(Width / 2 - w / 2, 150 + 760 + 10 + 50 + 10, w, 160.0f);
+		}
 	}
 	else
 	{

@@ -10,6 +10,7 @@
 #include <engine/storage.h>
 
 #include "countryflags.h"
+#include "game/client/render.h"
 
 #include <game/client/render.h>
 

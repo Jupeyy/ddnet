@@ -951,8 +951,6 @@ inline void clampf(float &Value, float Min, float Max)
 
 void CGraphics_Threaded::SetColorVertex(const CColorVertex *pArray, int Num)
 {
-	dbg_assert(m_Drawing != 0, "called Graphics()->SetColorVertex without begin");
-
 	for(int i = 0; i < Num; ++i)
 	{
 		float r = pArray[i].m_R, g = pArray[i].m_G, b = pArray[i].m_B, a = pArray[i].m_A;
@@ -994,7 +992,6 @@ void CGraphics_Threaded::SetColor(ColorRGBA Color)
 
 void CGraphics_Threaded::SetColor4(ColorRGBA TopLeft, ColorRGBA TopRight, ColorRGBA BottomLeft, ColorRGBA BottomRight)
 {
-	dbg_assert(m_Drawing != 0, "called Graphics()->SetColor without begin");
 	CColorVertex Array[4] = {
 		CColorVertex(0, TopLeft.r, TopLeft.g, TopLeft.b, TopLeft.a),
 		CColorVertex(1, TopRight.r, TopRight.g, TopRight.b, TopRight.a),

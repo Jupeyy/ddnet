@@ -1571,6 +1571,8 @@ set(EXPECTED_DATA
   menuimages/play_game.png
   menuimages/settings.png
   particles.png
+  scoreboard/fng.png
+  scoreboard/fngbg.png
   shader/pipeline.frag
   shader/pipeline.vert
   shader/prim.frag
@@ -2237,6 +2239,7 @@ if(CLIENT)
     components/race_demo.h
     components/scoreboard.cpp
     components/scoreboard.h
+    components/scoreboard_fng.cpp
     components/skins.cpp
     components/skins.h
     components/sounds.cpp
