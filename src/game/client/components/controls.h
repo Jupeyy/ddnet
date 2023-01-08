@@ -13,6 +13,7 @@
 class CControls : public CComponent
 {
 	float GetMaxMouseDistance() const;
+	EComponentMouseMovementBlockMode OnMouseWrongStateImpl();
 
 public:
 	vec2 m_aMousePos[NUM_DUMMIES];
@@ -37,8 +38,13 @@ public:
 	virtual void OnRelease() override;
 	virtual void OnRender() override;
 	virtual void OnMessage(int MsgType, void *pRawMsg) override;
-	virtual bool OnCursorMove(float x, float y, IInput::ECursorType CursorType) override;
 	virtual void OnConsoleInit() override;
+
+	virtual EComponentMouseMovementBlockMode OnMouseInWindowPos(int X, int Y) override;
+	virtual EComponentMouseMovementBlockMode OnMouseAbsoluteInWindowPos(int X, int Y) override;
+	virtual EComponentMouseMovementBlockMode OnMouseInWindowRelativeMove(int X, int Y) override;
+	virtual EComponentMouseMovementBlockMode OnMouseRelativeMove(float RelX, float RelY, IInput::ECursorType CursorType) override;
+
 	virtual void OnPlayerDeath();
 
 	int SnapInput(int *pData);

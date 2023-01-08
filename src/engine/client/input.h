@@ -69,7 +69,6 @@ private:
 	static void ConchainJoystickGuidChanged(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 	float GetJoystickDeadzone();
 
-	int m_InputGrabbed;
 	char *m_pClipboardText;
 
 	bool m_MouseFocus;
@@ -102,7 +101,12 @@ private:
 	int m_EditingTextLen;
 	int m_EditingCursor;
 
+	int m_DesktopX = 0;
+	int m_DesktopY = 0;
+
 	bool KeyState(int Key) const;
+
+	void MouseModeInGameRelativeImpl();
 
 public:
 	CInput();
@@ -121,11 +125,19 @@ public:
 	void SelectNextJoystick() override;
 
 	bool MouseRelative(float *pX, float *pY) override;
-	void MouseModeAbsolute() override;
-	void MouseModeRelative() override;
+	bool MouseModeAbsolute() override;
+	bool MouseModeRelative() override;
 	void NativeMousePos(int *pX, int *pY) const override;
 	bool NativeMousePressed(int Index) override;
 	bool MouseDoubleClick() override;
+
+	bool MouseDesktopRelative(int *x, int *y) override;
+	bool MouseAbsolute(int *x, int *y) override;
+
+	// return true if the mode was changed
+	void MouseModeChange(EInputMouseMode OldState, EInputMouseMode NewState);
+	bool MouseModeInGame(int *pDesiredX = NULL, int *pDesiredY = NULL) override;
+	bool MouseModeInGameRelative() override;
 
 	const char *GetClipboardText() override;
 	void SetClipboardText(const char *pText) override;

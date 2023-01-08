@@ -507,6 +507,7 @@ public:
 	// be aware that this function should only be called from the graphics thread, and even then you should really know what you are doing
 	// this function always returns the pixels in RGB
 	virtual TGLBackendReadPresentedImageData &GetReadPresentedImageDataFuncUnsafe() = 0;
+	virtual void WarpMouse(int MouseX, int MouseY) = 0;
 
 	virtual SWarning *GetCurWarning() = 0;
 

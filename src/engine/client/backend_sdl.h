@@ -275,6 +275,7 @@ public:
 	bool ResizeWindow(int w, int h, int RefreshRate) override;
 	void GetViewportSize(int &w, int &h) override;
 	void NotifyWindow() override;
+	void WarpMouse(int MouseX, int MouseY) override;
 
 	void WindowDestroyNtf(uint32_t WindowID) override;
 	void WindowCreateNtf(uint32_t WindowID) override;

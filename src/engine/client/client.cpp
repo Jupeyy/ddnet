@@ -125,7 +125,7 @@ void CGraph::InsertAt(size_t Index, float v, float r, float g, float b)
 
 void CGraph::Render(IGraphics *pGraphics, IGraphics::CTextureHandle FontTexture, float x, float y, float w, float h, const char *pDescription)
 {
-	//m_pGraphics->BlendNormal();
+	// m_pGraphics->BlendNormal();
 
 	pGraphics->TextureClear();
 
@@ -1023,7 +1023,7 @@ void CClient::DebugRender()
 	if(!g_Config.m_Debug)
 		return;
 
-	//m_pGraphics->BlendNormal();
+	// m_pGraphics->BlendNormal();
 	Graphics()->TextureSet(m_DebugFont);
 	Graphics()->MapScreen(0, 0, Graphics()->ScreenWidth(), Graphics()->ScreenHeight());
 	Graphics()->QuadsBegin();
@@ -1115,7 +1115,7 @@ void CClient::DebugRender()
 	// render graphs
 	if(g_Config.m_DbgGraphs)
 	{
-		//Graphics()->MapScreen(0,0,400.0f,300.0f);
+		// Graphics()->MapScreen(0,0,400.0f,300.0f);
 		float w = Graphics()->ScreenWidth() / 4.0f;
 		float h = Graphics()->ScreenHeight() / 6.0f;
 		float sp = Graphics()->ScreenWidth() / 100.0f;
@@ -2925,7 +2925,7 @@ void CClient::InitInterfaces()
 	m_pEngine = Kernel()->RequestInterface<IEngine>();
 	m_pEditor = Kernel()->RequestInterface<IEditor>();
 	m_pFavorites = Kernel()->RequestInterface<IFavorites>();
-	//m_pGraphics = Kernel()->RequestInterface<IEngineGraphics>();
+	// m_pGraphics = Kernel()->RequestInterface<IEngineGraphics>();
 	m_pSound = Kernel()->RequestInterface<IEngineSound>();
 	m_pGameClient = Kernel()->RequestInterface<IGameClient>();
 	m_pInput = Kernel()->RequestInterface<IEngineInput>();
@@ -3023,7 +3023,8 @@ void CClient::Run()
 		}
 		for(unsigned int i = 0; i < std::size(m_aNetClient); i++)
 		{
-			int &PortRef = i == CONN_MAIN ? g_Config.m_ClPort : i == CONN_DUMMY ? g_Config.m_ClDummyPort : g_Config.m_ClContactPort;
+			int &PortRef = i == CONN_MAIN ? g_Config.m_ClPort : i == CONN_DUMMY ? g_Config.m_ClDummyPort :
+											      g_Config.m_ClContactPort;
 			if(PortRef < 1024) // Reject users setting ports that we don't want to use
 			{
 				PortRef = 0;
@@ -3204,7 +3205,6 @@ void CClient::Run()
 			{
 				if(!m_EditorActive)
 				{
-					Input()->MouseModeRelative();
 					Input()->SetIMEState(true);
 					GameClient()->OnActivateEditor();
 					m_pEditor->ResetMentions();
@@ -3885,7 +3885,7 @@ const char *CClient::DemoPlayer_Render(const char *pFilename, int StorageType, c
 	this->CClient::StartVideo(NULL, this, pVideoName);
 	m_DemoPlayer.Play();
 	m_DemoPlayer.SetSpeed(g_aSpeeds[SpeedIndex]);
-	//m_pConsole->Print(IConsole::OUTPUT_LEVEL_DEBUG, "demo_recorder", "demo eof");
+	// m_pConsole->Print(IConsole::OUTPUT_LEVEL_DEBUG, "demo_recorder", "demo eof");
 	return 0;
 }
 #endif
@@ -4333,7 +4333,7 @@ void CClient::ConchainPassword(IConsole::IResult *pResult, void *pUserData, ICon
 {
 	CClient *pSelf = (CClient *)pUserData;
 	pfnCallback(pResult, pCallbackUserData);
-	if(pResult->NumArguments() && pSelf->m_LocalStartTime) //won't set m_SendPassword before game has started
+	if(pResult->NumArguments() && pSelf->m_LocalStartTime) // won't set m_SendPassword before game has started
 		pSelf->m_SendPassword = true;
 }
 

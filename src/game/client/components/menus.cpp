@@ -34,6 +34,10 @@
 #include <game/generated/client_data.h>
 #include <game/localization.h>
 
+#include <game/client/component.h>
+
+#include "controls.h"
+
 #include "countryflags.h"
 #include "menus.h"
 
@@ -487,7 +491,7 @@ int CMenus::DoValueSelector(void *pID, CUIRect *pRect, const char *pLabel, bool 
 	{
 		if(!UI()->MouseButton(0))
 		{
-			//m_LockMouse = false;
+			// m_LockMouse = false;
 			UI()->SetActiveItem(nullptr);
 			ms_ValueSelectorTextMode = false;
 		}
@@ -507,14 +511,14 @@ int CMenus::DoValueSelector(void *pID, CUIRect *pRect, const char *pLabel, bool 
 				Current = clamp(str_toint_base(s_aNumStr, 16), Min, Max);
 			else
 				Current = clamp(str_toint(s_aNumStr), Min, Max);
-			//m_LockMouse = false;
+			// m_LockMouse = false;
 			UI()->SetActiveItem(nullptr);
 			ms_ValueSelectorTextMode = false;
 		}
 
 		if(Input()->KeyIsPressed(KEY_ESCAPE))
 		{
-			//m_LockMouse = false;
+			// m_LockMouse = false;
 			UI()->SetActiveItem(nullptr);
 			ms_ValueSelectorTextMode = false;
 		}
@@ -554,7 +558,7 @@ int CMenus::DoValueSelector(void *pID, CUIRect *pRect, const char *pLabel, bool 
 		{
 			if(UI()->MouseButtonClicked(0))
 			{
-				//m_LockMouse = true;
+				// m_LockMouse = true;
 				s_Value = 0;
 				UI()->SetActiveItem(pID);
 			}
@@ -1468,8 +1472,8 @@ int CMenus::Render()
 	else
 	{
 		// make sure that other windows doesn't do anything funnay!
-		//UI()->SetHotItem(0);
-		//UI()->SetActiveItem(nullptr);
+		// UI()->SetHotItem(0);
+		// UI()->SetActiveItem(nullptr);
 		char aBuf[1536];
 		const char *pTitle = "";
 		const char *pExtraText = "";
@@ -2307,17 +2311,42 @@ void CMenus::OnShutdown()
 	KillServer();
 }
 
-bool CMenus::OnCursorMove(float x, float y, IInput::ECursorType CursorType)
+EComponentMouseMovementBlockMode CMenus::OnMouseInWindowPos(int X, int Y)
 {
 	if(!m_MenuActive)
-		return false;
+		return COMPONENT_MOUSE_MOVEMENT_BLOCK_MODE_DONT_BLOCK;
 
-	UI()->ConvertMouseMove(&x, &y, CursorType);
+	{
+		m_MousePos.x = clamp<float>(X, 0.f, (float)Graphics()->WindowWidth());
+		m_MousePos.y = clamp<float>(Y, 0.f, (float)Graphics()->WindowHeight());
+	}
+	return COMPONENT_MOUSE_MOVEMENT_BLOCK_MODE_BLOCK;
+}
 
-	m_MousePos.x = clamp(m_MousePos.x + x, 0.f, (float)Graphics()->WindowWidth());
-	m_MousePos.y = clamp(m_MousePos.y + y, 0.f, (float)Graphics()->WindowHeight());
+EComponentMouseMovementBlockMode CMenus::OnMouseAbsoluteInWindowPos(int X, int Y)
+{
+	if(!m_MenuActive)
+		return COMPONENT_MOUSE_MOVEMENT_BLOCK_MODE_DONT_BLOCK;
 
-	return true;
+	return COMPONENT_MOUSE_MOVEMENT_BLOCK_MODE_BLOCK_AND_CHANGE_TO_INGAME;
+}
+
+EComponentMouseMovementBlockMode CMenus::OnMouseInWindowRelativeMove(int X, int Y)
+{
+	if(!m_MenuActive)
+		return COMPONENT_MOUSE_MOVEMENT_BLOCK_MODE_DONT_BLOCK;
+
+	return COMPONENT_MOUSE_MOVEMENT_BLOCK_MODE_BLOCK_AND_CHANGE_TO_INGAME;
+
+	return COMPONENT_MOUSE_MOVEMENT_BLOCK_MODE_BLOCK;
+}
+
+EComponentMouseMovementBlockMode CMenus::OnMouseRelativeMove(float x, float y, IInput::ECursorType CursorType)
+{
+	if(!m_MenuActive)
+		return COMPONENT_MOUSE_MOVEMENT_BLOCK_MODE_DONT_BLOCK;
+
+	return COMPONENT_MOUSE_MOVEMENT_BLOCK_MODE_BLOCK_AND_CHANGE_TO_INGAME;
 }
 
 bool CMenus::OnInput(IInput::CEvent Event)
@@ -2566,7 +2595,7 @@ int CMenus::MenuImageScan(const char *pName, int IsDir, int DirType, void *pUser
 		MenuImage.m_OrgTexture = pSelf->Graphics()->LoadTextureRaw(Info.m_Width, Info.m_Height, Info.m_Format, Info.m_pData, Info.m_Format, 0);
 
 		unsigned char *pData = (unsigned char *)Info.m_pData;
-		//int Pitch = Info.m_Width*4;
+		// int Pitch = Info.m_Width*4;
 
 		// create colorless version
 		int Step = Info.m_Format == CImageInfo::FORMAT_RGBA ? 4 : 3;

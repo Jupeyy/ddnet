@@ -8,6 +8,18 @@
 const int g_MaxKeys = 512;
 extern const char g_aaKeyStrings[g_MaxKeys][20];
 
+enum EInputMouseMode
+{
+	// Use absolute mouse mode, doesn't grab the mouse inside the window and uses desktop cursor coordinates
+	INPUT_MOUSE_MODE_ABSOLUTE = 0,
+	// Use relative mouse mode, does grab the mouse inside the window and uses mouse driver coordinates(except if mouse old)
+	INPUT_MOUSE_MODE_RELATIVE,
+	// Use ingame mouse mode, does grab the mouse inside the window, but uses uses desktop cursor coordinates
+	INPUT_MOUSE_MODE_INGAME,
+	// Use ingame mouse mode, does grab the mouse inside the window, but uses uses desktop cursor coordinates, but is relative
+	INPUT_MOUSE_MODE_INGAME_RELATIVE,
+};
+
 class IInput : public IInterface
 {
 	MACRO_INTERFACE("input", 0)
@@ -36,6 +48,8 @@ protected:
 	int m_NumEvents;
 	IInput::CEvent m_aInputEvents[INPUT_BUFFER_SIZE];
 
+	EInputMouseMode m_MouseMode = INPUT_MOUSE_MODE_ABSOLUTE;
+
 public:
 	enum
 	{
@@ -50,6 +64,9 @@ public:
 		CURSOR_MOUSE,
 		CURSOR_JOYSTICK,
 	};
+
+	EInputMouseMode GetMouseMode() { return m_MouseMode; };
+	void SetMouseMode(EInputMouseMode NewMode) { m_MouseMode = NewMode; };
 
 	// events
 	int NumEvents() const { return m_NumEvents; }
@@ -97,14 +114,21 @@ public:
 	// mouse
 	virtual void NativeMousePos(int *pX, int *pY) const = 0;
 	virtual bool NativeMousePressed(int Index) = 0;
-	virtual void MouseModeRelative() = 0;
-	virtual void MouseModeAbsolute() = 0;
+	virtual bool MouseModeRelative() = 0;
+	virtual bool MouseModeAbsolute() = 0;
 	virtual bool MouseDoubleClick() = 0;
 	virtual bool MouseRelative(float *pX, float *pY) = 0;
 
 	// clipboard
 	virtual const char *GetClipboardText() = 0;
 	virtual void SetClipboardText(const char *pText) = 0;
+
+	virtual bool MouseModeInGame(int *pDesiredX = NULL, int *pDesiredY = NULL) = 0;
+	virtual bool MouseModeInGameRelative() = 0;
+
+	// return true if there was a mouse input
+	virtual bool MouseAbsolute(int *x, int *y) = 0;
+	virtual bool MouseDesktopRelative(int *x, int *y) = 0;
 
 	// text editing
 	virtual bool GetIMEState() = 0;

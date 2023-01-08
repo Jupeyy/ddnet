@@ -3070,6 +3070,11 @@ void CGraphics_Threaded::NotifyWindow()
 	return m_pBackend->NotifyWindow();
 }
 
+void CGraphics_Threaded::WarpMouse(int MouseX, int MouseY)
+{
+	return m_pBackend->WarpMouse(MouseX, MouseY);
+}
+
 void CGraphics_Threaded::TakeScreenshot(const char *pFilename)
 {
 	// TODO: screenshot support

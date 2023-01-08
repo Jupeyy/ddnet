@@ -19,9 +19,6 @@ class CSpectator : public CComponent
 	int m_SelectedSpectatorID;
 	vec2 m_SelectorMouse;
 
-	float m_OldMouseX;
-	float m_OldMouseY;
-
 	bool CanChangeSpectator();
 	void SpectateNext(bool Reverse);
 
@@ -31,15 +28,21 @@ class CSpectator : public CComponent
 	static void ConSpectatePrevious(IConsole::IResult *pResult, void *pUserData);
 	static void ConSpectateClosest(IConsole::IResult *pResult, void *pUserData);
 
+	EComponentMouseMovementBlockMode OnMouseWrongStateImpl();
+
 public:
 	CSpectator();
 	virtual int Sizeof() const override { return sizeof(*this); }
 
 	virtual void OnConsoleInit() override;
-	virtual bool OnCursorMove(float x, float y, IInput::ECursorType CursorType) override;
 	virtual void OnRender() override;
 	virtual void OnRelease() override;
 	virtual void OnReset() override;
+
+	virtual EComponentMouseMovementBlockMode OnMouseInWindowPos(int X, int Y) override;
+	virtual EComponentMouseMovementBlockMode OnMouseAbsoluteInWindowPos(int X, int Y) override;
+	virtual EComponentMouseMovementBlockMode OnMouseInWindowRelativeMove(int X, int Y) override;
+	virtual EComponentMouseMovementBlockMode OnMouseRelativeMove(float x, float y, IInput::ECursorType CursorType) override;
 
 	void Spectate(int SpectatorID);
 };

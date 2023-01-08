@@ -386,7 +386,7 @@ int CEditor::DoButton_Editor_Common(const void *pID, const char *pText, int Chec
 	return UI()->DoButtonLogic(pID, Checked, pRect);
 
 	// Draw here
-	//return UI()->DoButton(id, text, checked, r, draw_func, 0);
+	// return UI()->DoButton(id, text, checked, r, draw_func, 0);
 }
 
 int CEditor::DoButton_Editor(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Flags, const char *pToolTip, int AlignVert)
@@ -581,7 +581,7 @@ int CEditor::UiDoValueSelector(void *pID, CUIRect *pRect, const char *pLabel, in
 	{
 		if(!UI()->MouseButton(0))
 		{
-			m_LockMouse = false;
+			SetLockMouse(false);
 			UI()->SetActiveItem(nullptr);
 			s_TextMode = false;
 		}
@@ -603,14 +603,14 @@ int CEditor::UiDoValueSelector(void *pID, CUIRect *pRect, const char *pLabel, in
 				Current = clamp(str_toint_base(s_aNumStr, 16), Min, Max);
 			else
 				Current = clamp(str_toint(s_aNumStr), Min, Max);
-			m_LockMouse = false;
+			SetLockMouse(false);
 			UI()->SetActiveItem(nullptr);
 			s_TextMode = false;
 		}
 
 		if(Input()->KeyIsPressed(KEY_ESCAPE))
 		{
-			m_LockMouse = false;
+			SetLockMouse(false);
 			UI()->SetActiveItem(nullptr);
 			s_TextMode = false;
 		}
@@ -647,7 +647,7 @@ int CEditor::UiDoValueSelector(void *pID, CUIRect *pRect, const char *pLabel, in
 		{
 			if(UI()->MouseButton(0))
 			{
-				m_LockMouse = true;
+				SetLockMouse(true);
 				s_Value = 0;
 				UI()->SetActiveItem(pID);
 			}
@@ -1155,7 +1155,7 @@ void CEditor::DoToolbar(CUIRect ToolBar)
 				if(pS)
 				{
 					const char *pButtonName = nullptr;
-					int (*pfnPopupFunc)(CEditor * pEditor, CUIRect View, void *pContext) = nullptr;
+					int (*pfnPopupFunc)(CEditor *pEditor, CUIRect View, void *pContext) = nullptr;
 					int Rows = 0;
 					if(pS == m_Map.m_pSwitchLayer)
 					{
@@ -1339,7 +1339,7 @@ void CEditor::DoSoundSource(CSoundSource *pSource, int Index)
 				{
 					static int s_SourcePopupID = 0;
 					UiInvokePopupMenu(&s_SourcePopupID, 0, UI()->MouseX(), UI()->MouseY(), 120, 200, PopupSource);
-					m_LockMouse = false;
+					SetLockMouse(false);
 				}
 				s_Operation = OP_NONE;
 				UI()->SetActiveItem(nullptr);
@@ -1349,7 +1349,7 @@ void CEditor::DoSoundSource(CSoundSource *pSource, int Index)
 		{
 			if(!UI()->MouseButton(0))
 			{
-				m_LockMouse = false;
+				SetLockMouse(false);
 				s_Operation = OP_NONE;
 				UI()->SetActiveItem(nullptr);
 			}
@@ -1490,7 +1490,7 @@ void CEditor::DoQuad(CQuad *pQuad, int Index)
 
 					static int s_QuadPopupID = 0;
 					UiInvokePopupMenu(&s_QuadPopupID, 0, UI()->MouseX(), UI()->MouseY(), 120, 198, PopupQuad);
-					m_LockMouse = false;
+					SetLockMouse(false);
 				}
 				s_Operation = OP_NONE;
 				UI()->SetActiveItem(nullptr);
@@ -1502,7 +1502,7 @@ void CEditor::DoQuad(CQuad *pQuad, int Index)
 			{
 				if(m_vSelectedLayers.size() == 1)
 				{
-					m_LockMouse = false;
+					SetLockMouse(false);
 					m_Map.m_Modified = true;
 					DeleteSelectedQuads();
 				}
@@ -1514,7 +1514,7 @@ void CEditor::DoQuad(CQuad *pQuad, int Index)
 		{
 			if(!UI()->MouseButton(0))
 			{
-				m_LockMouse = false;
+				SetLockMouse(false);
 				s_Operation = OP_NONE;
 				UI()->SetActiveItem(nullptr);
 			}
@@ -1539,7 +1539,7 @@ void CEditor::DoQuad(CQuad *pQuad, int Index)
 			}
 			else if(Input()->ModifierIsPressed())
 			{
-				m_LockMouse = true;
+				SetLockMouse(true);
 				s_Operation = OP_ROTATE;
 				s_RotateAngle = 0;
 
@@ -1719,7 +1719,7 @@ void CEditor::DoQuadPoint(CQuad *pQuad, int QuadIndex, int V)
 						m_SelectedPoints = 1 << V;
 				}
 
-				m_LockMouse = false;
+				SetLockMouse(false);
 				UI()->SetActiveItem(nullptr);
 			}
 		}
@@ -1740,7 +1740,7 @@ void CEditor::DoQuadPoint(CQuad *pQuad, int QuadIndex, int V)
 			if(Input()->ShiftIsPressed())
 			{
 				s_Operation = OP_MOVEUV;
-				m_LockMouse = true;
+				SetLockMouse(true);
 			}
 			else
 				s_Operation = OP_MOVEPOINT;
@@ -2041,7 +2041,7 @@ void CEditor::DoQuadEnvelopes(const std::vector<CQuad> &vQuads, IGraphics::CText
 				apEnvelope[i] = m_Map.m_vpEnvelopes[vQuads[i].m_PosEnv];
 	}
 
-	//Draw Lines
+	// Draw Lines
 	Graphics()->TextureClear();
 	Graphics()->LinesBegin();
 	Graphics()->SetColor(80.0f / 255, 150.0f / 255, 230.f / 255, 0.5f);
@@ -2050,7 +2050,7 @@ void CEditor::DoQuadEnvelopes(const std::vector<CQuad> &vQuads, IGraphics::CText
 		if(!apEnvelope[j])
 			continue;
 
-		//QuadParams
+		// QuadParams
 		const CPoint *pPoints = vQuads[j].m_aPoints;
 		for(size_t i = 0; i < apEnvelope[j]->m_vPoints.size() - 1; i++)
 		{
@@ -2069,7 +2069,7 @@ void CEditor::DoQuadEnvelopes(const std::vector<CQuad> &vQuads, IGraphics::CText
 	Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 	Graphics()->LinesEnd();
 
-	//Draw Quads
+	// Draw Quads
 	Graphics()->TextureSet(Texture);
 	Graphics()->QuadsBegin();
 
@@ -2078,17 +2078,17 @@ void CEditor::DoQuadEnvelopes(const std::vector<CQuad> &vQuads, IGraphics::CText
 		if(!apEnvelope[j])
 			continue;
 
-		//QuadParams
+		// QuadParams
 		const CPoint *pPoints = vQuads[j].m_aPoints;
 
 		for(size_t i = 0; i < apEnvelope[j]->m_vPoints.size(); i++)
 		{
-			//Calc Env Position
+			// Calc Env Position
 			float OffsetX = fx2f(apEnvelope[j]->m_vPoints[i].m_aValues[0]);
 			float OffsetY = fx2f(apEnvelope[j]->m_vPoints[i].m_aValues[1]);
 			float Rot = fx2f(apEnvelope[j]->m_vPoints[i].m_aValues[2]) / 360.0f * pi * 2;
 
-			//Set Colours
+			// Set Colours
 			float Alpha = (m_SelectedQuadEnvelope == vQuads[j].m_PosEnv && m_SelectedEnvelopePoint == (int)i) ? 0.65f : 0.35f;
 			IGraphics::CColorVertex aArray[4] = {
 				IGraphics::CColorVertex(0, vQuads[j].m_aColors[0].r, vQuads[j].m_aColors[0].g, vQuads[j].m_aColors[0].b, Alpha),
@@ -2097,7 +2097,7 @@ void CEditor::DoQuadEnvelopes(const std::vector<CQuad> &vQuads, IGraphics::CText
 				IGraphics::CColorVertex(3, vQuads[j].m_aColors[3].r, vQuads[j].m_aColors[3].g, vQuads[j].m_aColors[3].b, Alpha)};
 			Graphics()->SetColorVertex(aArray, 4);
 
-			//Rotation
+			// Rotation
 			if(Rot != 0)
 			{
 				static CPoint aRotated[4];
@@ -2113,14 +2113,14 @@ void CEditor::DoQuadEnvelopes(const std::vector<CQuad> &vQuads, IGraphics::CText
 				Rotate(&vQuads[j].m_aPoints[4], &aRotated[3], Rot);
 			}
 
-			//Set Texture Coords
+			// Set Texture Coords
 			Graphics()->QuadsSetSubsetFree(
 				fx2f(vQuads[j].m_aTexcoords[0].x), fx2f(vQuads[j].m_aTexcoords[0].y),
 				fx2f(vQuads[j].m_aTexcoords[1].x), fx2f(vQuads[j].m_aTexcoords[1].y),
 				fx2f(vQuads[j].m_aTexcoords[2].x), fx2f(vQuads[j].m_aTexcoords[2].y),
 				fx2f(vQuads[j].m_aTexcoords[3].x), fx2f(vQuads[j].m_aTexcoords[3].y));
 
-			//Set Quad Coords & Draw
+			// Set Quad Coords & Draw
 			IGraphics::CFreeformItem Freeform(
 				fx2f(pPoints[0].x) + OffsetX, fx2f(pPoints[0].y) + OffsetY,
 				fx2f(pPoints[1].x) + OffsetX, fx2f(pPoints[1].y) + OffsetY,
@@ -2205,7 +2205,7 @@ void CEditor::DoQuadEnvPoint(const CQuad *pQuad, int QIndex, int PIndex)
 
 		if(!UI()->MouseButton(0))
 		{
-			m_LockMouse = false;
+			SetLockMouse(false);
 			s_Operation = OP_NONE;
 			UI()->SetActiveItem(nullptr);
 		}
@@ -2223,7 +2223,7 @@ void CEditor::DoQuadEnvPoint(const CQuad *pQuad, int QIndex, int PIndex)
 		{
 			if(Input()->ModifierIsPressed())
 			{
-				m_LockMouse = true;
+				SetLockMouse(true);
 				s_Operation = OP_ROTATE;
 
 				SelectQuad(QIndex);
@@ -2850,7 +2850,7 @@ void CEditor::DoMapEditor(CUIRect View)
 
 		// possible screen sizes (white border)
 		float aLastPoints[4];
-		float Start = 1.0f; //9.0f/16.0f;
+		float Start = 1.0f; // 9.0f/16.0f;
 		float End = 16.0f / 9.0f;
 		const int NumSteps = 20;
 		for(int i = 0; i <= NumSteps; i++)
@@ -5020,7 +5020,7 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 			{
 				// add point
 				int Time = (int)(((UI()->MouseX() - View.x) * TimeScale) * 1000.0f);
-				//float env_y = (UI()->MouseY()-view.y)/TimeScale;
+				// float env_y = (UI()->MouseY()-view.y)/TimeScale;
 				ColorRGBA Channels;
 				pEnvelope->Eval(Time / 1000.0f, Channels);
 				pEnvelope->AddPoint(Time,
@@ -5075,7 +5075,7 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 				float t0 = pEnvelope->m_vPoints[i].m_Time / 1000.0f / EndTime;
 				float t1 = pEnvelope->m_vPoints[i + 1].m_Time / 1000.0f / EndTime;
 
-				//dbg_msg("", "%f", end_time);
+				// dbg_msg("", "%f", end_time);
 
 				CUIRect v;
 				v.x = CurveBar.x + (t0 + (t1 - t0) * 0.5f) * CurveBar.w;
@@ -5119,7 +5119,7 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 				float x0 = pEnvelope->m_vPoints[i].m_Time / 1000.0f / EndTime;
 				//				float y0 = (fx2f(envelope->points[i].values[c])-bottom)/(top-bottom);
 				float x1 = pEnvelope->m_vPoints[i + 1].m_Time / 1000.0f / EndTime;
-				//float y1 = (fx2f(envelope->points[i+1].values[c])-bottom)/(top-bottom);
+				// float y1 = (fx2f(envelope->points[i+1].values[c])-bottom)/(top-bottom);
 				CUIRect v;
 				v.x = ColorBar.x + x0 * ColorBar.w;
 				v.y = ColorBar.y;
@@ -5997,7 +5997,7 @@ void CEditor::Reset(bool CreateDefault)
 {
 	m_Map.Clean();
 
-	//delete undo file
+	// delete undo file
 	char aBuffer[1024];
 	m_pStorage->GetCompletePath(IStorage::TYPE_SAVE, "editor/", aBuffer, sizeof(aBuffer));
 
@@ -6329,6 +6329,18 @@ IGraphics::CTextureHandle CEditor::GetEntitiesTexture()
 	return m_EntitiesTexture;
 }
 
+void CEditor::SetLockMouse(bool SetVal)
+{
+	if(m_LockMouse != SetVal)
+	{
+		m_LockMouse = SetVal;
+		if(SetVal)
+			Input()->MouseModeInGameRelative();
+		else
+			Input()->MouseModeInGame();
+	}
+}
+
 void CEditor::Init()
 {
 	m_pInput = Kernel()->RequestInterface<IInput>();
@@ -6390,7 +6402,7 @@ void CEditor::OnUpdate()
 		Reset();
 	}
 
-	for(int i = 0; i < Input()->NumEvents(); i++)
+	/*for(int i = 0; i < Input()->NumEvents(); i++)
 		UI()->OnInput(Input()->GetEvent(i));
 
 	// handle cursor movement
@@ -6407,15 +6419,53 @@ void CEditor::OnUpdate()
 		m_MouseDeltaX += MouseRelX;
 		m_MouseDeltaY += MouseRelY;
 
-		if(!m_LockMouse)
+		if(!m_LockMouse)*/
+	if(m_Animate)
+		m_AnimateTime = (time_get() - m_AnimateStart) / (float)time_freq();
+	else
+		m_AnimateTime = 0;
+	ms_pUiGotContext = nullptr;
+
+	UI()->StartCheck();
+
+	// handle mouse movement
+	int rx = 0, ry = 0;
+	if(m_LockMouse)
+	{
+		UI()->ResetMouseSlow();
+		// use relative mouse movement when locked
+		Input()->MouseModeInGameRelative();
+		int TmpDeltaX = 0;
+		int TmpDeltaY = 0;
+		Input()->MouseDesktopRelative(&TmpDeltaX, &TmpDeltaY);
+		m_MouseDeltaX = TmpDeltaX;
+		m_MouseDeltaY = TmpDeltaY;
+		rx = m_LastX;
+		ry = m_LastY;
+	}
+	else
+	{
+		// use desktop mouse movement when not locked
+		Input()->MouseModeInGame();
+		bool GotInput = Input()->MouseAbsolute(&rx, &ry);
+		if(!GotInput)
 		{
-			s_MouseX = clamp<float>(s_MouseX + MouseRelX, 0.0f, Graphics()->WindowWidth());
-			s_MouseY = clamp<float>(s_MouseY + MouseRelY, 0.0f, Graphics()->WindowHeight());
+			rx = m_LastX;
+			ry = m_LastY;
 		}
 
-		// update positions for ui, but only update ui when rendering
-		m_MouseX = UI()->Screen()->w * ((float)s_MouseX / Graphics()->WindowWidth());
-		m_MouseY = UI()->Screen()->h * ((float)s_MouseY / Graphics()->WindowHeight());
+		m_MouseDeltaX = rx - m_LastX;
+		m_MouseDeltaY = ry - m_LastY;
+
+		m_LastX = rx;
+		m_LastY = ry;
+	}
+
+	// handle mouse movement
+	{
+		// update the ui
+		m_MouseX = UI()->Screen()->w * ((float)rx / Graphics()->WindowWidth());
+		m_MouseY = UI()->Screen()->h * ((float)ry / Graphics()->WindowHeight());
 
 		// fix correct world x and y
 		CLayerGroup *pGroup = GetSelectedGroup();
@@ -6429,8 +6479,8 @@ void CEditor::OnUpdate()
 
 			m_MouseWScale = WorldWidth / Graphics()->WindowWidth();
 
-			m_MouseWorldX = aPoints[0] + WorldWidth * (s_MouseX / Graphics()->WindowWidth());
-			m_MouseWorldY = aPoints[1] + WorldHeight * (s_MouseY / Graphics()->WindowHeight());
+			m_MouseWorldX = aPoints[0] + WorldWidth * (rx / Graphics()->WindowWidth());
+			m_MouseWorldY = aPoints[1] + WorldHeight * (ry / Graphics()->WindowHeight());
 			m_MouseDeltaWx = m_MouseDeltaX * (WorldWidth / Graphics()->WindowWidth());
 			m_MouseDeltaWy = m_MouseDeltaY * (WorldHeight / Graphics()->WindowHeight());
 		}

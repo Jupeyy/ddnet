@@ -35,8 +35,8 @@ void CControls::OnReset()
 void CControls::ResetInput(int Dummy)
 {
 	m_aLastData[Dummy].m_Direction = 0;
-	//m_aLastData[Dummy].m_Hook = 0;
-	// simulate releasing the fire button
+	// m_LastData[Dummy].m_Hook = 0;
+	//  simulate releasing the fire button
 	if((m_aLastData[Dummy].m_Fire & 1) != 0)
 		m_aLastData[Dummy].m_Fire++;
 	m_aLastData[Dummy].m_Fire &= INPUT_STATE_MASK;
@@ -49,7 +49,7 @@ void CControls::ResetInput(int Dummy)
 
 void CControls::OnRelease()
 {
-	//OnReset();
+	// OnReset();
 }
 
 void CControls::OnPlayerDeath()
@@ -365,17 +365,40 @@ void CControls::OnRender()
 		m_aTargetPos[g_Config.m_ClDummy] = m_aMousePos[g_Config.m_ClDummy];
 }
 
-bool CControls::OnCursorMove(float x, float y, IInput::ECursorType CursorType)
+EComponentMouseMovementBlockMode CControls::OnMouseWrongStateImpl()
 {
-	if(m_pClient->m_Snap.m_pGameInfoObj && (m_pClient->m_Snap.m_pGameInfoObj->m_GameStateFlags & GAMESTATEFLAG_PAUSED))
-		return false;
+	if((m_pClient->m_Snap.m_pGameInfoObj && m_pClient->m_Snap.m_pGameInfoObj->m_GameStateFlags & GAMESTATEFLAG_PAUSED))
+		return COMPONENT_MOUSE_MOVEMENT_BLOCK_MODE_DONT_BLOCK;
+
+	return COMPONENT_MOUSE_MOVEMENT_BLOCK_MODE_BLOCK_AND_CHANGE_TO_RELATIVE;
+}
+
+EComponentMouseMovementBlockMode CControls::OnMouseInWindowPos(int X, int Y)
+{
+	return OnMouseWrongStateImpl();
+}
+
+EComponentMouseMovementBlockMode CControls::OnMouseAbsoluteInWindowPos(int X, int Y)
+{
+	return OnMouseWrongStateImpl();
+}
+
+EComponentMouseMovementBlockMode CControls::OnMouseInWindowRelativeMove(int X, int Y)
+{
+	return OnMouseWrongStateImpl();
+}
+
+EComponentMouseMovementBlockMode CControls::OnMouseRelativeMove(float RelX, float RelY, IInput::ECursorType CursorType)
+{
+	if((m_pClient->m_Snap.m_pGameInfoObj && m_pClient->m_Snap.m_pGameInfoObj->m_GameStateFlags & GAMESTATEFLAG_PAUSED))
+		return COMPONENT_MOUSE_MOVEMENT_BLOCK_MODE_DONT_BLOCK;
 
 	if(CursorType == IInput::CURSOR_JOYSTICK && g_Config.m_InpControllerAbsolute && m_pClient->m_Snap.m_pGameInfoObj && !m_pClient->m_Snap.m_SpecInfo.m_Active)
 	{
 		float AbsX = 0.0f, AbsY = 0.0f;
 		if(Input()->GetActiveJoystick()->Absolute(&AbsX, &AbsY))
 			m_aMousePos[g_Config.m_ClDummy] = vec2(AbsX, AbsY) * GetMaxMouseDistance();
-		return true;
+		return COMPONENT_MOUSE_MOVEMENT_BLOCK_MODE_BLOCK;
 	}
 
 	float Factor = 1.0f;
@@ -403,9 +426,10 @@ bool CControls::OnCursorMove(float x, float y, IInput::ECursorType CursorType)
 	if(m_pClient->m_Snap.m_SpecInfo.m_Active && m_pClient->m_Snap.m_SpecInfo.m_SpectatorID < 0)
 		Factor *= m_pClient->m_Camera.m_Zoom;
 
-	m_aMousePos[g_Config.m_ClDummy] += vec2(x, y) * Factor;
+	m_aMousePos[g_Config.m_ClDummy] += vec2(RelX, RelY) * Factor; // TODO: ugly
 	ClampMousePos();
-	return true;
+
+	return COMPONENT_MOUSE_MOVEMENT_BLOCK_MODE_BLOCK;
 }
 
 void CControls::ClampMousePos()

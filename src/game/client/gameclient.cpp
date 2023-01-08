@@ -28,6 +28,10 @@
 #include <base/vmath.h>
 
 #include "gameclient.h"
+#include <engine/input.h>
+
+#include <game/client/component.h>
+
 #include "race.h"
 #include "render.h"
 
@@ -378,13 +382,56 @@ void CGameClient::OnUpdate()
 
 	// handle mouse movement
 	float x = 0.0f, y = 0.0f;
-	IInput::ECursorType CursorType = Input()->CursorRelative(&x, &y);
-	if(CursorType != IInput::CURSOR_NONE)
+	int PosX = 0, PosY = 0;
+	bool GotInput = false;
+	IInput::ECursorType CursorType;
+	if(Input()->GetMouseMode() == INPUT_MOUSE_MODE_RELATIVE)
+	{
+		CursorType = Input()->CursorRelative(&x, &y);
+		GotInput = CursorType != IInput::CURSOR_NONE;
+	}
+	else if(Input()->GetMouseMode() == INPUT_MOUSE_MODE_INGAME_RELATIVE)
+	{
+		GotInput = Input()->MouseDesktopRelative(&PosX, &PosY);
+	}
+	else
+	{
+		GotInput = Input()->MouseAbsolute(&PosX, &PosY);
+	}
+	if(GotInput)
 	{
 		for(auto &pComponent : m_vpInput)
 		{
-			if(pComponent->OnCursorMove(x, y, CursorType))
+			EComponentMouseMovementBlockMode CompBreak = COMPONENT_MOUSE_MOVEMENT_BLOCK_MODE_DONT_BLOCK;
+			if(Input()->GetMouseMode() == INPUT_MOUSE_MODE_RELATIVE)
+				CompBreak = pComponent->OnMouseRelativeMove(x, y, CursorType);
+			else if(Input()->GetMouseMode() == INPUT_MOUSE_MODE_INGAME_RELATIVE)
+				CompBreak = pComponent->OnMouseInWindowRelativeMove(PosX, PosY);
+			else if(Input()->GetMouseMode() == INPUT_MOUSE_MODE_INGAME)
+				CompBreak = pComponent->OnMouseInWindowPos(PosX, PosY);
+			else if(Input()->GetMouseMode() == INPUT_MOUSE_MODE_ABSOLUTE)
+				CompBreak = pComponent->OnMouseAbsoluteInWindowPos(PosX, PosY);
+			if(CompBreak != COMPONENT_MOUSE_MOVEMENT_BLOCK_MODE_DONT_BLOCK)
+			{
+				switch(CompBreak)
+				{
+				case COMPONENT_MOUSE_MOVEMENT_BLOCK_MODE_BLOCK_AND_CHANGE_TO_INGAME:
+					Input()->MouseModeInGame();
+					break;
+				case COMPONENT_MOUSE_MOVEMENT_BLOCK_MODE_BLOCK_AND_CHANGE_TO_INGAME_RELATIVE:
+					Input()->MouseModeInGameRelative();
+					break;
+				case COMPONENT_MOUSE_MOVEMENT_BLOCK_MODE_BLOCK_AND_CHANGE_TO_RELATIVE:
+					Input()->MouseModeRelative();
+					break;
+				case COMPONENT_MOUSE_MOVEMENT_BLOCK_MODE_BLOCK_AND_CHANGE_TO_ABSOLUTE:
+					Input()->MouseModeAbsolute();
+					break;
+				default:
+					break;
+				}
 				break;
+			}
 		}
 	}
 

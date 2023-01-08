@@ -981,7 +981,7 @@ void CGameConsole::Toggle(int Type)
 		}
 		else
 		{
-			Input()->MouseModeRelative();
+			Input()->MouseModeInGame();
 			UI()->SetEnabled(true);
 			m_pClient->OnRelease();
 			m_ConsoleState = CONSOLE_CLOSING;

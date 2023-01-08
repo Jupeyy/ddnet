@@ -1282,8 +1282,8 @@ void CMenus::RenderSettingsControls(CUIRect MainView)
 
 			MouseSettings.HSplitTop(2.0f, 0, &MouseSettings);
 
-			MouseSettings.HSplitTop(20.0f, &Button, &MouseSettings);
-			UI()->DoScrollbarOption(&g_Config.m_UiMousesens, &g_Config.m_UiMousesens, &Button, Localize("UI mouse sens."), 1, 500, &CUI::ms_LogarithmicScrollbarScale, CUI::SCROLLBAR_OPTION_NOCLAMPVALUE);
+			// MouseSettings.HSplitTop(20.0f, &Button, &MouseSettings);
+			// UI()->DoScrollbarOption(&g_Config.m_UiMousesens, &g_Config.m_UiMousesens, &Button, Localize("UI mouse sens."), 1, 500, &CUI::ms_LogarithmicScrollbarScale, CUI::SCROLLBAR_OPTION_NOCLAMPVALUE);
 		}
 	}
 
@@ -1425,7 +1425,7 @@ void CMenus::ResetSettingsControls()
 	m_pClient->m_Binds.SetDefaults();
 
 	g_Config.m_InpMousesens = 200;
-	g_Config.m_UiMousesens = 200;
+	// g_Config.m_UiMousesens = 200;
 
 	g_Config.m_InpControllerEnable = 0;
 	g_Config.m_InpControllerGUID[0] = '\0';
@@ -1694,7 +1694,7 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 	CUIRect Text;
 	MainView.HSplitTop(20.0f, 0, &MainView);
 	MainView.HSplitTop(20.0f, &Text, &MainView);
-	//text.VSplitLeft(15.0f, 0, &text);
+	// text.VSplitLeft(15.0f, 0, &text);
 	UI()->DoLabel(&Text, Localize("UI Color"), 14.0f, TEXTALIGN_LEFT);
 	CUIRect HSLBar = MainView;
 	RenderHSLScrollbars(&HSLBar, &g_Config.m_UiColor, true);
@@ -3203,9 +3203,6 @@ void CMenus::RenderSettingsDDNet(CUIRect MainView)
 {
 	CUIRect Button, Left, Right, LeftLeft, Demo, Gameplay, Miscellaneous, Label, Background;
 
-	bool CheckSettings = false;
-	static int s_InpMouseOld = g_Config.m_InpMouseOld;
-
 	MainView.HSplitTop(100.0f, &Demo, &MainView);
 
 	Demo.HSplitTop(30.0f, &Label, &Demo);
@@ -3377,11 +3374,7 @@ void CMenus::RenderSettingsDDNet(CUIRect MainView)
 	if(DoButton_CheckBox(&g_Config.m_InpMouseOld, Localize("Old mouse mode"), g_Config.m_InpMouseOld, &Button))
 	{
 		g_Config.m_InpMouseOld ^= 1;
-		CheckSettings = true;
 	}
-
-	if(CheckSettings)
-		m_NeedRestartDDNet = s_InpMouseOld != g_Config.m_InpMouseOld;
 
 	Left.HSplitTop(5.0f, &Button, &Left);
 	Left.VSplitRight(10.0f, &Left, 0x0);

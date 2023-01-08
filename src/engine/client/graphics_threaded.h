@@ -745,6 +745,7 @@ public:
 	virtual bool ResizeWindow(int w, int h, int RefreshRate) = 0;
 	virtual void GetViewportSize(int &w, int &h) = 0;
 	virtual void NotifyWindow() = 0;
+	virtual void WarpMouse(int MouseX, int MouseY) = 0;
 
 	virtual void WindowDestroyNtf(uint32_t WindowID) = 0;
 	virtual void WindowCreateNtf(uint32_t WindowID) = 0;
@@ -1279,6 +1280,7 @@ public:
 
 	void SetWindowGrab(bool Grab) override;
 	void NotifyWindow() override;
+	void WarpMouse(int MouseX, int MouseY) override;
 
 	int Init() override;
 	void Shutdown() override;

@@ -593,8 +593,12 @@ public:
 	virtual void OnReset() override;
 	virtual void OnRender() override;
 	virtual bool OnInput(IInput::CEvent Event) override;
-	virtual bool OnCursorMove(float x, float y, IInput::ECursorType CursorType) override;
 	virtual void OnShutdown() override;
+
+	virtual EComponentMouseMovementBlockMode OnMouseInWindowPos(int X, int Y) override;
+	virtual EComponentMouseMovementBlockMode OnMouseAbsoluteInWindowPos(int X, int Y) override;
+	virtual EComponentMouseMovementBlockMode OnMouseInWindowRelativeMove(int X, int Y) override;
+	virtual EComponentMouseMovementBlockMode OnMouseRelativeMove(float x, float y, IInput::ECursorType CursorType) override;
 
 	enum
 	{

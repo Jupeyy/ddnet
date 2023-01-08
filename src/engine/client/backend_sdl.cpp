@@ -1171,9 +1171,6 @@ int CGraphicsBackend_SDL_GL::Init(const char *pName, int *pScreen, int *pWidth, 
 		}
 	}
 
-	if(g_Config.m_InpMouseOld)
-		SDL_SetHint(SDL_HINT_MOUSE_RELATIVE_MODE_WARP, "1");
-
 	m_pWindow = SDL_CreateWindow(
 		pName,
 		SDL_WINDOWPOS_CENTERED_DISPLAY(*pScreen),
@@ -1613,6 +1610,11 @@ void CGraphicsBackend_SDL_GL::WindowCreateNtf(uint32_t WindowID)
 TGLBackendReadPresentedImageData &CGraphicsBackend_SDL_GL::GetReadPresentedImageDataFuncUnsafe()
 {
 	return m_ReadPresentedImageDataFunc;
+}
+
+void CGraphicsBackend_SDL_GL::WarpMouse(int MouseX, int MouseY)
+{
+	SDL_WarpMouseInWindow(m_pWindow, MouseX, MouseY);
 }
 
 IGraphicsBackend *CreateGraphicsBackend(TTranslateFunc &&TranslateFunc) { return new CGraphicsBackend_SDL_GL(std::move(TranslateFunc)); }
