@@ -219,6 +219,11 @@ public:
 struct STextContainerUsages
 {
 	int m_Dummy = 0;
+	std::string test;
+
+	STextContainerUsages() {
+		test.reserve(4096);
+	}
 };
 
 struct STextContainerIndex
@@ -307,6 +312,8 @@ public:
 
 	virtual void OnPreWindowResize() = 0;
 	virtual void OnWindowResize() = 0;
+
+	int m_MHH = 0;
 };
 
 class IEngineTextRender : public ITextRender

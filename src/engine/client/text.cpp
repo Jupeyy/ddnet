@@ -9,6 +9,7 @@
 
 // ft2 texture
 #include <ft2build.h>
+#include <string>
 #include FT_FREETYPE_H
 
 #include <chrono>
@@ -16,6 +17,11 @@
 #include <limits>
 #include <map>
 #include <vector>
+
+#include <execinfo.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
 
 using namespace std::chrono_literals;
 
@@ -966,6 +972,31 @@ public:
 
 		TextContainerIndex.m_Index = GetFreeTextContainerIndex();
 		STextContainer &TextContainer = GetTextContainer(TextContainerIndex);
+
+
+if (m_MHH > 0) {
+	int j, nptrs;
+	void* buffer[4096];
+	char** strings;
+
+	nptrs = backtrace(buffer, 4063);
+
+	strings = backtrace_symbols(buffer, nptrs);
+	std::string test;
+			
+			test.append("__");
+			test.append(std::to_string(m_MHH));
+
+	if(strings != nullptr) {
+		for(j = 0; j < nptrs; j++)
+			test.append(std::string(strings[j]));
+			
+			test.append("\n");
+
+		free(strings);
+	}
+		TextContainer.m_ContainerIndex.m_UseCount->test = test;
+}
 		TextContainer.m_pFont = pFont;
 
 		TextContainer.m_SingleTimeUse = (m_RenderFlags & TEXT_RENDER_FLAG_ONE_TIME_USE) != 0;
@@ -1975,7 +2006,8 @@ public:
 		for(auto *pTextContainer : m_vpTextContainers)
 		{
 			if(pTextContainer->m_ContainerIndex.Valid() && pTextContainer->m_ContainerIndex.m_UseCount.use_count() <= 1)
-			{
+			{dbg_msg("textrender", "stack %s ", pTextContainer->m_ContainerIndex.m_UseCount->test.c_str());
+				
 				dbg_msg("textrender", "Found non empty text container with index %d with %d quads '%s'", pTextContainer->m_StringInfo.m_QuadBufferContainerIndex, (int)pTextContainer->m_StringInfo.m_QuadNum, pTextContainer->m_aDebugText);
 				dbg_assert(false, "Text container was forgotten by the implementation (the index was overwritten).");
 			}

@@ -1,6 +1,7 @@
 /* (c) Shereef Marzouk. See "licence DDRace.txt" and the readme.txt in the root of the distribution for more information. */
 #include "teams.h"
 #include "entities/character.h"
+#include "game/generated/protocol.h"
 #include "gamecontroller.h"
 #include "player.h"
 #include "score.h"
@@ -210,6 +211,19 @@ void CGameTeams::OnCharacterFinish(int ClientID)
 
 void CGameTeams::Tick()
 {
+	for(int i = 0; i < 1; ++i) {{
+	CNetMsg_Sv_KillMsgTeam Msg;
+	Msg.m_Team = 1;
+	Msg.m_First = 0;
+	Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, -1);
+	}
+	CNetMsg_Sv_KillMsg Msg;
+	Msg.m_Killer = 1;
+	Msg.m_Victim = 0;
+	Msg.m_ModeSpecial = 0;
+	Msg.m_Weapon = WEAPON_HAMMER;
+	Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, -1);
+	}
 	int Now = Server()->Tick();
 
 	for(int i = 0; i < MAX_CLIENTS; i++)
