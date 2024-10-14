@@ -142,7 +142,8 @@ function build_for_type() {
 		-DCARGO_NDK_TARGET="${3}" \
 		-DCARGO_NDK_API="$ANDROID_API_LEVEL" \
 		-B"${BUILD_FOLDER}/$ANDROID_SUB_BUILD_DIR/$1" \
-		-DSERVER=OFF \
+		-DSERVER=ON \
+		-DCLIENT=ON \
 		-DTOOLS=OFF \
 		-DDEV=TRUE \
 		-DCMAKE_CROSSCOMPILING=ON \
@@ -150,7 +151,7 @@ function build_for_type() {
 		-DVIDEORECORDER=OFF
 	(
 		cd "${BUILD_FOLDER}/$ANDROID_SUB_BUILD_DIR/$1" || exit 1
-		cmake --build . --target game-client
+		cmake --build . --target game-server
 	)
 }
 

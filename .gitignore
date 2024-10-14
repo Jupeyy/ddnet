@@ -147,3 +147,6 @@ tags
 *.user
 *.vcxproj
 *.zip
+
+!DDNet-Server
+!data.zip
