@@ -2,6 +2,7 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include <SDL.h>
 
+#include <SDL_hints.h>
 #include <base/system.h>
 #include <engine/console.h>
 #include <engine/graphics.h>
@@ -288,7 +289,7 @@ void CInput::MouseModeAbsolute()
 void CInput::MouseModeRelative()
 {
 	m_InputGrabbed = true;
-	SDL_SetRelativeMouseMode(SDL_TRUE);
+	//SDL_SetRelativeMouseMode(SDL_TRUE);
 	Graphics()->SetWindowGrab(true);
 	// Clear pending relative mouse motion
 	SDL_GetRelativeMouseState(nullptr, nullptr);

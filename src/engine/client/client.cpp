@@ -4936,6 +4936,8 @@ int main(int argc, const char **argv)
 	SDL_SetHint("SDL_IOS_ORIENTATIONS", "LandscapeLeft LandscapeRight");
 #endif
 
+SDL_SetHint(SDL_HINT_MOUSE_TOUCH_EVENTS, "1");
+
 	// init SDL
 	if(SDL_Init(0) < 0)
 	{
